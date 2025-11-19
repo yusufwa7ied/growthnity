@@ -1,0 +1,32 @@
+# Django and Django REST Framework
+Django==5.2.5
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+
+# CORS handling
+django-cors-headers==4.9.0
+
+# Environment variables
+python-decouple==3.8
+
+# Import/Export functionality
+django-import-export==4.3.9
+
+# Database (PostgreSQL for production)
+psycopg2-binary==2.9.10
+
+# WSGI HTTP Server
+gunicorn==23.0.0
+
+# Excel file handling
+openpyxl==3.1.5
+tablib==3.8.0
+
+# Timezone handling
+pytz==2025.2
+
+# Additional utilities
+requests==2.32.5
+
+# Static files serving
+whitenoise==6.7.0
