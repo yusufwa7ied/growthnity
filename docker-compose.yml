@@ -1,15 +1,18 @@
 version: '3.8'
 
+# This compose file reads variables from a `.env` file in the project root.
 services:
   # PostgreSQL Database
   db:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
     environment:
-      - POSTGRES_DB=perfdb
-      - POSTGRES_USER=perfuser
-      - POSTGRES_PASSWORD=perfpass123
+      POSTGRES_DB: ${POSTGRES_DB:-perfdb}
+      POSTGRES_USER: ${POSTGRES_USER:-perfuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-perfpass123}
     ports:
       - "5432:5432"
 
@@ -23,17 +26,19 @@ services:
       - media_volume:/app/media
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - DEBUG=False
-      - SECRET_KEY=your-production-secret-key-change-this
-      - USE_POSTGRES=True
-      - DB_NAME=perfdb
-      - DB_USER=perfuser
-      - DB_PASSWORD=perfpass123
-      - DB_HOST=db
-      - DB_PORT=5432
-      - ALLOWED_HOSTS=localhost,127.0.0.1,44.210.80.248
-      - CORS_ALLOWED_ORIGINS=http://localhost:4200,http://localhost,http://44.210.80.248
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY}
+      USE_POSTGRES: ${USE_POSTGRES:-True}
+      DB_NAME: ${POSTGRES_DB:-perfdb}
+      DB_USER: ${POSTGRES_USER:-perfuser}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-perfpass123}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,44.210.80.248}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://44.210.80.248}
     depends_on:
       - db
 
