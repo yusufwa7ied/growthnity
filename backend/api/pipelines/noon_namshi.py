@@ -15,13 +15,13 @@ from api.models import (
 from api.pipelines.helpers import (
     store_raw_snapshot,
     enrich_df,
-    resolve_payouts,
     compute_final_metrics,
     nf,
     nz,
 )
+from api.models import PartnerPayout
 
-ADVERTISER_NAMES = {"Noon", "Namshi"}  # we’ll respect whichever appears per row
+ADVERTISER_NAMES = {"Noon", "Namshi"}  # we'll respect whichever appears per row
 RAW_CSV = "/Users/yusuf/noon-namshi.csv"   # replace with your real path
 
 COUNTRY_MAP = {
@@ -34,6 +34,205 @@ COUNTRY_MAP = {
     "BH": "BHR",
     "EG": "EGY",
 }
+
+# Noon bracket-based payout structures by country
+NOON_BRACKETS = {
+    # Noon KSA/UAE (countries: SAU, ARE)
+    # Brackets in AED, revenue/payout in USD
+    "KSA_UAE": {
+        "countries": ["SAU", "ARE"],
+        "currency": "USD",
+        "revenue": [
+            (100, 1.0),    # <100 AED → $1
+            (150, 2.0),    # 100-150 AED → $2
+            (200, 3.5),    # 150-200 AED → $3.5
+            (400, 5.0),    # 200-400 AED → $5
+            (float('inf'), 7.0)  # ≥400 AED → $7
+        ],
+        "default": [
+            (100, 0.8),
+            (150, 1.6),
+            (200, 2.8),
+            (400, 4.0),
+            (float('inf'), 6.0)
+        ],
+        "special": [
+            (100, 0.95),
+            (150, 1.9),
+            (200, 3.25),
+            (400, 4.75),
+            (float('inf'), 7.0)
+        ]
+    },
+    # Noon GCC (countries: QAT, KWT, OMN, BHR)
+    # Brackets in AED, revenue/payout in USD
+    "GCC": {
+        "countries": ["QAT", "KWT", "OMN", "BHR"],
+        "currency": "USD",
+        "revenue": [
+            (100, 3.0),    # <100 AED → $3
+            (200, 6.0),    # 100-200 AED → $6
+            (float('inf'), 12.0)  # ≥200 AED → $12
+        ],
+        "default": [
+            (100, 2.0),
+            (200, 4.5),
+            (float('inf'), 9.0)
+        ],
+        "special": [
+            (100, 2.5),
+            (200, 5.25),
+            (float('inf'), 10.5)
+        ]
+    },
+    # Noon Egypt (country: EGY)
+    "EGYPT": {
+        "countries": ["EGY"],
+        "currency": "USD",
+        "revenue": [
+            (14.25, 0.30),
+            (23.85, 0.75),
+            (37.24, 1.30),
+            (59.40, 2.20),
+            (72.00, 3.25),
+            (110.00, 4.25),
+            (float('inf'), 7.0)
+        ],
+        "default": [
+            (14.25, 0.20),
+            (23.85, 0.55),
+            (37.24, 1.0),
+            (59.40, 1.70),
+            (72.00, 2.50),
+            (110.00, 3.25),
+            (float('inf'), 5.50)
+        ],
+        "special": [
+            (14.25, 0.25),
+            (23.85, 0.65),
+            (37.24, 1.10),
+            (59.40, 2.0),
+            (72.00, 2.80),
+            (110.00, 3.0),
+            (float('inf'), 6.25)
+        ]
+    },
+    "Namshi": {  # Using percentage-based, keep existing logic
+        "use_percentage": True
+    }
+}
+
+def get_bracket_config(country):
+    """
+    Determine which bracket configuration to use based on country.
+    """
+    for config_name, config in NOON_BRACKETS.items():
+        if config_name == "Namshi":
+            continue
+        if country in config.get("countries", []):
+            return config
+    # Default to KSA/UAE if country not found
+    return NOON_BRACKETS["KSA_UAE"]
+
+def get_bracket_amount(order_value_aed, brackets):
+    """
+    Given an order value in AED and a list of (threshold, amount) tuples,
+    return the appropriate fixed amount.
+    """
+    for threshold, amount in brackets:
+        if order_value_aed < threshold:
+            return amount
+    return brackets[-1][1]  # Return last bracket if nothing matches
+
+def calculate_noon_payouts(df, advertiser):
+    """
+    Calculate revenue and payouts for Noon based on bracket structure.
+    For Namshi, fall back to percentage-based calculation.
+    Bracket rules apply to ALL Noon orders (including historical data).
+    
+    IMPORTANT: For Noon orders:
+    - PartnerPayout table is ONLY used as a boolean flag (exists/doesn't exist)
+    - The ftu_payout, rtu_payout, and fixed_bonus values are IGNORED
+    - Only the bracket amounts (from NOON_BRACKETS dict) are used
+    """
+    from api.pipelines.helpers import resolve_payouts
+    
+    if advertiser.name == "Namshi":
+        # Use existing percentage-based logic for Namshi
+        return resolve_payouts(advertiser, df)
+    
+    # For Noon, apply bracket-based logic to ALL orders
+    if df.empty:
+        return df
+    
+    bracket_results = []
+    for idx, row in df.iterrows():
+        # Get country to determine bracket config
+        country = row.get("country", "SAU")
+        bracket_config = get_bracket_config(country)
+        
+        # Get order value in original currency
+        order_value = float(row.get("sales", 0))
+        
+        # For Egypt, order value is already in USD
+        # For others, it's in AED
+        if bracket_config["currency"] == "AED":
+            # Convert to USD using advertiser exchange rate
+            exchange_rate = float(advertiser.exchange_rate or 0.27)
+            order_value_for_bracket = order_value  # Keep in AED for bracket lookup
+        else:
+            # Egypt - already in USD
+            order_value_for_bracket = order_value
+        
+        # Calculate revenue per order based on bracket
+        revenue_per_order = get_bracket_amount(order_value_for_bracket, bracket_config["revenue"])
+        
+        # Check if partner has special payout
+        # NOTE: For ALL Noon orders, PartnerPayout table is ONLY used as a flag.
+        # The ftu_payout/rtu_payout/fixed_bonus values are IGNORED.
+        # We only check: "Does the record exist?" → Yes = special brackets, No = default brackets
+        partner_name = row.get("partner_name")
+        partner = Partner.objects.filter(name=partner_name).first() if partner_name else None
+        has_special = False
+        
+        if partner:
+            special_payout = PartnerPayout.objects.filter(
+                advertiser=advertiser,
+                partner=partner
+            ).first()
+            has_special = special_payout is not None  # Just checking existence, not reading values
+        
+        # Use special or default bracket based on flag
+        payout_brackets = bracket_config["special"] if has_special else bracket_config["default"]
+        payout_per_order = get_bracket_amount(order_value_for_bracket, payout_brackets)
+        
+        # Calculate totals
+        orders = int(row.get("orders", 0))
+        our_rev = revenue_per_order * orders  # Already in USD
+        payout = payout_per_order * orders    # Already in USD
+        
+        # Update row
+        row_dict = row.to_dict()
+        row_dict["our_rev"] = our_rev
+        row_dict["payout"] = payout
+        row_dict["profit"] = our_rev - payout
+        row_dict["payout_usd"] = payout  # Already in USD
+        row_dict["profit_usd"] = our_rev - payout
+        
+        # Set rates based on user type for compatibility
+        user_type = row.get("user_type", "")
+        if user_type == "FTU":
+            row_dict["ftu_rate"] = revenue_per_order
+        elif user_type == "RTU":
+            row_dict["rtu_rate"] = revenue_per_order
+        
+        bracket_results.append(row_dict)
+    
+    # Return results as DataFrame
+    if bracket_results:
+        return pd.DataFrame(bracket_results)
+    
+    return df
 
 def run(date_from: date, date_to: date):
     print(f"🚀 Running Noon/Namshi pipeline {date_from} → {date_to}")
@@ -60,9 +259,10 @@ def run(date_from: date, date_to: date):
             continue
         advertiser = Advertiser.objects.filter(name=adv_name).first()
         if advertiser is None:
-            # if advertiser record doesn’t exist yet, skip safely
+            # if advertiser record doesn't exist yet, skip safely
             continue
-        payout_df = resolve_payouts(advertiser, chunk)
+        # Use bracket-based calculation for Noon, percentage for Namshi
+        payout_df = calculate_noon_payouts(chunk, advertiser)
         final_rows.append(payout_df)
 
     if not final_rows:
@@ -70,7 +270,8 @@ def run(date_from: date, date_to: date):
         return 0
 
     merged = pd.concat(final_rows, ignore_index=True)
-    final_df = compute_final_metrics(merged, advertiser)
+    # Skip compute_final_metrics since we already calculated everything
+    final_df = merged
 
     count = save_final_rows(final_df, date_from, date_to)
     push_to_performance(date_from, date_to)
@@ -273,16 +474,22 @@ def push_to_performance(date_from: date, date_to: date):
         advertiser = Advertiser.objects.filter(name=r.advertiser_name).first()
         exchange_rate = float(advertiser.exchange_rate or 1.0) if advertiser else 1.0
         
+        # For Noon: revenue/payout already in USD (from brackets), only convert sales
+        # For Namshi: everything needs conversion from AED to USD
+        is_noon = r.advertiser_name == "Noon"
+        
         if r.user_type == "FTU":
             g["ftu_orders"] += r.orders
             g["ftu_sales"] += float(r.sales) * exchange_rate
-            g["ftu_revenue"] += float(r.our_rev) * exchange_rate
-            g["ftu_payout"] += float(r.payout) * exchange_rate
+            # Revenue and payout: only convert if NOT Noon (Noon brackets already in USD)
+            g["ftu_revenue"] += float(r.our_rev) if is_noon else float(r.our_rev) * exchange_rate
+            g["ftu_payout"] += float(r.payout) if is_noon else float(r.payout) * exchange_rate
         elif r.user_type == "RTU":
             g["rtu_orders"] += r.orders
             g["rtu_sales"] += float(r.sales) * exchange_rate
-            g["rtu_revenue"] += float(r.our_rev) * exchange_rate
-            g["rtu_payout"] += float(r.payout) * exchange_rate
+            # Revenue and payout: only convert if NOT Noon (Noon brackets already in USD)
+            g["rtu_revenue"] += float(r.our_rev) if is_noon else float(r.our_rev) * exchange_rate
+            g["rtu_payout"] += float(r.payout) if is_noon else float(r.payout) * exchange_rate
 
     with transaction.atomic():
         # delete only for Noon + Namshi advertisers in range

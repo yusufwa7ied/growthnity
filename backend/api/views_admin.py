@@ -327,6 +327,9 @@ def media_buyer_spend_view(request):
             'advertiser_name': s.advertiser.name,
             'partner_id': s.partner.id if s.partner else None,
             'partner_name': s.partner.name if s.partner else None,
+            'coupon_id': s.coupon.id if s.coupon else None,
+            'coupon_code': s.coupon.code if s.coupon else None,
+            'platform': s.platform,
             'amount_spent': float(s.amount_spent),
             'currency': s.currency or 'USD'
         } for s in spends]
@@ -338,11 +341,13 @@ def media_buyer_spend_view(request):
         date = request.data.get('date')
         advertiser_id = request.data.get('advertiser_id')
         partner_id = request.data.get('partner_id')
+        coupon_id = request.data.get('coupon_id')
+        platform = request.data.get('platform', 'Meta')
         amount_spent = request.data.get('amount_spent')
         currency = request.data.get('currency', 'USD')
 
         if not all([date, advertiser_id, partner_id, amount_spent]):
-            return Response({"detail": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Missing required fields: date, advertiser_id, partner_id, amount_spent"}, status=status.HTTP_400_BAD_REQUEST)
 
         # If TeamMember, verify they can only create for their own partner
         if role == "TeamMember" and company_user.department == "media_buying":
@@ -359,6 +364,8 @@ def media_buyer_spend_view(request):
                 date=date,
                 advertiser_id=advertiser_id,
                 partner_id=partner_id,
+                coupon_id=coupon_id,
+                platform=platform,
                 defaults={
                     'amount_spent': amount_spent,
                     'currency': currency
@@ -372,6 +379,9 @@ def media_buyer_spend_view(request):
                 'advertiser_name': spend.advertiser.name,
                 'partner_id': spend.partner.id if spend.partner else None,
                 'partner_name': spend.partner.name if spend.partner else None,
+                'coupon_id': spend.coupon.id if spend.coupon else None,
+                'coupon_code': spend.coupon.code if spend.coupon else None,
+                'platform': spend.platform,
                 'amount_spent': float(spend.amount_spent),
                 'currency': spend.currency or 'USD',
                 'created': created
@@ -436,13 +446,35 @@ def partners_view(request):
 
     if request.method == 'GET':
         partners = Partner.objects.all().order_by('-id')
-        data = [{
-            'id': p.id,
-            'name': p.name,
-            'partner_type': p.partner_type,
-            'email': p.email or '',
-            'phone': p.phone or ''
-        } for p in partners]
+        data = []
+        for p in partners:
+            # Get special payouts for this partner across all advertisers
+            special_payouts = PartnerPayout.objects.filter(
+                partner=p
+            ).select_related('advertiser').order_by('advertiser__name')
+            
+            special_payout_info = []
+            for sp in special_payouts:
+                special_payout_info.append({
+                    'advertiser': sp.advertiser.name,
+                    'advertiser_id': sp.advertiser.id,
+                    'ftu_payout': float(sp.ftu_payout) if sp.ftu_payout else None,
+                    'rtu_payout': float(sp.rtu_payout) if sp.rtu_payout else None,
+                    'ftu_fixed_bonus': float(sp.ftu_fixed_bonus) if sp.ftu_fixed_bonus else None,
+                    'rtu_fixed_bonus': float(sp.rtu_fixed_bonus) if sp.rtu_fixed_bonus else None,
+                    'rate_type': sp.rate_type,
+                })
+            
+            data.append({
+                'id': p.id,
+                'name': p.name,
+                'partner_type': p.partner_type,
+                'email': p.email or '',
+                'phone': p.phone or '',
+                'has_special_payouts': len(special_payout_info) > 0,
+                'special_payouts_count': len(special_payout_info),
+                'special_payouts': special_payout_info
+            })
         return Response(data, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':

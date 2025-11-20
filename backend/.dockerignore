@@ -26,3 +26,7 @@ staticfiles/
 
 # OS
 .DS_Store
+
+# Tests and local data
+tests/
+*.sqlite3

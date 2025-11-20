@@ -14,8 +14,9 @@ from .views import (
     targets_list,
     target_detail,
     performance_analytics_view,
+    coupon_detail_view,
+    coupon_history_view,
 )
-from .views import coupon_detail_view  # explicitly separated
 from . import views_tracking
 from .views_admin import (
     high_level_dashboard_view,
@@ -41,6 +42,7 @@ urlpatterns = [
     path("dashboard/performance-table/", performance_table_view),
     path("coupons/", coupons_view, name="coupons"), # type: ignore
     path("coupons/<str:code>/", coupon_detail_view, name="coupon-detail"),
+    path("coupons/<str:code>/history/", coupon_history_view, name="coupon-history"),
     path("partners/", partner_list_view, name="partner-list"),
     path("advertisers/", advertiser_list_view, name="advertiser-list"),
     path("payouts/", partner_payouts_view, name="partner-payouts"),# type: ignore

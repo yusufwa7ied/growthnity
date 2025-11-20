@@ -14,8 +14,12 @@ from django.utils.timezone import make_aware
 from api.models import (
     Advertiser,
     Coupon,
+    CouponAssignmentHistory,
     PartnerPayout,
+    PayoutRuleHistory,
+    RevenueRuleHistory,
     RawAdvertiserRecord,
+    Partner,
 )
 
 
@@ -44,6 +48,193 @@ def nf(x):
         return float(x) if x == x and x is not None else 0.0
     except:
         return 0.0
+
+
+def get_coupon_owner_at_date(coupon_code, transaction_date, advertiser):
+    """
+    Resolve which partner owned a coupon at a specific date.
+    Returns partner_id or None.
+    
+    Logic:
+    1. Find the coupon by code and advertiser
+    2. Look at CouponAssignmentHistory for assignments on or before transaction_date
+    3. Return the most recent assignment before/at transaction_date
+    4. If no history found, return current coupon.partner
+    """
+    try:
+        coupon = Coupon.objects.get(code=coupon_code, advertiser=advertiser)
+    except Coupon.DoesNotExist:
+        return None
+    
+    # Convert transaction_date to datetime for comparison
+    if isinstance(transaction_date, date) and not isinstance(transaction_date, datetime):
+        transaction_datetime = datetime.combine(transaction_date, datetime.min.time())
+        transaction_datetime = make_aware(transaction_datetime)
+    else:
+        transaction_datetime = transaction_date if transaction_date.tzinfo else make_aware(transaction_date)
+    
+    # Find most recent assignment before or at transaction date
+    history = CouponAssignmentHistory.objects.filter(
+        coupon=coupon,
+        assigned_date__lte=transaction_datetime
+    ).order_by('-assigned_date').first()
+    
+    if history:
+        return history.partner.id
+    
+    # No history found - use current assignment
+    return coupon.partner.id if coupon.partner else None
+
+
+def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
+    """
+    Resolve payout rules for a specific partner/advertiser at a transaction date.
+    Returns dict with payout configuration or None.
+    
+    Logic:
+    1. Look at PayoutRuleHistory for rules effective on or before transaction_date
+    2. Return the most recent rule before/at transaction_date
+    3. If no history found, return current PartnerPayout or advertiser defaults
+    
+    Returns dict: {
+        'ftu_payout': Decimal,
+        'rtu_payout': Decimal,
+        'ftu_fixed_bonus': Decimal,
+        'rtu_fixed_bonus': Decimal,
+        'rate_type': str
+    }
+    """
+    # Convert transaction_date to datetime for comparison
+    if isinstance(transaction_date, date) and not isinstance(transaction_date, datetime):
+        transaction_datetime = datetime.combine(transaction_date, datetime.min.time())
+        transaction_datetime = make_aware(transaction_datetime)
+    else:
+        transaction_datetime = transaction_date if transaction_date.tzinfo else make_aware(transaction_date)
+    
+    # Try to find partner-specific historical rule
+    if partner_id:
+        history = PayoutRuleHistory.objects.filter(
+            advertiser=advertiser,
+            partner_id=partner_id,
+            effective_date__lte=transaction_datetime
+        ).order_by('-effective_date').first()
+        
+        if history:
+            return {
+                'ftu_payout': history.ftu_payout,
+                'rtu_payout': history.rtu_payout,
+                'ftu_fixed_bonus': history.ftu_fixed_bonus or 0,
+                'rtu_fixed_bonus': history.rtu_fixed_bonus or 0,
+                'rate_type': history.rate_type
+            }
+    
+    # Try to find default (partner=NULL) historical rule
+    default_history = PayoutRuleHistory.objects.filter(
+        advertiser=advertiser,
+        partner__isnull=True,
+        effective_date__lte=transaction_datetime
+    ).order_by('-effective_date').first()
+    
+    if default_history:
+        return {
+            'ftu_payout': default_history.ftu_payout,
+            'rtu_payout': default_history.rtu_payout,
+            'ftu_fixed_bonus': default_history.ftu_fixed_bonus or 0,
+            'rtu_fixed_bonus': default_history.rtu_fixed_bonus or 0,
+            'rate_type': default_history.rate_type
+        }
+    
+    # No history found - use current PartnerPayout or advertiser defaults
+    if partner_id:
+        try:
+            payout = PartnerPayout.objects.get(advertiser=advertiser, partner_id=partner_id)
+            return {
+                'ftu_payout': payout.ftu_payout,
+                'rtu_payout': payout.rtu_payout,
+                'ftu_fixed_bonus': payout.ftu_fixed_bonus or 0,
+                'rtu_fixed_bonus': payout.rtu_fixed_bonus or 0,
+                'rate_type': payout.rate_type
+            }
+        except PartnerPayout.DoesNotExist:
+            pass
+    
+    # Try default PartnerPayout
+    try:
+        default_payout = PartnerPayout.objects.get(advertiser=advertiser, partner__isnull=True)
+        return {
+            'ftu_payout': default_payout.ftu_payout,
+            'rtu_payout': default_payout.rtu_payout,
+            'ftu_fixed_bonus': default_payout.ftu_fixed_bonus or 0,
+            'rtu_fixed_bonus': default_payout.rtu_fixed_bonus or 0,
+            'rate_type': default_payout.rate_type
+        }
+    except PartnerPayout.DoesNotExist:
+        pass
+    
+    # Last resort: advertiser defaults
+    return {
+        'ftu_payout': getattr(advertiser, 'default_ftu_payout', 0) or 0,
+        'rtu_payout': getattr(advertiser, 'default_rtu_payout', 0) or 0,
+        'ftu_fixed_bonus': getattr(advertiser, 'default_ftu_fixed_bonus', 0) or 0,
+        'rtu_fixed_bonus': getattr(advertiser, 'default_rtu_fixed_bonus', 0) or 0,
+        'rate_type': getattr(advertiser, 'default_payout_rate_type', 'percent') or 'percent'
+    }
+
+
+def get_revenue_rules_at_date(advertiser, transaction_date):
+    """
+    Resolve revenue rules for advertiser at a transaction date.
+    Returns dict with revenue configuration.
+    
+    Logic:
+    1. Look at RevenueRuleHistory for rules effective on or before transaction_date
+    2. Return the most recent rule before/at transaction_date
+    3. If no history found, return current advertiser revenue rules
+    
+    Returns dict: {
+        'rev_rate_type': str,
+        'rev_ftu_rate': Decimal,
+        'rev_rtu_rate': Decimal,
+        'rev_ftu_fixed_bonus': Decimal,
+        'rev_rtu_fixed_bonus': Decimal,
+        'currency': str,
+        'exchange_rate': Decimal
+    }
+    """
+    # Convert transaction_date to datetime for comparison
+    if isinstance(transaction_date, date) and not isinstance(transaction_date, datetime):
+        transaction_datetime = datetime.combine(transaction_date, datetime.min.time())
+        transaction_datetime = make_aware(transaction_datetime)
+    else:
+        transaction_datetime = transaction_date if transaction_date.tzinfo else make_aware(transaction_date)
+    
+    # Find most recent revenue rule before or at transaction date
+    history = RevenueRuleHistory.objects.filter(
+        advertiser=advertiser,
+        effective_date__lte=transaction_datetime
+    ).order_by('-effective_date').first()
+    
+    if history:
+        return {
+            'rev_rate_type': history.rev_rate_type,
+            'rev_ftu_rate': history.rev_ftu_rate,
+            'rev_rtu_rate': history.rev_rtu_rate,
+            'rev_ftu_fixed_bonus': history.rev_ftu_fixed_bonus or 0,
+            'rev_rtu_fixed_bonus': history.rev_rtu_fixed_bonus or 0,
+            'currency': history.currency,
+            'exchange_rate': history.exchange_rate
+        }
+    
+    # No history found - use current advertiser revenue rules
+    return {
+        'rev_rate_type': getattr(advertiser, 'rev_rate_type', 'percent') or 'percent',
+        'rev_ftu_rate': getattr(advertiser, 'rev_ftu_rate', 0) or 0,
+        'rev_rtu_rate': getattr(advertiser, 'rev_rtu_rate', 0) or 0,
+        'rev_ftu_fixed_bonus': getattr(advertiser, 'rev_ftu_fixed_bonus', 0) or 0,
+        'rev_rtu_fixed_bonus': getattr(advertiser, 'rev_rtu_fixed_bonus', 0) or 0,
+        'currency': getattr(advertiser, 'currency', 'AED') or 'AED',
+        'exchange_rate': getattr(advertiser, 'exchange_rate', None)
+    }
 
 
 # --------------------------------------------
@@ -93,58 +284,188 @@ def enrich_df(df: pd.DataFrame) -> pd.DataFrame:
 
     df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
 
-    coupons = pd.DataFrame(list(Coupon.objects.values(
-        "code",
-        "advertiser__id",
-        "advertiser__name",
-        "partner__id",
-        "partner__name",
-        "partner__partner_type",
-    )))
-    if coupons.empty:
-        return df
+    # ✅ NEW: Use date-based coupon ownership resolution
+    # For each row, resolve which partner owned the coupon at the transaction date
+    if "created_at" in df.columns:
+        print("🔍 Resolving coupon ownership by transaction date...")
+        
+        for idx, row in df.iterrows():
+            coupon_code = row.get("coupon")
+            transaction_date = row.get("created_at")
+            
+            if pd.notna(coupon_code) and pd.notna(transaction_date):
+                # Get advertiser first
+                try:
+                    coupon = Coupon.objects.get(code__iexact=coupon_code)
+                    advertiser = coupon.advertiser
+                    
+                    # Resolve partner at this date (use original coupon code from DB)
+                    partner_id = get_coupon_owner_at_date(coupon.code, transaction_date, advertiser)
+                    
+                    if partner_id:
+                        partner = Partner.objects.get(id=partner_id)
+                        df.at[idx, "partner_id"] = partner_id
+                        df.at[idx, "partner_name"] = partner.name
+                        df.at[idx, "partner_type"] = partner.partner_type
+                        df.at[idx, "advertiser_id"] = advertiser.id
+                        df.at[idx, "advertiser_name"] = advertiser.name
+                except Coupon.DoesNotExist:
+                    continue
+    else:
+        # ⚠️ FALLBACK: If no date column, use current coupon assignment (old behavior)
+        print("⚠️  No 'created_at' column - using current coupon assignments")
+        coupons = pd.DataFrame(list(Coupon.objects.values(
+            "code",
+            "advertiser__id",
+            "advertiser__name",
+            "partner__id",
+            "partner__name",
+            "partner__partner_type",
+        )))
+        if not coupons.empty:
+            coupons = coupons.rename(columns={
+                "code": "coupon",
+                "advertiser__id": "adv_id",
+                "advertiser__name": "advertiser_name_coupon",
+                "partner__id": "coupon_partner_id",
+                "partner__name": "coupon_partner_name",
+                "partner__partner_type": "coupon_partner_type",
+            })
+            coupons["coupon"] = coupons["coupon"].astype(str).str.upper()
 
-    coupons = coupons.rename(columns={
-        "code": "coupon",
-        "advertiser__id": "adv_id",
-        "advertiser__name": "advertiser_name_coupon",
-        "partner__id": "coupon_partner_id",
-        "partner__name": "coupon_partner_name",
-        "partner__partner_type": "coupon_partner_type",
-    })
-    coupons["coupon"] = coupons["coupon"].astype(str).str.upper()
+            # Merge without clobbering left columns
+            df = df.merge(coupons, on="coupon", how="left")
 
-    # Merge without clobbering left columns
-    df = df.merge(coupons, on="coupon", how="left")
+            # Combine/cast
+            df["partner_id"] = pd.to_numeric(df["partner_id"], errors="coerce").astype("Int64")
+            df["coupon_partner_id"] = pd.to_numeric(df["coupon_partner_id"], errors="coerce").astype("Int64")
 
-    # Combine/cast
+            df["partner_id"]   = df["coupon_partner_id"].combine_first(df["partner_id"])
+            df["partner_name"] = df["coupon_partner_name"].combine_first(df["partner_name"])
+            df["partner_type"] = df["coupon_partner_type"].combine_first(df["partner_type"])
+            
+            # Cleanup
+            df.drop(columns=[
+                "coupon_partner_id","coupon_partner_name","coupon_partner_type",
+                "adv_id","advertiser_name_coupon",
+            ], inplace=True, errors="ignore")
+
+    # Ensure partner_id is properly typed
     df["partner_id"] = pd.to_numeric(df["partner_id"], errors="coerce").astype("Int64")
-    df["coupon_partner_id"] = pd.to_numeric(df["coupon_partner_id"], errors="coerce").astype("Int64")
-
-    df["partner_id"]   = df["coupon_partner_id"].combine_first(df["partner_id"])
-    df["partner_name"] = df["coupon_partner_name"].combine_first(df["partner_name"])
-    df["partner_type"] = df["coupon_partner_type"].combine_first(df["partner_type"])
-
-    # Advertiser ALWAYS from coupon
-    df["advertiser_id"]   = df["adv_id"]
-    df["advertiser_name"] = df["advertiser_name_coupon"].combine_first(df["advertiser_name"])
 
     # Defaults
     df["partner_name"] = df["partner_name"].fillna("(No Partner)")
     df["partner_type"] = df["partner_type"].fillna("AFF")
     df["advertiser_name"] = df["advertiser_name"].fillna("(Unknown Advertiser)")
 
-    # Cleanup helper cols
-    df.drop(columns=[
-        "coupon_partner_id","coupon_partner_name","coupon_partner_type",
-        "adv_id","advertiser_name_coupon",
-    ], inplace=True, errors="ignore")
-    print
+    print(f"✅ Enriched {len(df)} rows with partner/advertiser data")
     return df
 
 # --------------------------------------------
 # PAYOUT RESOLUTION (FTU/RTU, percent/fixed)
 # --------------------------------------------
+
+def resolve_payouts_with_history(advertiser: Advertiser, df: pd.DataFrame) -> pd.DataFrame:
+    """
+    NEW: Date-based payout resolution using PayoutRuleHistory and RevenueRuleHistory.
+    
+    For each row with a 'created_at' timestamp:
+    1. Resolve payout rules active at that date
+    2. Resolve revenue rules active at that date
+    3. Calculate our_rev, payout, profit using historical rules
+    
+    Falls back to current rules if no created_at column exists.
+    """
+    
+    # Check if we have transaction timestamps
+    has_timestamps = "created_at" in df.columns or "date" in df.columns
+    timestamp_col = "created_at" if "created_at" in df.columns else "date"
+    
+    if not has_timestamps:
+        # No timestamps - use current rules (fallback to existing function)
+        return resolve_payouts(advertiser, df)
+    
+    # Ensure timestamp column is datetime
+    df[timestamp_col] = pd.to_datetime(df[timestamp_col], errors="coerce")
+    
+    # Initialize payout columns
+    df["ftu_rate"] = 0.0
+    df["rtu_rate"] = 0.0
+    df["ftu_fixed_bonus"] = 0.0
+    df["rtu_fixed_bonus"] = 0.0
+    df["rate_type"] = "percent"
+    df["our_rev"] = 0.0
+    df["payout"] = 0.0
+    df["profit"] = 0.0
+    
+    print(f"⏳ Resolving payouts with historical rules for {len(df)} rows...")
+    
+    # Iterate through each row and resolve rules by date
+    for idx, row in df.iterrows():
+        transaction_date = row[timestamp_col]
+        if pd.isna(transaction_date):
+            continue
+        
+        partner_id = row.get("partner_id")
+        user_type = str(row.get("user_type", "RTU")).upper()
+        sales = float(row.get("sales", 0))
+        orders = int(row.get("orders", 1))
+        
+        # 1️⃣ Get payout rules at this date
+        payout_rules = get_payout_rules_at_date(advertiser, partner_id, transaction_date)
+        
+        # 2️⃣ Get revenue rules at this date
+        revenue_rules = get_revenue_rules_at_date(advertiser, transaction_date)
+        
+        # 3️⃣ Set payout rates
+        df.at[idx, "ftu_rate"] = float(payout_rules["ftu_payout"] or 0)
+        df.at[idx, "rtu_rate"] = float(payout_rules["rtu_payout"] or 0)
+        df.at[idx, "ftu_fixed_bonus"] = float(payout_rules["ftu_fixed_bonus"] or 0)
+        df.at[idx, "rtu_fixed_bonus"] = float(payout_rules["rtu_fixed_bonus"] or 0)
+        df.at[idx, "rate_type"] = payout_rules["rate_type"]
+        
+        # 4️⃣ Calculate our_rev (what advertiser pays us)
+        our_rev = 0.0
+        if revenue_rules["rev_rate_type"] == "percent":
+            if user_type == "FTU":
+                our_rev = sales * (float(revenue_rules["rev_ftu_rate"] or 0) / 100.0)
+                if revenue_rules["rev_ftu_fixed_bonus"]:
+                    our_rev += orders * float(revenue_rules["rev_ftu_fixed_bonus"])
+            else:  # RTU
+                our_rev = sales * (float(revenue_rules["rev_rtu_rate"] or 0) / 100.0)
+                if revenue_rules["rev_rtu_fixed_bonus"]:
+                    our_rev += orders * float(revenue_rules["rev_rtu_fixed_bonus"])
+        else:  # fixed rate
+            if user_type == "FTU":
+                our_rev = orders * float(revenue_rules["rev_ftu_rate"] or 0)
+            else:
+                our_rev = orders * float(revenue_rules["rev_rtu_rate"] or 0)
+        
+        df.at[idx, "our_rev"] = our_rev
+        
+        # 5️⃣ Calculate payout (what we pay partner)
+        payout = 0.0
+        if payout_rules["rate_type"] == "percent":
+            if user_type == "FTU":
+                payout = our_rev * (float(payout_rules["ftu_payout"] or 0) / 100.0)
+                payout += orders * float(payout_rules["ftu_fixed_bonus"] or 0)
+            else:  # RTU
+                payout = our_rev * (float(payout_rules["rtu_payout"] or 0) / 100.0)
+                payout += orders * float(payout_rules["rtu_fixed_bonus"] or 0)
+        else:  # fixed
+            if user_type == "FTU":
+                payout = orders * float(payout_rules["ftu_payout"] or 0)
+            else:
+                payout = orders * float(payout_rules["rtu_payout"] or 0)
+        
+        df.at[idx, "payout"] = payout
+        
+        # 6️⃣ Calculate profit
+        df.at[idx, "profit"] = our_rev - payout
+    
+    print(f"✅ Resolved {len(df)} rows with historical payout/revenue rules")
+    return df
+
 
 def resolve_payouts(advertiser: Advertiser, df: pd.DataFrame) -> pd.DataFrame:
     """Attach correct payout logic per row (FTU & RTU), supporting:

@@ -10,8 +10,11 @@ from .models import (
     RawAdvertiserRecord,
     SpringRoseTransaction,
     NoonNamshiTransaction,
+    PayoutRuleHistory,
+    RevenueRuleHistory,
 )
 from .models import StyliTransaction
+from django.utils import timezone
 
 @admin.register(Advertiser)
 class AdvertiserAdmin(ImportExportModelAdmin):
@@ -19,6 +22,25 @@ class AdvertiserAdmin(ImportExportModelAdmin):
     search_fields = ("name", "attribution")
     list_per_page = 50
     ordering = ("name",)
+    
+    def save_model(self, request, obj, form, change):
+        """Override save to create RevenueRuleHistory record when revenue fields change."""
+        super().save_model(request, obj, form, change)
+        
+        # Create history record when advertiser revenue rules are created/updated
+        RevenueRuleHistory.objects.create(
+            advertiser=obj,
+            effective_date=timezone.now(),
+            rev_rate_type=obj.rev_rate_type,
+            rev_ftu_rate=obj.rev_ftu_rate,
+            rev_rtu_rate=obj.rev_rtu_rate,
+            rev_ftu_fixed_bonus=obj.rev_ftu_fixed_bonus,
+            rev_rtu_fixed_bonus=obj.rev_rtu_fixed_bonus,
+            currency=obj.currency,
+            exchange_rate=obj.exchange_rate,
+            assigned_by=request.user,
+            notes=f"Updated via admin by {request.user.username}"
+        )
 
 @admin.register(CompanyRole)
 class CompanyRoleAdmin(ImportExportModelAdmin):
@@ -255,6 +277,24 @@ class PartnerPayoutAdmin(ImportExportModelAdmin):
             "fields": ("currency", "exchange_rate", "rate_type")
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        """Override save to create PayoutRuleHistory record."""
+        super().save_model(request, obj, form, change)
+        
+        # Create history record when payout is created/updated
+        PayoutRuleHistory.objects.create(
+            advertiser=obj.advertiser,
+            partner=obj.partner,
+            effective_date=timezone.now(),
+            ftu_payout=obj.ftu_payout,
+            rtu_payout=obj.rtu_payout,
+            ftu_fixed_bonus=obj.ftu_fixed_bonus,
+            rtu_fixed_bonus=obj.rtu_fixed_bonus,
+            rate_type=obj.rate_type,
+            assigned_by=request.user,
+            notes=f"Updated via admin by {request.user.username}"
+        )
 
 @admin.register(Coupon)
 class CouponAdmin(ImportExportModelAdmin):
@@ -275,6 +315,26 @@ class CouponAssignmentHistoryAdmin(ImportExportModelAdmin):
     ordering = ("-assigned_date",)
     date_hierarchy = "assigned_date"
     readonly_fields = ("assigned_date",)
+
+@admin.register(PayoutRuleHistory)
+class PayoutRuleHistoryAdmin(ImportExportModelAdmin):
+    list_display = ("advertiser", "partner", "effective_date", "ftu_payout", "rtu_payout", "rate_type", "assigned_by")
+    list_filter = ("advertiser", "partner", "rate_type", "effective_date")
+    search_fields = ("advertiser__name", "partner__name", "notes")
+    list_per_page = 50
+    ordering = ("-effective_date",)
+    date_hierarchy = "effective_date"
+    readonly_fields = ("effective_date", "created_at")
+
+@admin.register(RevenueRuleHistory)
+class RevenueRuleHistoryAdmin(ImportExportModelAdmin):
+    list_display = ("advertiser", "effective_date", "rev_ftu_rate", "rev_rtu_rate", "rev_rate_type", "currency", "assigned_by")
+    list_filter = ("advertiser", "rev_rate_type", "currency", "effective_date")
+    search_fields = ("advertiser__name", "notes")
+    list_per_page = 50
+    ordering = ("-effective_date",)
+    date_hierarchy = "effective_date"
+    readonly_fields = ("effective_date", "created_at")
 
 @admin.register(RawAdvertiserRecord)
 class RawAdvertiserRecordAdmin(ImportExportModelAdmin):

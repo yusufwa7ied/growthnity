@@ -436,16 +436,20 @@ def performance_table_view(request):
         )
 
         # Build lookup dicts for MB spend allocation
-        # We need to split spend proportionally when there are multiple rows per day/advertiser/partner
-        mb_spend_lookup = {}  # {(date, advertiser_id, partner_id): total_spend}
-        mb_revenue_totals = {}  # {(date, advertiser_id, partner_id): total_revenue}
+        # Match by (date, advertiser, partner, coupon) and sum across all platforms
+        mb_spend_lookup = {}  # {(date, advertiser_id, partner_id, coupon_code): total_spend}
+        mb_revenue_totals = {}  # {(date, advertiser_id, partner_id, coupon_code): total_revenue}
         
         # If we have any MB records, fetch their spend data
-        mb_keys = [(r["date"], r["advertiser_id"], r["partner_id"]) 
-                   for r in data if r["partner_type_value"] == "MB"]
+        mb_records = [r for r in data if r["partner_type_value"] == "MB"]
         
-        if mb_keys:
+        if mb_records:
             from django.db.models import Q
+            
+            # Get unique combinations for MB records
+            mb_keys = set()
+            for r in mb_records:
+                mb_keys.add((r["date"], r["advertiser_id"], r["partner_id"]))
             
             # Get MB spend records
             spend_conditions = Q()
@@ -453,33 +457,35 @@ def performance_table_view(request):
                 spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
             
             if spend_conditions:
-                spends = MediaBuyerDailySpend.objects.filter(spend_conditions).values(
-                    "date", "advertiser_id", "partner_id", "amount_spent"
-                )
+                # Get spend grouped by date/advertiser/partner/coupon (sum across platforms)
+                spends = MediaBuyerDailySpend.objects.filter(spend_conditions).select_related('coupon')
+                
                 for s in spends:
-                    key = (s["date"], s["advertiser_id"], s["partner_id"])
-                    mb_spend_lookup[key] = float(s["amount_spent"] or 0)
+                    coupon_code = s.coupon.code if s.coupon else None
+                    key = (s.date, s.advertiser_id, s.partner_id, coupon_code)
+                    mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
             
-            # Calculate total revenue per (date, advertiser, partner) for MB records
-            for r in data:
-                if r["partner_type_value"] == "MB":
-                    key = (r["date"], r["advertiser_id"], r["partner_id"])
-                    revenue = float(r["total_revenue"] or 0)
-                    mb_revenue_totals[key] = mb_revenue_totals.get(key, 0) + revenue
+            # Calculate total revenue per (date, advertiser, partner, coupon) for MB records
+            for r in mb_records:
+                key = (r["date"], r["advertiser_id"], r["partner_id"], r["coupon_code"])
+                revenue = float(r["total_revenue"] or 0)
+                mb_revenue_totals[key] = mb_revenue_totals.get(key, 0) + revenue
 
         result = []
         for r in data:
             revenue = float(r["total_revenue"] or 0)
             original_payout = float(r["total_payout"] or 0)
             
-            # For MB partners, payout = MB spend (cost) allocated proportionally by revenue
+            # For MB partners, payout = MB spend (cost) matched by coupon
             # For AFF/INF partners, payout = their actual payout
             if r["partner_type_value"] == "MB":
-                key = (r["date"], r["advertiser_id"], r["partner_id"])
+                # Match spend by (date, advertiser, partner, coupon)
+                key = (r["date"], r["advertiser_id"], r["partner_id"], r["coupon_code"])
                 total_spend = mb_spend_lookup.get(key, 0)
                 total_revenue_for_key = mb_revenue_totals.get(key, 1)  # Avoid division by zero
                 
                 # Allocate spend proportionally based on this row's revenue
+                # (in case there are multiple orders with same coupon on same day)
                 if total_revenue_for_key > 0:
                     payout = total_spend * (revenue / total_revenue_for_key)
                 else:
@@ -523,13 +529,13 @@ def performance_table_view(request):
         "total_payout",
     )
 
-    # Get spend data for media buyers (by date, advertiser, partner)
+    # Get spend data for media buyers (by date, advertiser, partner, coupon)
     is_media_buyer = company_user and company_user.department == "media_buying"
     spend_dict = {}
     daily_revenue_dict = {}
     
     if is_media_buyer:
-        # Get spend data - filter by the exact date/advertiser/partner combinations in the filtered data
+        # Get spend data - filter by the exact date/advertiser/partner combinations
         spend_keys = qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
         
         from django.db.models import Q
@@ -538,15 +544,16 @@ def performance_table_view(request):
             spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
         
         if spend_conditions:
-            spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions)
-            # Build lookup dict: (date, advertiser_id, partner_id) -> spend
+            spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions).select_related('coupon')
+            # Build lookup dict: (date, advertiser_id, partner_id, coupon_code) -> total spend
             for spend in spend_qs:
-                key = (str(spend.date), spend.advertiser_id, spend.partner_id)
-                spend_dict[key] = float(spend.amount_spent or 0)
+                coupon_code = spend.coupon.code if spend.coupon else None
+                key = (str(spend.date), spend.advertiser_id, spend.partner_id, coupon_code)
+                spend_dict[key] = spend_dict.get(key, 0) + float(spend.amount_spent or 0)
         
-        # Calculate total revenue per day/advertiser/partner for proportional distribution
+        # Calculate total revenue per day/advertiser/partner/coupon for proportional distribution
         for r in data:
-            key = (str(r["date"]), r["advertiser_id"], r["partner_id"])
+            key = (str(r["date"]), r["advertiser_id"], r["partner_id"], r["coupon_code"])
             revenue = float(r["total_revenue"] or 0)
             if key not in daily_revenue_dict:
                 daily_revenue_dict[key] = 0
@@ -557,9 +564,9 @@ def performance_table_view(request):
         company_revenue = float(r["total_revenue"] or 0)
         partner_payout = float(r["total_payout"] or 0)
         
-        # For media buyers, show company revenue and their spend
+        # For media buyers, show company revenue and their spend matched by coupon
         if is_media_buyer:
-            key = (str(r["date"]), r["advertiser_id"], r["partner_id"])
+            key = (str(r["date"]), r["advertiser_id"], r["partner_id"], r["coupon_code"])
             daily_spend = spend_dict.get(key, 0)
             daily_revenue = daily_revenue_dict.get(key, 0)
             
@@ -625,8 +632,26 @@ def coupons_view(request):
                     advertiser_ids.update(a.advertisers.values_list("id", flat=True))
                     partner_ids.update(a.partners.values_list("id", flat=True))
                 
-                # Filter coupons to only those assigned to user's advertisers
-                if advertiser_ids:
+                # Filter coupons by both advertiser AND partner assignments
+                if advertiser_ids and partner_ids:
+                    # Team member sees coupons that:
+                    # 1. Match their advertiser assignment AND
+                    # 2. Are currently assigned to them OR were assigned to them in history
+                    from django.db.models import Q
+                    
+                    # Get coupon IDs from history where this partner was ever assigned
+                    historical_coupon_ids = CouponAssignmentHistory.objects.filter(
+                        partner_id__in=list(partner_ids)
+                    ).values_list('coupon_id', flat=True).distinct()
+                    
+                    coupons = coupons.filter(
+                        advertiser_id__in=list(advertiser_ids)
+                    ).filter(
+                        Q(partner_id__in=list(partner_ids)) |  # Currently assigned
+                        Q(id__in=list(historical_coupon_ids))   # Ever assigned in history
+                    )
+                elif advertiser_ids:
+                    # Has advertisers but no partners - filter by advertiser only
                     coupons = coupons.filter(advertiser_id__in=list(advertiser_ids))
                 else:
                     # If no advertiser assignments, return empty list
@@ -636,6 +661,7 @@ def coupons_view(request):
         data = []
         for c in coupons:
             data.append({
+                "id": c.id,
                 "code": c.code,
                 "advertiser": c.advertiser.name,
                 "advertiser_id": c.advertiser.id,  # Add for filtering
@@ -786,6 +812,35 @@ def coupon_detail_view(request, code):
             "info": f"No changes made to coupon {coupon.code}."
         }, status=200)
 
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def coupon_history_view(request, code):
+    """
+    Get assignment history for a specific coupon.
+    Returns list of partner assignments with timestamps.
+    """
+    try:
+        coupon = Coupon.objects.get(code=code)
+    except Coupon.DoesNotExist:
+        return Response({"error": f"Coupon {code} not found."}, status=404)
+    
+    history = CouponAssignmentHistory.objects.filter(
+        coupon=coupon
+    ).select_related('partner', 'assigned_by').order_by('-assigned_date')
+    
+    data = []
+    for h in history:
+        data.append({
+            "partner": h.partner.name,
+            "partner_type": h.partner.partner_type,
+            "assigned_date": h.assigned_date.isoformat(),
+            "assigned_by": h.assigned_by.username if h.assigned_by else None,
+            "discount_percent": float(h.discount_percent) if h.discount_percent else None,
+            "notes": h.notes or None,
+        })
+    
+    return Response(data)
 
 
 @api_view(["GET"])

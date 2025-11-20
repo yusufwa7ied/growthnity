@@ -470,6 +470,7 @@ class NoonNamshiTransaction(models.Model):
 class PartnerizeConversion(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
+    # Original fields
     conversion_id = models.CharField(max_length=100, unique=True)
     campaign_title = models.CharField(max_length=255, null=True, blank=True)
     conversion_time = models.DateTimeField()
@@ -482,31 +483,73 @@ class PartnerizeConversion(models.Model):
     voucher = models.CharField(max_length=100, null=True, blank=True)
     first_time_user = models.BooleanField(null=True, blank=True)
 
+    # Pipeline enriched fields (same as other transaction models)
+    partner_name = models.CharField(max_length=150, null=True, blank=True)
+    partner_type = models.CharField(max_length=20, null=True, blank=True)
+    advertiser_name = models.CharField(max_length=150, null=True, blank=True)
+    currency = models.CharField(max_length=10, null=True, blank=True)
+    rate_type = models.CharField(max_length=20, null=True, blank=True)
+    
+    # Money fields
+    sales = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    commission = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    our_rev = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    
+    # Order tracking
+    ftu_orders = models.IntegerField(default=0)
+    rtu_orders = models.IntegerField(default=0)
+    orders = models.IntegerField(default=0)
+    
+    # Rates & payouts
+    ftu_rate = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    rtu_rate = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    payout = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    profit = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.conversion_id} | {self.campaign_title}"
     
 class MediaBuyerDailySpend(models.Model):
+    PLATFORM_CHOICES = [
+        ("Meta", "Meta (Facebook/Instagram)"),
+        ("Snapchat", "Snapchat"),
+        ("TikTok", "TikTok"),
+        ("Google", "Google Ads"),
+        ("Twitter", "Twitter/X"),
+        ("LinkedIn", "LinkedIn"),
+        ("YouTube", "YouTube"),
+        ("Other", "Other"),
+    ]
+    
     date = models.DateField()
     advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE, related_name="daily_spends")
     partner = models.ForeignKey("Partner", on_delete=models.CASCADE, related_name="daily_spends", null=True, blank=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, related_name="daily_spends", null=True, blank=True)
+    platform = models.CharField(max_length=50, choices=PLATFORM_CHOICES, default="Meta")
     amount_spent = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=10, blank=True, null=True)
 
     class Meta:
-        unique_together = ("date", "advertiser", "partner")  # Update uniqueness constraint
+        unique_together = ("date", "advertiser", "partner", "coupon", "platform")
         verbose_name = "Media Buyer Daily Spend"
 
     def __str__(self):
-        return f"{self.partner.name} → {self.advertiser.name} on {self.date}: ${self.amount_spent}" # type: ignore
+        coupon_str = f" | {self.coupon.code}" if self.coupon else ""
+        return f"{self.partner.name} → {self.advertiser.name} on {self.date} | {self.platform}{coupon_str}: ${self.amount_spent}" # type: ignore
         
 class Coupon(models.Model):
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=50)
     advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE, related_name="coupons")
     partner = models.ForeignKey("Partner", on_delete=models.CASCADE, related_name="coupons", null=True, blank=True)
     geo = models.CharField(max_length=10, null=True, blank=True)
     discount_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        unique_together = [['code', 'advertiser']]
 
     def __str__(self):
         advertiser_name = self.advertiser.name if self.advertiser else "(No Advertiser)"
@@ -594,5 +637,75 @@ class CouponAssignmentHistory(models.Model):
 
     def __str__(self):
         return f"{self.coupon.code} → {self.partner.name} on {self.assigned_date}"
+
+
+class PayoutRuleHistory(models.Model):
+    """
+    Tracks all payout rule changes over time.
+    When PartnerPayout is created/updated, a history record is saved.
+    This allows correct payout calculation based on transaction date.
+    """
+    advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE, related_name="payout_history")
+    partner = models.ForeignKey("Partner", on_delete=models.CASCADE, null=True, blank=True, related_name="payout_history")
+    
+    # When this rule became effective
+    effective_date = models.DateTimeField()
+    
+    # Payout configuration
+    ftu_payout = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    rtu_payout = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    ftu_fixed_bonus = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    rtu_fixed_bonus = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    rate_type = models.CharField(max_length=10, choices=RATE_TYPE_CHOICES, default="percent")
+    
+    # Metadata
+    assigned_by = models.ForeignKey("auth.User", on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-effective_date"]
+        verbose_name = "Payout Rule History"
+        verbose_name_plural = "Payout Rule History"
+
+    def __str__(self):
+        partner_name = self.partner.name if self.partner else "Default"
+        return f"{self.advertiser.name} → {partner_name} | FTU: {self.ftu_payout}% / RTU: {self.rtu_payout}% (from {self.effective_date.date()})"
+
+
+class RevenueRuleHistory(models.Model):
+    """
+    Tracks all advertiser revenue rule changes over time.
+    When Advertiser revenue fields are updated, a history record is saved.
+    This ensures correct revenue calculation based on transaction date.
+    """
+    advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE, related_name="revenue_history")
+    
+    # When this rule became effective
+    effective_date = models.DateTimeField()
+    
+    # Revenue configuration
+    rev_rate_type = models.CharField(max_length=10, choices=RATE_TYPE_CHOICES, default="percent")
+    rev_ftu_rate = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    rev_rtu_rate = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    rev_ftu_fixed_bonus = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    rev_rtu_fixed_bonus = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    
+    # Exchange rate at this time
+    currency = models.CharField(max_length=10, default="AED")
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    
+    # Metadata
+    assigned_by = models.ForeignKey("auth.User", on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-effective_date"]
+        verbose_name = "Revenue Rule History"
+        verbose_name_plural = "Revenue Rule History"
+
+    def __str__(self):
+        return f"{self.advertiser.name} | FTU: {self.rev_ftu_rate}% / RTU: {self.rev_rtu_rate}% (from {self.effective_date.date()})"
 
 
