@@ -3,12 +3,13 @@ import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, switchMap, tap, throwError } from 'rxjs';
 import { DashboardContext, LoginCredentials, LoginResponse, User } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_BASE_URL = 'http://localhost:8000/api'; // Update with your Django backend URL
+  private readonly API_BASE_URL = environment.apiUrl;
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'logged_user';
 
