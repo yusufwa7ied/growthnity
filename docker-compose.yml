@@ -37,8 +37,8 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-perfpass123}
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,44.210.80.248,growthnity-app.com,www.growthnity-app.com}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://44.210.80.248,https://growthnity-app.com,https://www.growthnity-app.com}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,44.210.80.248,growthnity-app.com}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://44.210.80.248,https://growthnity-app.com}
     depends_on:
       - db
 
