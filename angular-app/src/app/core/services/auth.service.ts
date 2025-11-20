@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, switchMap, tap, throwError } from 'rxjs';
-import { DashboardContext, LoginCredentials, LoginResponse, User } from '../models/user.model';
 import { environment } from '../../../environments/environment';
+import { DashboardContext, LoginCredentials, LoginResponse, User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
