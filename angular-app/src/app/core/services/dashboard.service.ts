@@ -11,12 +11,13 @@ import {
   Partner,
   TableRow
 } from '../models/dashboard.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
-  private readonly API_BASE_URL = 'http://localhost:8000/api';
+  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
