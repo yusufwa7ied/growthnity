@@ -1,0 +1,89 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import {
+  Advertiser,
+  Coupon,
+  DashboardContext,
+  DashboardFilters,
+  GraphData,
+  KPIData,
+  Partner,
+  TableRow
+} from '../models/dashboard.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DashboardService {
+  private readonly API_BASE_URL = 'http://localhost:8000/api';
+
+  constructor(private http: HttpClient) { }
+
+  // Get dashboard context (role, permissions, assignments)
+  getDashboardContext(): Observable<DashboardContext> {
+    return this.http.get<DashboardContext>(`${this.API_BASE_URL}/dashboard/context/`);
+  }
+
+  // Get KPI summary data
+  getKPIs(filters: DashboardFilters): Observable<KPIData> {
+    let params = this.buildParams(filters);
+    return this.http.get<KPIData>(`${this.API_BASE_URL}/dashboard/kpis/`, { params });
+  }
+
+  // Get graph data
+  getGraphData(filters: DashboardFilters): Observable<GraphData> {
+    let params = this.buildParams(filters);
+    return this.http.get<GraphData>(`${this.API_BASE_URL}/dashboard/graph-data/`, { params });
+  }
+
+  // Get table data
+  getTableData(filters: DashboardFilters): Observable<TableRow[]> {
+    let params = this.buildParams(filters);
+    return this.http.get<TableRow[]>(`${this.API_BASE_URL}/dashboard/performance-table/`, { params });
+  }
+
+  // Get advertisers list
+  getAdvertisers(): Observable<Advertiser[]> {
+    return this.http.get<Advertiser[]>(`${this.API_BASE_URL}/advertisers/`);
+  }
+
+  // Get partners list
+  getPartners(): Observable<Partner[]> {
+    return this.http.get<Partner[]>(`${this.API_BASE_URL}/partners/`);
+  }
+
+  // Get coupons list
+  getCoupons(): Observable<Coupon[]> {
+    return this.http.get<Coupon[]>(`${this.API_BASE_URL}/coupons/`);
+  }
+
+  // Helper to build HTTP params from filters
+  private buildParams(filters: DashboardFilters): HttpParams {
+    let params = new HttpParams();
+
+    if (filters.partner_type) {
+      params = params.set('partner_type', filters.partner_type);
+    }
+    if (filters.advertiser_id) {
+      const advIds = Array.isArray(filters.advertiser_id) ? filters.advertiser_id : [filters.advertiser_id];
+      advIds.forEach(id => params = params.append('advertiser_id', id.toString()));
+    }
+    if (filters.partner_id) {
+      const partnerIds = Array.isArray(filters.partner_id) ? filters.partner_id : [filters.partner_id];
+      partnerIds.forEach(id => params = params.append('partner_id', id.toString()));
+    }
+    if (filters.coupon_code) {
+      const codes = Array.isArray(filters.coupon_code) ? filters.coupon_code : [filters.coupon_code];
+      codes.forEach(code => params = params.append('coupon_code', code));
+    }
+    if (filters.date_from) {
+      params = params.set('date_from', filters.date_from);
+    }
+    if (filters.date_to) {
+      params = params.set('date_to', filters.date_to);
+    }
+
+    return params;
+  }
+}

@@ -1,0 +1,377 @@
+<div class="coupons-wrapper">
+    <app-main-header [showSidebarButton]="false" [activeTab]="'coupons'">
+    </app-main-header>
+
+    <div class="coupons-page">
+        <!-- Page Header Section -->
+        <div class="page-header">
+            <div class="header-left">
+                <h2><i class="pi pi-ticket"></i> Coupon Management</h2>
+                <p class="subtitle">Create, assign, and track promotional codes across all campaigns</p>
+            </div>
+            <div class="header-actions">
+                <button pButton type="button" label="Manage Coupons" (click)="toggleNewCouponForm()"
+                    class="p-button-success"></button>
+            </div>
+        </div>
+
+        <!-- KPI Overview Cards -->
+        <div class="kpi-overview">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon">
+                    <i class="pi pi-hashtag"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Coupons</span>
+                    <span class="kpi-value">{{stats.totalCoupons}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-assigned">
+                <div class="kpi-icon">
+                    <i class="pi pi-check-circle"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Assigned</span>
+                    <span class="kpi-value">{{stats.assignedCoupons}}</span>
+                    <span class="kpi-subtext">{{stats.utilizationRate}}% utilization</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-unassigned">
+                <div class="kpi-icon">
+                    <i class="pi pi-exclamation-circle"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Unassigned</span>
+                    <span class="kpi-value">{{stats.unassignedCoupons}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-advertisers">
+                <div class="kpi-icon">
+                    <i class="pi pi-briefcase"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Advertisers</span>
+                    <span class="kpi-value">{{stats.activeAdvertisers}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-partners">
+                <div class="kpi-icon">
+                    <i class="pi pi-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Partners</span>
+                    <span class="kpi-value">{{stats.activePartners}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forms Section with Tabs -->
+        <p-card class="coupons-card form-card" *ngIf="showNewCouponForm || showAssignCouponForm">
+
+            <!-- Tab Navigation -->
+            <div class="form-tabs">
+                <button class="tab-button" [class.active]="showNewCouponForm"
+                    (click)="showNewCouponForm = true; showAssignCouponForm = false;">
+                    <i class="pi pi-plus-circle"></i> Create New Coupons
+                </button>
+                <button class="tab-button" [class.active]="showAssignCouponForm"
+                    (click)="showNewCouponForm = false; showAssignCouponForm = true;">
+                    <i class="pi pi-link"></i> Assign Coupons
+                </button>
+                <button class="tab-close" (click)="showNewCouponForm = false; showAssignCouponForm = false;"
+                    title="Close forms">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+
+            <div *ngIf="showNewCouponForm" class="form-section">
+                <div class="form-header">
+                    <h3><i class="pi pi-plus-circle"></i> Create New Coupons</h3>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field full-width">
+                        <label for="codes">Coupon Codes <span class="required">*</span></label>
+                        <textarea pTextarea rows="4" [(ngModel)]="newCouponCodes"
+                            placeholder="Enter codes separated by comma or new line&#10;Example: SUMMER20, FALL25, WINTER30"></textarea>
+                        <small class="field-hint">You can enter multiple codes at once</small>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Advertiser <span class="required">*</span></label>
+                        <p-select [options]="advertisers" [(ngModel)]="selectedAdvertiser"
+                            placeholder="Select advertiser" [style]="{'width':'100%'}" appendTo="body"></p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Partner (Optional)</label>
+                        <p-select [options]="partners" [(ngModel)]="selectedPartner" placeholder="Assign to partner"
+                            [style]="{'width':'100%'}" [showClear]="true" appendTo="body"></p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Discount Percentage</label>
+                        <p-inputNumber [(ngModel)]="discountPercent" mode="decimal" [min]="0" [max]="100" suffix="%"
+                            [style]="{'width':'100%'}"></p-inputNumber>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Geographic Region</label>
+                        <input pInputText type="text" [(ngModel)]="geo" placeholder="e.g., US, UK, EU"
+                            style="width: 100%;" />
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button pButton type="button" label="Cancel" (click)="toggleNewCouponForm()"
+                        class="p-button-secondary p-button-outlined"></button>
+                    <button pButton type="button" icon="pi pi-check" label="Create Coupons" (click)="submitCoupon()"
+                        class="p-button-success" [loading]="loading"></button>
+                </div>
+            </div>
+
+            <div *ngIf="showAssignCouponForm" class="form-section">
+                <div class="form-header">
+                    <h3><i class="pi pi-link"></i> Assign Coupons to Partner</h3>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field full-width">
+                        <label>Select Coupons <span class="required">*</span></label>
+                        <p-multiSelect [options]="couponOptions" [(ngModel)]="selectedExistingCoupons"
+                            defaultLabel="Choose one or more coupons" [style]="{'width':'100%'}" [filter]="true"
+                            appendTo="body"></p-multiSelect>
+                        <small class="field-hint">Select multiple coupons to assign in bulk</small>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Partner (Optional)</label>
+                        <p-select [options]="allPartners" [(ngModel)]="selectedPartner"
+                            placeholder="Select partner or leave unassigned" [style]="{'width':'100%'}"
+                            [showClear]="true" appendTo="body"></p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Update Discount (Optional)</label>
+                        <p-inputNumber [(ngModel)]="discountPercent" mode="decimal" [min]="0" [max]="100" suffix="%"
+                            placeholder="Leave blank to keep existing" [style]="{'width':'100%'}"></p-inputNumber>
+                    </div>
+
+                    <div class="form-field full-width">
+                        <label>Geographic Region (Optional)</label>
+                        <input pInputText type="text" [(ngModel)]="geo" placeholder="e.g., US, UK, EU"
+                            style="width: 100%;" />
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button pButton type="button" label="Cancel" (click)="toggleAssignCouponForm()"
+                        class="p-button-secondary p-button-outlined"></button>
+                    <button pButton type="button" icon="pi pi-link" label="Assign to Partner" (click)="submitCoupon()"
+                        class="p-button-info" [loading]="loading"></button>
+                </div>
+            </div>
+
+        </p-card>
+
+        <!-- Data Table Section -->
+        <p-card class="coupons-card table-card">
+            <div class="table-header">
+                <div class="table-title">
+                    <h3><i class="pi pi-list"></i> All Coupons</h3>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <div class="filter-item">
+                    <label>Quick Filter</label>
+                    <button pButton type="button" label="Unassigned Only" [class.active-filter]="showUnassignedOnly"
+                        (click)="toggleUnassignedFilter()" class="p-button-outlined quick-filter-btn"></button>
+                </div>
+                <div class="filter-item">
+                    <label>Advertiser</label>
+                    <div *ngIf="advertisers.length === 1" class="single-option-display">
+                        <span>{{ advertisers[0].label }}</span>
+                        <button class="single-option-clear"
+                            (click)="filterAdvertiser = null; recomputeFilterDropdowns(); applyFilters();"
+                            title="Clear filter">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                    <p-select *ngIf="advertisers.length !== 1" [options]="advertisers" [(ngModel)]="filterAdvertiser"
+                        placeholder="All Advertisers" (onChange)="onFilterAdvertiserChange()" [showClear]="true"
+                        appendTo="body"></p-select>
+                </div>
+                <div class="filter-item">
+                    <label>Partner</label>
+                    <div *ngIf="partners.length === 1" class="single-option-display">
+                        <span>{{ partners[0].label }}</span>
+                        <button class="single-option-clear"
+                            (click)="filterPartner = null; recomputeFilterDropdowns(); applyFilters();"
+                            title="Clear filter">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                    <p-select *ngIf="partners.length !== 1" [options]="partners" [(ngModel)]="filterPartner"
+                        placeholder="All Partners" (onChange)="onFilterPartnerChange()" [showClear]="true"
+                        appendTo="body"></p-select>
+                </div>
+                <div class="filter-item">
+                    <label>Coupon Code</label>
+                    <div *ngIf="couponOptions.length === 1" class="single-option-display">
+                        <span>{{ couponOptions[0].label }}</span>
+                        <button class="single-option-clear"
+                            (click)="filterCoupon = null; recomputeFilterDropdowns(); applyFilters();"
+                            title="Clear filter">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                    <p-select *ngIf="couponOptions.length !== 1" [options]="couponOptions" [(ngModel)]="filterCoupon"
+                        placeholder="Search Code" (onChange)="onFilterCouponChange()" [showClear]="true" [filter]="true"
+                        appendTo="body"></p-select>
+                </div>
+                <div class="filter-actions">
+                    <button pButton type="button" label="Clear All" (click)="clearFilters()"
+                        class="p-button-secondary p-button-outlined"></button>
+                </div>
+            </div>
+
+            <p-table [value]="filteredCoupons" [paginator]="true" [rows]="30" [rowsPerPageOptions]="[10,25,30,50,100]"
+                styleClass="p-datatable-sm p-datatable-striped coupons-table" [loading]="loading"
+                [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords} records"
+                [globalFilterFields]="['code','advertiser','partner','geo']">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 50px;"></th>
+                        <th class="col-code">Coupon Code</th>
+                        <th class="col-advertiser">Advertiser</th>
+                        <th class="col-partner">Partner Status</th>
+                        <th class="col-geo">Geographic Region</th>
+                        <th class="col-discount">Discount Rate</th>
+                        <th class="col-actions" style="width: 140px;">Actions</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row>
+                    <tr>
+                        <td>
+                            <button pButton type="button"
+                                [icon]="expandedRows[row.code] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                                class="p-button-text p-button-rounded p-button-sm" (click)="toggleHistory(row.code)"
+                                pTooltip="View assignment history"></button>
+                        </td>
+                        <td class="col-code">
+                            <span class="coupon-code">{{row.code}}</span>
+                        </td>
+                        <td class="col-advertiser">
+                            <span class="advertiser-name">{{row.advertiser}}</span>
+                        </td>
+                        <td class="col-partner">
+                            <span *ngIf="row.partner" class="partner-badge assigned">
+                                <i class="pi pi-check-circle"></i> {{row.partner}}
+                            </span>
+                            <span *ngIf="!row.partner" class="partner-badge unassigned">
+                                <i class="pi pi-minus-circle"></i> Unassigned
+                            </span>
+                        </td>
+                        <td class="col-geo">
+                            <span class="geo-tag" *ngIf="row.geo">
+                                <i class="pi pi-map-marker"></i> {{row.geo}}
+                            </span>
+                            <span *ngIf="!row.geo" class="text-muted">—</span>
+                        </td>
+                        <td class="col-discount">
+                            <span class="discount-value" *ngIf="row.discount">{{row.discount}}%</span>
+                            <span *ngIf="!row.discount" class="text-muted">—</span>
+                        </td>
+                        <td class="col-actions">
+                            <div class="action-buttons">
+                                <button pButton type="button" label="Edit"
+                                    class="p-button-sm p-button-outlined action-edit"
+                                    (click)="editCoupon(row)"></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Expandable History Row -->
+                    <tr *ngIf="expandedRows[row.code]">
+                        <td colspan="7" style="padding: 0; background: #f8f9fa;">
+                            <div style="padding: 1rem; border-top: 1px solid #dee2e6;">
+                                <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #495057;">
+                                    <i class="pi pi-history"></i> Assignment History
+                                </h4>
+
+                                <div *ngIf="loadingHistory[row.code]" style="text-align: center; padding: 1rem;">
+                                    <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
+                                </div>
+
+                                <div *ngIf="!loadingHistory[row.code] && couponHistory[row.code]?.length === 0"
+                                    style="text-align: center; padding: 1rem; color: #6c757d;">
+                                    <i class="pi pi-info-circle"></i> No assignment history found
+                                </div>
+
+                                <div
+                                    *ngIf="!loadingHistory[row.code] && couponHistory[row.code] && couponHistory[row.code].length > 0">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #fff; border-bottom: 2px solid #dee2e6;">
+                                                <th style="padding: 0.5rem; text-align: left; font-size: 0.85rem;">Date
+                                                    & Time</th>
+                                                <th style="padding: 0.5rem; text-align: left; font-size: 0.85rem;">
+                                                    Partner</th>
+                                                <th style="padding: 0.5rem; text-align: left; font-size: 0.85rem;">Type
+                                                </th>
+                                                <th style="padding: 0.5rem; text-align: left; font-size: 0.85rem;">
+                                                    Assigned By</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let h of couponHistory[row.code]; let i = index"
+                                                style="border-bottom: 1px solid #e9ecef;">
+                                                <td style="padding: 0.5rem; font-size: 0.85rem;">
+                                                    <i class="pi pi-calendar"
+                                                        style="margin-right: 0.3rem; color: #6c757d;"></i>
+                                                    {{ h.assigned_date | date:'MMM d, y HH:mm' }}
+                                                    <span *ngIf="i === 0"
+                                                        style="margin-left: 0.5rem; background: #28a745; color: white; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.75rem;">Current</span>
+                                                </td>
+                                                <td style="padding: 0.5rem; font-size: 0.85rem; font-weight: 500;">
+                                                    {{ h.partner }}
+                                                </td>
+                                                <td style="padding: 0.5rem; font-size: 0.85rem;">
+                                                    <span
+                                                        style="background: #e7f3ff; color: #0066cc; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.75rem;">
+                                                        {{ h.partner_type }}
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 0.5rem; font-size: 0.85rem; color: #6c757d;">
+                                                    <i class="pi pi-user"></i> {{ h.assigned_by || '—' }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="7" class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            <p>No coupons found</p>
+                            <button pButton type="button" label="Create First Coupon" (click)="toggleNewCouponForm()"
+                                class="p-button-sm"></button>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+
+        <!-- Footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

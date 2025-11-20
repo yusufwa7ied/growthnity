@@ -1,0 +1,84 @@
+<div class="login-page">
+  <!-- Animated Background -->
+  <div class="login-background">
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-content">
+      <div class="login-branding">
+        <img src="Grwothnity_Logo.png" alt="Growthnity" class="main-logo">
+        <p class="brand-tagline">Performance Marketing Dashboard</p>
+      </div>
+
+      <div class="login-card-wrapper">
+        <p-card class="login-card">
+          <ng-template pTemplate="header">
+            <div class="login-header">
+              <img src="Brandmark.png" alt="Growthnity" class="welcome-logo">
+              <h1 class="login-title">Welcome Back</h1>
+              <p class="login-subtitle">Sign in to your dashboard</p>
+            </div>
+          </ng-template>
+
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            @if (errorMessage()) {
+            <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-4"></p-message>
+            }
+
+            <div class="form-field">
+              <label for="username" class="form-label">Username</label>
+              <input pInputText id="username" formControlName="username" placeholder="Enter your username"
+                class="w-full" [class.ng-invalid]="usernameControl?.invalid && usernameControl?.touched" />
+              @if (usernameControl?.invalid && usernameControl?.touched) {
+              <small class="error-text">Username is required</small>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="password" class="form-label">Password</label>
+              <p-password id="password" formControlName="password" placeholder="Enter your password"
+                [toggleMask]="false" [feedback]="false" styleClass="w-full" inputStyleClass="w-full"
+                [class.ng-invalid]="passwordControl?.invalid && passwordControl?.touched"></p-password>
+              @if (passwordControl?.invalid && passwordControl?.touched) {
+              <small class="error-text">Password is required</small>
+              }
+            </div>
+
+            <div class="form-actions">
+              <p-button type="submit" label="Sign In" icon="pi pi-sign-in" [loading]="isLoading()"
+                [disabled]="isLoading()" styleClass="w-full" size="large"></p-button>
+            </div>
+
+            <div class="login-footer-links">
+              <a href="#" class="footer-link">Forgot Password?</a>
+              <span class="footer-divider">|</span>
+              <a href="#" class="footer-link">Need Help?</a>
+            </div>
+          </form>
+        </p-card>
+      </div>
+
+      <!-- Info Section -->
+      <div class="login-info">
+        <div class="info-item">
+          <i class="pi pi-shield"></i>
+          <span>Secure Login</span>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-clock"></i>
+          <span>24/7 Access</span>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-chart-line"></i>
+          <span>Real-time Analytics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>

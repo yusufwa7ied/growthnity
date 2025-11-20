@@ -1,0 +1,1018 @@
+import { animate, style, transition, trigger } from '@angular/animations';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+import { Card } from 'primeng/card';
+import { DatePicker } from 'primeng/datepicker';
+import { InputText } from 'primeng/inputtext';
+import { MultiSelect } from 'primeng/multiselect';
+import { Select } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { Advertiser, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
+import { User } from '../../core/models/user.model';
+import { AnalyticsService, PerformanceAnalytics } from '../../core/services/analytics.service';
+import { AuthService } from '../../core/services/auth.service';
+import { DashboardService } from '../../core/services/dashboard.service';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+
+@Component({
+    selector: 'app-dashboard',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        Card,
+        Select,
+        MultiSelect,
+        DatePicker,
+        FooterComponent,
+        InputText,
+        TableModule,
+        BaseChartDirective,
+        MainHeaderComponent
+    ],
+    templateUrl: './dashboard.component.html',
+    styleUrl: './dashboard.component.css',
+    animations: [
+        trigger('slideIn', [
+            transition(':enter', [
+                style({ transform: 'translateX(100%)', opacity: 0 }),
+                animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(0)', opacity: 1 }))
+            ]),
+            transition(':leave', [
+                animate('250ms cubic-bezier(0.4, 0, 1, 1)', style({ transform: 'translateX(100%)', opacity: 0 }))
+            ])
+        ])
+    ]
+})
+export class DashboardComponent implements OnInit {
+    user: User | null = null;
+    role: string = '';
+    isAdmin: boolean = false;
+    isMediaBuyer: boolean = false;
+
+    // Filters
+    filters: DashboardFilters = {};
+
+    // All available options (never filtered)
+    allAdvertisers: Advertiser[] = [];
+    allPartners: Partner[] = [];
+    allCoupons: Coupon[] = [];
+
+    // Filtered options (dynamically updated based on selections)
+    advertisers: Advertiser[] = [];
+    partners: Partner[] = [];
+    coupons: Coupon[] = [];
+
+    // Department options for admin filter
+    departmentOptions = [
+        { label: 'Media Buying', value: 'MB' },
+        { label: 'Affiliate', value: 'AFF' },
+        { label: 'Influencer', value: 'INF' }
+    ];
+
+    // Data
+    kpis: KPIData | null = null;
+    tableData: TableRow[] = [];
+    graphData: GraphData | null = null;
+
+    // Charts
+    lineChart: ChartConfiguration | null = null;
+    pieChart: ChartConfiguration | null = null;
+
+    // Analytics
+    analytics: PerformanceAnalytics | null = null;
+    showAnalytics: boolean = true;
+
+    // UI State
+    sidebarVisible: boolean = false;
+    loading: boolean = false;
+    dateRange: Date[] = [];
+    activeDatePreset: string = '';
+    tableSearchTerm: string = '';
+    filteredTableData: TableRow[] = [];
+    showFilterModal: boolean = false;
+
+    constructor(
+        private authService: AuthService,
+        private router: Router,
+        private dashboardService: DashboardService,
+        private analyticsService: AnalyticsService
+    ) { }
+
+    ngOnInit(): void {
+        this.user = this.authService.currentUser();
+        this.role = this.user?.role || '';
+        this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
+        this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    hasActiveFilters(): boolean {
+        return !!(this.filters.partner_type || this.filters.advertiser_id || this.filters.partner_id ||
+            this.filters.coupon_code || (this.filters.date_from && this.filters.date_to));
+    }
+
+    getAdvertiserNames(): string {
+        if (!this.filters.advertiser_id) return '';
+        const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+        const names = ids.map(id => this.allAdvertisers.find(a => a.id === id)?.name || 'Unknown');
+        return names.join(', ');
+    }
+
+    getPartnerNames(): string {
+        if (!this.filters.partner_id) return '';
+        const ids = Array.isArray(this.filters.partner_id) ? this.filters.partner_id : [this.filters.partner_id];
+        const names = ids.map(id => this.allPartners.find(p => p.id === id)?.name || 'Unknown');
+        return names.join(', ');
+    }
+
+    getCouponCodes(): string {
+        if (!this.filters.coupon_code) return '';
+        const codes = Array.isArray(this.filters.coupon_code) ? this.filters.coupon_code : [this.filters.coupon_code];
+        return codes.join(', ');
+    }
+
+    getDepartmentName(): string {
+        if (!this.filters.partner_type) return '';
+        const dept = this.departmentOptions.find(d => d.value === this.filters.partner_type);
+        return dept?.label || '';
+    }
+
+    removeFilter(filterType: string): void {
+        switch (filterType) {
+            case 'department':
+                this.filters.partner_type = undefined;
+                this.recomputeFilterDropdowns();
+                this.loadData();
+                this.loadAnalytics();
+                return;
+            case 'advertiser':
+                this.filters.advertiser_id = undefined;
+                break;
+            case 'partner':
+                this.filters.partner_id = undefined;
+                break;
+            case 'coupon':
+                this.filters.coupon_code = undefined;
+                break;
+            case 'date':
+                this.filters.date_from = undefined;
+                this.filters.date_to = undefined;
+                this.dateRange = [];
+                this.activeDatePreset = '';
+                // Date filter removal should NOT reload analytics
+                this.recomputeFilterDropdowns();
+                this.loadData();
+                return;
+        }
+        // For advertiser/partner/coupon: reload both data and analytics
+        this.recomputeFilterDropdowns();
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    loadFiltersFromTableData(): void {
+        // Only populate the all* arrays if they're empty (first load only)
+        // This preserves the full list of options even when filters are applied
+        const isFirstLoad = this.allAdvertisers.length === 0;
+
+        // Extract unique advertisers from table data
+        const advertiserMap = new Map<number, string>();
+        const partnerMap = new Map<number, string>();
+        const couponMap = new Map<string, { advertiser_id: number, partner_id?: number }>();
+
+        this.tableData.forEach(row => {
+            // Collect advertisers (campaign field contains advertiser name)
+            if (row.advertiser_id && row.campaign) {
+                advertiserMap.set(row.advertiser_id, row.campaign);
+            }
+
+            // Collect partners (only for admin roles)
+            if (this.isAdmin && row.partner_id && row.partner) {
+                partnerMap.set(row.partner_id, row.partner);
+            }
+
+            // Collect coupons
+            if (row.coupon) {
+                couponMap.set(row.coupon, {
+                    advertiser_id: row.advertiser_id,
+                    partner_id: row.partner_id
+                });
+            }
+        });
+
+        if (isFirstLoad) {
+            // First load - build the full lists
+            this.allAdvertisers = Array.from(advertiserMap.entries())
+                .map(([id, name]) => ({ id, name, attribution: '' }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            this.advertisers = [...this.allAdvertisers];
+
+            this.allPartners = Array.from(partnerMap.entries())
+                .map(([id, name]) => ({ id, name, type: '' }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            this.partners = [...this.allPartners];
+
+            this.allCoupons = Array.from(couponMap.entries())
+                .map(([code, data]) => ({
+                    code,
+                    advertiser: '',
+                    advertiser_id: data.advertiser_id,
+                    partner: '',
+                    partner_id: data.partner_id
+                }))
+                .sort((a, b) => a.code.localeCompare(b.code));
+            this.coupons = [...this.allCoupons];
+
+        } else {
+            // Subsequent loads - just recompute filtered dropdowns
+            this.recomputeFilterDropdowns();
+        }
+    }
+
+    hasFilterValue(value: any): boolean {
+        if (value == null) return false;
+        if (Array.isArray(value)) return value.length > 0;
+        return true;
+    }
+
+    clearAdvertiserFilter(): void {
+        this.filters.advertiser_id = null;
+        this.recomputeFilterDropdowns();
+    }
+
+    clearPartnerFilter(): void {
+        this.filters.partner_id = null;
+        this.recomputeFilterDropdowns();
+    }
+
+    clearCouponFilter(): void {
+        this.filters.coupon_code = null;
+        this.recomputeFilterDropdowns();
+    }
+
+    clearDepartmentFilter(): void {
+        this.filters.partner_type = null;
+        this.recomputeFilterDropdowns();
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    onDepartmentChangeRealtime(): void {
+        // Normalize empty string to null
+        if (this.filters.partner_type === '') {
+            this.filters.partner_type = null;
+        }
+        this.recomputeFilterDropdowns();
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    onAdvertiserChangeRealtime(): void {
+        // Normalize empty arrays to null
+        if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length === 0) {
+            this.filters.advertiser_id = null;
+        }
+        // Instantly recompute other dropdown options
+        this.recomputeFilterDropdowns();
+        // Load data and analytics immediately
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    onPartnerChangeRealtime(): void {
+        // Normalize empty arrays to null
+        if (Array.isArray(this.filters.partner_id) && this.filters.partner_id.length === 0) {
+            this.filters.partner_id = null;
+        }
+        // Instantly recompute other dropdown options
+        this.recomputeFilterDropdowns();
+        // Load data immediately
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    onCouponChangeRealtime(): void {
+        // Normalize empty arrays to null
+        if (Array.isArray(this.filters.coupon_code) && this.filters.coupon_code.length === 0) {
+            this.filters.coupon_code = null;
+        }
+        // Instantly recompute other dropdown options
+        this.recomputeFilterDropdowns();
+        // Load data immediately
+        this.loadData();
+        this.loadAnalytics();
+    }
+
+    /**
+     * Dynamically filter dropdown options based on current selections.
+     * Mirrors the Dash callback logic from admin_tools.py
+     * This runs instantly on any selection change - no need to click "Apply Filter"
+     */
+    recomputeFilterDropdowns(): void {
+        // Check if all filters are empty
+        const hasAdvertiserFilter = this.filters.advertiser_id != null &&
+            (!Array.isArray(this.filters.advertiser_id) || this.filters.advertiser_id.length > 0);
+        const hasPartnerFilter = this.filters.partner_id != null &&
+            (!Array.isArray(this.filters.partner_id) || this.filters.partner_id.length > 0);
+        const hasCouponFilter = this.filters.coupon_code != null &&
+            (!Array.isArray(this.filters.coupon_code) || this.filters.coupon_code.length > 0);
+
+        if (!hasAdvertiserFilter && !hasPartnerFilter && !hasCouponFilter) {
+            // No filters - restore all
+            this.advertisers = [...this.allAdvertisers];
+            this.partners = [...this.allPartners];
+            this.coupons = [...this.allCoupons];
+            return;
+        }
+
+        // Build advertiser options: filter by partner + coupon (NOT by advertiser itself)
+        let couponsForAdvertisers = [...this.allCoupons];
+        if (hasPartnerFilter) {
+            const ids = Array.isArray(this.filters.partner_id) ? this.filters.partner_id : [this.filters.partner_id];
+            couponsForAdvertisers = couponsForAdvertisers.filter(c => c.partner_id && ids.includes(c.partner_id));
+        }
+        if (hasCouponFilter) {
+            const codes = Array.isArray(this.filters.coupon_code) ? this.filters.coupon_code : [this.filters.coupon_code];
+            couponsForAdvertisers = couponsForAdvertisers.filter(c => codes.includes(c.code));
+        }
+        const advertiserIds = new Set(couponsForAdvertisers.map(c => c.advertiser_id));
+        if (hasAdvertiserFilter) {
+            const selected = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            selected.forEach(id => { if (id != null) advertiserIds.add(id); });
+        }
+        this.advertisers = this.allAdvertisers.filter(a => advertiserIds.has(a.id));
+
+        // Build partner options: filter by advertiser + coupon (NOT by partner itself)
+        let couponsForPartners = [...this.allCoupons];
+        if (hasAdvertiserFilter) {
+            const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            couponsForPartners = couponsForPartners.filter(c => ids.includes(c.advertiser_id));
+        }
+        if (hasCouponFilter) {
+            const codes = Array.isArray(this.filters.coupon_code) ? this.filters.coupon_code : [this.filters.coupon_code];
+            couponsForPartners = couponsForPartners.filter(c => codes.includes(c.code));
+        }
+        const partnerIds = new Set(couponsForPartners.filter(c => c.partner_id).map(c => c.partner_id!));
+        if (hasPartnerFilter) {
+            const selected = Array.isArray(this.filters.partner_id) ? this.filters.partner_id : [this.filters.partner_id];
+            selected.forEach(id => { if (id != null) partnerIds.add(id); });
+        }
+        this.partners = this.allPartners.filter(p => partnerIds.has(p.id));
+
+        // Build coupon options: filter by advertiser + partner (NOT by coupon itself)
+        let couponsForCoupons = [...this.allCoupons];
+        if (hasAdvertiserFilter) {
+            const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            couponsForCoupons = couponsForCoupons.filter(c => ids.includes(c.advertiser_id));
+        }
+        if (hasPartnerFilter) {
+            const ids = Array.isArray(this.filters.partner_id) ? this.filters.partner_id : [this.filters.partner_id];
+            couponsForCoupons = couponsForCoupons.filter(c => c.partner_id && ids.includes(c.partner_id));
+        }
+        const couponCodes = new Set(couponsForCoupons.map(c => c.code));
+        if (hasCouponFilter) {
+            const selected = Array.isArray(this.filters.coupon_code) ? this.filters.coupon_code : [this.filters.coupon_code];
+            selected.forEach(code => { if (code != null) couponCodes.add(code); });
+        }
+        this.coupons = this.allCoupons.filter(c => couponCodes.has(c.code));
+    }
+
+    loadData(): void {
+        this.loading = true;
+        this.dashboardService.getKPIs(this.filters).subscribe({
+            next: (data) => {
+                this.kpis = data;
+                // Add mock trend data for demonstration (in production, this would come from backend)
+                if (this.kpis && !this.kpis.trends) {
+                    this.kpis.trends = {
+                        orders_change: this.calculateMockTrend(this.kpis.total_orders),
+                        sales_change: this.calculateMockTrend(this.kpis.total_sales),
+                        revenue_change: this.calculateMockTrend(this.kpis.total_revenue),
+                        payout_change: this.calculateMockTrend(this.kpis.total_payout),
+                        profit_change: this.calculateMockTrend(this.kpis.total_profit)
+                    };
+                }
+                this.loading = false;
+            },
+            error: (error) => {
+                console.error('Error loading KPIs:', error);
+                this.loading = false;
+                // KPIs will remain null/previous value, UI should handle gracefully
+            }
+        });
+
+        this.dashboardService.getTableData(this.filters).subscribe({
+            next: (data) => {
+                this.tableData = data;
+                this.filteredTableData = [...data];
+                // Build filters from the table data
+                this.loadFiltersFromTableData();
+                // Build pie chart from table data
+                this.buildPieChart(data);
+            },
+            error: (error) => {
+                console.error('Error loading table data:', error);
+                // Table will remain empty/previous value
+            }
+        });
+
+        this.dashboardService.getGraphData(this.filters).subscribe({
+            next: (data) => {
+                this.graphData = data;
+                this.buildLineChart(data);
+            },
+            error: (error) => {
+                console.error('Error loading graph data:', error);
+                // Graph will remain null/previous value
+            }
+        });
+    }
+
+    private calculateMockTrend(value: number): number {
+        // Mock calculation: simulate realistic 7-day trends between -15% and +25%
+        const seed = Math.abs(Math.sin(value * 0.001));
+        return Math.round((seed * 40 - 15) * 10) / 10;
+    }
+
+    buildLineChart(data: GraphData): void {
+        // Format dates to show as "7th Oct" instead of full date
+        const formattedDates = data.dates.map(dateStr => {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.toLocaleString('en-US', { month: 'short' });
+            const suffix = this.getOrdinalSuffix(day);
+            return `${day}${suffix} ${month}`;
+        });
+
+        const datasets: any[] = [
+            {
+                label: 'Revenue',
+                data: data.daily_revenue,
+                borderColor: '#009292',
+                backgroundColor: 'rgba(0, 146, 146, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Payout',
+                data: data.daily_payout,
+                borderColor: '#ff6b6b',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ];
+
+        // Only admin roles see Profit
+        if (this.isAdmin && data.daily_profit) {
+            datasets.push({
+                label: 'Profit',
+                data: data.daily_profit,
+                borderColor: '#95e1d3',
+                backgroundColor: 'rgba(149, 225, 211, 0.1)',
+                tension: 0.4,
+                fill: true
+            });
+        }
+
+        this.lineChart = {
+            type: 'line',
+            data: {
+                labels: formattedDates,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#101010',
+                            font: {
+                                size: 13,
+                                weight: 'bold',
+                                family: 'Segoe UI'
+                            },
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(16, 16, 16, 0.95)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(0, 146, 146, 0.5)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function (context: any) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += '$' + context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 146, 146, 0.08)',
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: '#757575',
+                            font: {
+                                size: 11
+                            },
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 146, 146, 0.08)',
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: '#757575',
+                            font: {
+                                size: 11
+                            },
+                            callback: function (value: any) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                elements: {
+                    line: {
+                        tension: 0.4
+                    },
+                    point: {
+                        radius: 3,
+                        hoverRadius: 6,
+                        hitRadius: 10
+                    }
+                }
+            }
+        };
+    }
+
+    buildPieChart(data: TableRow[]): void {
+        // Group by campaign and sum revenue
+        const campaignData = new Map<string, number>();
+
+        data.forEach(row => {
+            const campaign = row.campaign;
+            const value = row.revenue || 0;
+            if (campaign && value) {
+                campaignData.set(campaign, (campaignData.get(campaign) || 0) + value);
+            }
+        });
+
+        // Convert to arrays and sort by value
+        const sortedCampaigns = Array.from(campaignData.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10); // Top 10 campaigns
+
+        const labels = sortedCampaigns.map(([campaign]) => campaign);
+        const values = sortedCampaigns.map(([, value]) => value);
+
+        this.pieChart = {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#009292', '#00b0b0', '#007a7a', '#4ecdc4', '#95e1d3',
+                        '#f38181', '#ff6b6b', '#ffd93d', '#6bcf7f', '#a29bfe'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            color: '#101010',
+                            font: {
+                                size: 11,
+                                family: 'Segoe UI'
+                            },
+                            padding: 10,
+                            boxWidth: 12
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: $${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    applyFilters(): void {
+        // Convert date range to string format using local timezone
+        if (this.dateRange && this.dateRange.length === 2 && this.dateRange[0] && this.dateRange[1]) {
+            const fromDate = new Date(this.dateRange[0]);
+            const toDate = new Date(this.dateRange[1]);
+
+            this.filters.date_from = `${fromDate.getFullYear()}-${String(fromDate.getMonth() + 1).padStart(2, '0')}-${String(fromDate.getDate()).padStart(2, '0')}`;
+            this.filters.date_to = `${toDate.getFullYear()}-${String(toDate.getMonth() + 1).padStart(2, '0')}-${String(toDate.getDate()).padStart(2, '0')}`;
+        } else {
+            this.filters.date_from = undefined;
+            this.filters.date_to = undefined;
+        }
+        // Only reload data (KPIs, table, charts) - NOT analytics
+        // Analytics should always show current month MTD regardless of date filter
+        this.loadData();
+    }
+
+    loadAnalytics(): void {
+        const advertiserId = Array.isArray(this.filters.advertiser_id)
+            ? this.filters.advertiser_id[0]
+            : this.filters.advertiser_id;
+        const partnerId = Array.isArray(this.filters.partner_id)
+            ? this.filters.partner_id[0]
+            : this.filters.partner_id;
+
+        // Determine partner type: use filter if set (admin), otherwise use user's department
+        let partnerType: string | undefined;
+        if (this.filters.partner_type) {
+            partnerType = this.filters.partner_type;
+        } else if (this.user?.department) {
+            if (this.user.department === 'media_buying') partnerType = 'MB';
+            else if (this.user.department === 'affiliate') partnerType = 'AFF';
+            else if (this.user.department === 'influencer') partnerType = 'INF';
+        }
+
+        this.analyticsService.getPerformanceAnalytics(
+            advertiserId || undefined,
+            partnerId || undefined,
+            partnerType,
+            undefined // current month by default
+        ).subscribe({
+            next: (data) => {
+                this.analytics = data;
+            },
+            error: (err) => {
+                console.error('Failed to load analytics:', err);
+            }
+        });
+    }
+
+    getPacingColor(status: string): string {
+        switch (status) {
+            case 'Ahead': return '#22c55e';
+            case 'Behind': return '#ef4444';
+            default: return '#3b82f6';
+        }
+    }
+
+    getAchievementColor(pct: number): string {
+        if (pct >= 100) return '#22c55e';
+        if (pct >= 75) return '#3b82f6';
+        if (pct >= 50) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    getOrdinalSuffix(day: number): string {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+
+    setDatePreset(preset: string): void {
+        this.activeDatePreset = preset;
+        const today = new Date();
+        const start = new Date();
+        const end = new Date();
+
+        switch (preset) {
+            case 'today':
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'last7days':
+                start.setDate(today.getDate() - 6);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'last30days':
+                start.setDate(today.getDate() - 29);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'thisMonth':
+                start.setDate(1);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case 'lastMonth':
+                start.setMonth(today.getMonth() - 1);
+                start.setDate(1);
+                start.setHours(0, 0, 0, 0);
+                end.setDate(0); // Last day of previous month
+                end.setMonth(today.getMonth());
+                end.setHours(23, 59, 59, 999);
+                break;
+        }
+
+        this.dateRange = [start, end];
+        // Apply date filter immediately
+        this.applyFilters();
+    }
+
+    onCustomDateChange(): void {
+        // Clear active preset when user manually changes date
+        this.activeDatePreset = '';
+        // Apply custom date filter immediately if both dates are selected
+        if (this.dateRange && this.dateRange.length === 2 && this.dateRange[0] && this.dateRange[1]) {
+            this.applyFilters();
+        }
+    }
+
+    clearFilters(): void {
+        // Clear all filter values
+        this.filters = {};
+        this.dateRange = [];
+        this.activeDatePreset = '';
+
+        // Reset all dropdown options to show all available items
+        this.advertisers = [...this.allAdvertisers];
+        this.partners = [...this.allPartners];
+        this.coupons = [...this.allCoupons];
+
+        // Reload data with no filters
+        this.applyFilters();
+    }
+
+    exportToCSV(): void {
+        if (this.tableData.length === 0) {
+            return;
+        }
+
+        const headers = ['Date', 'Campaign', 'Coupon'];
+        if (this.isAdmin) {
+            headers.push('Partner');
+        }
+        headers.push('Orders', 'Sales', 'Revenue', 'Payout');
+        if (this.isAdmin) {
+            headers.push('Profit');
+        }
+
+        const rows = this.tableData.map(row => {
+            const data = [
+                row.date,
+                row.campaign,
+                row.coupon
+            ];
+            if (this.isAdmin && row.partner) {
+                data.push(row.partner);
+            } else if (this.isAdmin) {
+                data.push('');
+            }
+            data.push(
+                row.orders.toString(),
+                row.sales.toFixed(2),
+                (row.revenue ?? 0).toFixed(2),
+                row.payout.toFixed(2)
+            );
+            if (this.isAdmin) {
+                data.push((row.profit ?? 0).toFixed(2));
+            }
+            return data;
+        });
+
+        let csvContent = headers.join(',') + '\n';
+        rows.forEach(row => {
+            csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `performance-data-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    exportToExcel(): void {
+        if (this.tableData.length === 0) {
+            return;
+        }
+
+        // Create workbook data
+        const headers = ['Date', 'Campaign', 'Coupon'];
+        if (this.isAdmin) {
+            headers.push('Partner');
+        }
+        headers.push('Orders', 'Sales', 'Revenue', 'Payout');
+        if (this.isAdmin) {
+            headers.push('Profit');
+        }
+
+        const data = [headers];
+        this.tableData.forEach(row => {
+            const rowData: any[] = [
+                row.date,
+                row.campaign,
+                row.coupon
+            ];
+            if (this.isAdmin) {
+                rowData.push(row.partner || '');
+            }
+            rowData.push(
+                row.orders,
+                row.sales,
+                row.revenue,
+                row.payout
+            );
+            if (this.isAdmin) {
+                rowData.push(row.profit);
+            }
+            data.push(rowData);
+        });
+
+        // Convert to HTML table format for Excel
+        let html = '<table><thead><tr>';
+        headers.forEach(header => {
+            html += `<th>${header}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        this.tableData.forEach(row => {
+            html += '<tr>';
+            html += `<td>${row.date}</td>`;
+            html += `<td>${row.campaign}</td>`;
+            html += `<td>${row.coupon}</td>`;
+            if (this.isAdmin) {
+                html += `<td>${row.partner || ''}</td>`;
+            }
+            html += `<td>${row.orders}</td>`;
+            html += `<td>${row.sales.toFixed(2)}</td>`;
+            html += `<td>${(row.revenue ?? 0).toFixed(2)}</td>`;
+            html += `<td>${row.payout.toFixed(2)}</td>`;
+            if (this.isAdmin) {
+                html += `<td>${(row.profit ?? 0).toFixed(2)}</td>`;
+            }
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `performance-data-${new Date().toISOString().split('T')[0]}.xls`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    logout(): void {
+        this.authService.logout();
+    }
+
+    goToCoupons(): void {
+        this.router.navigate(['/coupons']);
+    }
+
+    goToAdvertisers(): void {
+        this.router.navigate(['/advertisers']);
+    }
+
+    goToTargets(): void {
+        this.router.navigate(['/targets']);
+    }
+
+    goToMediaBuyerSpend(): void {
+        this.router.navigate(['/media-buyer-spend']);
+    }
+
+    refreshDashboard(): void {
+        window.location.reload();
+    }
+
+    getCurrentDate(): string {
+        const today = new Date();
+        return today.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    getStatusClass(achievementPct: number): string {
+        if (achievementPct >= 100) return 'status-excellent';
+        if (achievementPct >= 80) return 'status-good';
+        if (achievementPct >= 50) return 'status-warning';
+        return 'status-danger';
+    }
+
+    getStatusIcon(achievementPct: number): string {
+        if (achievementPct >= 100) return 'pi-check-circle';
+        if (achievementPct >= 80) return 'pi-arrow-up';
+        if (achievementPct >= 50) return 'pi-exclamation-triangle';
+        return 'pi-times-circle';
+    }
+
+    calculateProfitAchievement(): number {
+        if (!this.analytics?.daily) return 0;
+        const required = this.analytics.daily.required_daily_profit;
+        if (required === 0) return 0;
+        return (this.analytics.daily.today_profit / required) * 100;
+    }
+
+    onTableSearch(event: any): void {
+        const searchValue = this.tableSearchTerm.toLowerCase();
+        if (!searchValue) {
+            this.filteredTableData = [...this.tableData];
+            return;
+        }
+
+        this.filteredTableData = this.tableData.filter(row => {
+            return (
+                row.date?.toLowerCase().includes(searchValue) ||
+                row.campaign?.toLowerCase().includes(searchValue) ||
+                row.coupon?.toLowerCase().includes(searchValue) ||
+                row.partner?.toLowerCase().includes(searchValue)
+            );
+        });
+    }
+
+    clearTableSearch(): void {
+        this.tableSearchTerm = '';
+        this.filteredTableData = [...this.tableData];
+    }
+
+    getFilteredTableCount(): number {
+        return this.tableSearchTerm ? this.filteredTableData.length : this.tableData.length;
+    }
+
+    openFilterModal(): void {
+        this.showFilterModal = true;
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeFilterModal(): void {
+        this.showFilterModal = false;
+        document.body.style.overflow = 'auto';
+    }
+
+    getActiveFilterCount(): number {
+        let count = 0;
+        if (this.filters.partner_type) count++;
+        if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length > 0) count++;
+        if (Array.isArray(this.filters.partner_id) && this.filters.partner_id.length > 0) count++;
+        if (Array.isArray(this.filters.coupon_code) && this.filters.coupon_code.length > 0) count++;
+        if (this.filters.date_from && this.filters.date_to) count++;
+        return count;
+    }
+}

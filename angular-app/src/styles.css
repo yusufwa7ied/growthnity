@@ -1,0 +1,263 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Import PrimeIcons */
+@import "../node_modules/primeicons/primeicons.css";
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Utility Classes */
+.w-full {
+  width: 100%;
+}
+
+/* Brand Identity Colors */
+:root {
+  --brand-teal: #009292;
+  --brand-teal-dark: #007a7a;
+  --brand-teal-light: #00b0b0;
+  --brand-black: #101010;
+  --brand-white: #ffffff;
+  --brand-gray-light: #f5f5f5;
+  --brand-gray: #e0e0e0;
+  --brand-gray-dark: #757575;
+
+  /* Primary colors (Teal) */
+  --primary-color: #009292;
+  --primary-color-hover: #007a7a;
+  --primary-color-active: #006666;
+}
+
+::ng-deep .p-button {
+  background: var(--brand-teal);
+  border: none;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+::ng-deep .p-button:not(:disabled):hover {
+  background: var(--brand-teal-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3);
+}
+
+::ng-deep .p-button:not(:disabled):active {
+  transform: translateY(0);
+  background: var(--primary-color-active);
+}
+
+::ng-deep .p-inputtext:enabled:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(0, 146, 146, 0.25);
+}
+
+::ng-deep .p-password input:enabled:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(0, 146, 146, 0.25);
+}
+
+::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(0, 146, 146, 0.25);
+}
+
+::ng-deep .p-calendar:not(.p-calendar-disabled).p-inputwrapper-focus .p-inputtext {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 0.2rem rgba(0, 146, 146, 0.25);
+}
+
+/* Global Dropdown Styling - Custom Arrow */
+select,
+select.p-dropdown,
+::ng-deep .p-select,
+::ng-deep .p-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23009292' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem !important;
+  cursor: pointer;
+}
+
+/* Ensure text inputs don't get the dropdown arrow */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+.p-inputtext {
+  background-image: none !important;
+  padding-right: 1rem !important;
+}
+
+/* Global Pagination Styling */
+::ng-deep .p-paginator {
+  border-top: 2px solid #e5e7eb;
+  background: white;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+::ng-deep .p-paginator .p-paginator-current {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  order: -1;
+  background: #f3f4f6;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+::ng-deep .p-paginator .p-paginator-pages {
+  display: flex;
+  gap: 0.35rem;
+}
+
+::ng-deep .p-paginator .p-paginator-pages .p-paginator-page {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #1f2937;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+::ng-deep .p-paginator .p-paginator-pages .p-paginator-page:hover {
+  background: #e8f4f4;
+  border-color: var(--brand-teal);
+  color: var(--brand-teal);
+  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.15);
+}
+
+::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: linear-gradient(135deg, var(--brand-teal) 0%, #007a7a 100%);
+  border-color: var(--brand-teal);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3);
+}
+
+::ng-deep .p-paginator .p-paginator-first,
+::ng-deep .p-paginator .p-paginator-prev,
+::ng-deep .p-paginator .p-paginator-next,
+::ng-deep .p-paginator .p-paginator-last {
+  min-width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #1f2937;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+}
+
+::ng-deep .p-paginator .p-paginator-first:not(.p-disabled):hover,
+::ng-deep .p-paginator .p-paginator-prev:not(.p-disabled):hover,
+::ng-deep .p-paginator .p-paginator-next:not(.p-disabled):hover,
+::ng-deep .p-paginator .p-paginator-last:not(.p-disabled):hover {
+  background: linear-gradient(135deg, var(--brand-teal) 0%, #007a7a 100%);
+  border-color: var(--brand-teal);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.25);
+}
+
+::ng-deep .p-paginator .p-dropdown {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  height: 2.75rem;
+  transition: all 0.3s;
+}
+
+::ng-deep .p-paginator .p-dropdown:hover {
+  border-color: var(--brand-teal);
+}
+
+/* Global Footer Styling */
+.dashboard-footer {
+  margin-top: 3rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  position: relative;
+  z-index: 10;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 2rem;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.footer-logo-img {
+  height: 35px;
+  width: auto;
+}
+
+.footer-left p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.footer-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.footer-link {
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: var(--brand-teal);
+}
+
+.footer-divider {
+  color: #d1d5db;
+}

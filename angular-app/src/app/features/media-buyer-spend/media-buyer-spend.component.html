@@ -1,0 +1,197 @@
+<div class="spend-wrapper">
+    <app-main-header [showSidebarButton]="false" [activeTab]="'daily-spend'">
+    </app-main-header>
+
+    <div class="spend-page">
+        <!-- Page Header Section -->
+        <div class="page-header">
+            <div class="header-left">
+                <h2><i class="pi pi-dollar"></i> Media Buyer Daily Spend</h2>
+                <p class="subtitle">Track and manage daily advertising spend across all campaigns</p>
+            </div>
+            <div class="header-actions">
+                <button pButton type="button" label="Add Daily Spend" (click)="toggleAddForm()" class="p-button-success"
+                    *ngIf="!showAddForm"></button>
+                <button pButton type="button" label="Hide Form" (click)="toggleAddForm()" class="p-button-success"
+                    *ngIf="showAddForm"></button>
+            </div>
+        </div>
+
+        <!-- KPI Overview Cards -->
+        <div class="kpi-overview">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon">
+                    <i class="pi pi-chart-line"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Records</span>
+                    <span class="kpi-value">{{spendRecords.length}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-assigned">
+                <div class="kpi-icon">
+                    <i class="pi pi-money-bill"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Spend</span>
+                    <span class="kpi-value">{{getTotalSpend() | number:'1.2-2'}}</span>
+                    <span class="kpi-subtext">USD</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-advertisers">
+                <div class="kpi-icon">
+                    <i class="pi pi-briefcase"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Advertisers</span>
+                    <span class="kpi-value">{{getUniqueAdvertisers()}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-partners">
+                <div class="kpi-icon">
+                    <i class="pi pi-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Partners</span>
+                    <span class="kpi-value">{{getUniquePartners()}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Spend Form -->
+        <p-card class="spend-card form-card" *ngIf="showAddForm">
+            <div class="form-section">
+                <div class="form-header">
+                    <h3><i class="pi pi-plus-circle"></i> Add Daily Spend Record</h3>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Date Range <span class="required">*</span></label>
+                        <p-datepicker [(ngModel)]="selectedDateRange" selectionMode="range" dateFormat="yy-mm-dd"
+                            [showIcon]="false" [showButtonBar]="true" [readonlyInput]="true">
+                        </p-datepicker>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Advertiser <span class="required">*</span> ({{allAdvertisers.length}} available)</label>
+                        <p-select [options]="allAdvertisers" [(ngModel)]="selectedAdvertiser" [filter]="true"
+                            [showClear]="true" optionLabel="label" placeholder="All Advertisers" appendTo="body"
+                            (onChange)="onAdvertiserChange()">
+                        </p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Coupon <span class="required">*</span></label>
+                        <p-select [options]="coupons" [(ngModel)]="selectedCoupon" [filter]="true" [showClear]="true"
+                            optionLabel="label" placeholder="Select Coupon" appendTo="body"
+                            [disabled]="!selectedAdvertiser">
+                        </p-select>
+                        <small *ngIf="selectedAdvertiser && coupons.length === 0" class="text-warning">
+                            No coupons available for this advertiser
+                        </small>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Platform <span class="required">*</span></label>
+                        <p-select [options]="platformOptions" [(ngModel)]="selectedPlatform" optionLabel="label"
+                            placeholder="Select Platform" appendTo="body">
+                        </p-select>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Total Amount Spent (USD) <span class="required">*</span></label>
+                        <p-inputnumber [(ngModel)]="amountSpent" mode="decimal" [minFractionDigits]="2"
+                            [maxFractionDigits]="2">
+                        </p-inputnumber>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button pButton type="button" label="Save Spend" icon="pi pi-check" (click)="saveSpendRecord()"
+                        [disabled]="saving" class="p-button-success"></button>
+                    <button pButton type="button" label="Reset" (click)="resetForm()"
+                        class="p-button-secondary p-button-outlined"></button>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Spend History Table -->
+        <p-card class="spend-card table-card">
+            <div class="table-header">
+                <div class="table-title">
+                    <h3><i class="pi pi-table"></i> Spend History</h3>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <div class="filter-item">
+                    <label>Date Range</label>
+                    <p-datepicker [(ngModel)]="filterDateRange" selectionMode="range" dateFormat="yy-mm-dd"
+                        [showIcon]="false" [showButtonBar]="true" [readonlyInput]="true" placeholder="Select date range"
+                        (onSelect)="applyFilters()" appendTo="body">
+                    </p-datepicker>
+                </div>
+
+                <div class="filter-item">
+                    <label>Advertiser</label>
+                    <p-select [options]="advertisers" [(ngModel)]="filterAdvertiser" placeholder="All Advertisers"
+                        [filter]="true" [showClear]="true" optionLabel="label" (onChange)="applyFilters()"
+                        appendTo="body">
+                    </p-select>
+                </div>
+
+                <div class="filter-actions">
+                    <button pButton type="button" label="Clear All" (click)="clearFilters()"
+                        class="p-button-secondary p-button-outlined"></button>
+                </div>
+            </div>
+
+            <p-table [value]="spendRecords" [loading]="loading" [paginator]="true" [rows]="10"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                styleClass="spend-table">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Date</th>
+                        <th>Advertiser</th>
+                        <th>Partner</th>
+                        <th>Coupon</th>
+                        <th>Platform</th>
+                        <th>Amount Spent</th>
+                        <th>Currency</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-spend>
+                    <tr>
+                        <td>{{ spend.date }}</td>
+                        <td>{{ spend.advertiser_name }}</td>
+                        <td>{{ spend.partner_name }}</td>
+                        <td>{{ spend.coupon_code || 'N/A' }}</td>
+                        <td>{{ spend.platform || 'N/A' }}</td>
+                        <td>{{ spend.amount_spent | number:'1.2-2' }}</td>
+                        <td>{{ spend.currency }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="7" class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            <p>No spend records found</p>
+                            <span>Add your first daily spend entry using the button above</span>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+
+        <!-- Footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

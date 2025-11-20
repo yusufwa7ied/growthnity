@@ -1,0 +1,222 @@
+<div style="min-height: 100vh; background: #f9fafb; display: flex; flex-direction: column;">
+    <app-main-header [showSidebarButton]="false" [activeTab]="'targets'">
+    </app-main-header>
+
+    <div class="targets-page">
+        <div class="page-header">
+            <div class="header-left">
+                <h2><i class="pi pi-flag"></i> Targets Management</h2>
+                <p class="subtitle">Set and track monthly targets per advertiser and department</p>
+            </div>
+            <div class="header-actions">
+                <button pButton type="button" class="p-button-success manage-targets-btn" (click)="toggleForm()">
+                    Manage Targets
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Overview Cards -->
+        <div class="kpi-overview">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon">
+                    <i class="pi pi-flag"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Targets</span>
+                    <span class="kpi-value">{{stats.totalTargets}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-current">
+                <div class="kpi-icon">
+                    <i class="pi pi-calendar"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Current Month</span>
+                    <span class="kpi-value">{{stats.currentMonth}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-advertisers">
+                <div class="kpi-icon">
+                    <i class="pi pi-briefcase"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Active Advertisers</span>
+                    <span class="kpi-value">{{stats.activeAdvertisers}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-departments">
+                <div class="kpi-icon">
+                    <i class="pi pi-sitemap"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Departments</span>
+                    <span class="kpi-value">{{stats.departments}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="targets-table-card">
+            <div class="table-header">
+                <div class="table-title">
+                    <h3><i class="pi pi-list"></i> All Targets</h3>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filter-item">
+                    <label>Quick Filter</label>
+                    <button pButton type="button" label="Current Month Only"
+                        [class.active-filter]="showCurrentMonthOnly" (click)="toggleCurrentMonthFilter()"
+                        class="p-button-outlined quick-filter-btn"></button>
+                </div>
+                <div class="filter-item">
+                    <label>Advertiser</label>
+                    <select [(ngModel)]="filterAdvertiser" (change)="applyFilters()" class="form-input">
+                        <option [value]="null">All Advertisers</option>
+                        <option *ngFor="let adv of advertiserOptions" [value]="adv.value">{{ adv.label }}</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Department</label>
+                    <select [(ngModel)]="filterDepartment" (change)="applyFilters()" class="form-input">
+                        <option [value]="null">All Departments</option>
+                        <option *ngFor="let dept of departmentOptions" [value]="dept.value">{{ dept.label }}</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Month</label>
+                    <select [(ngModel)]="filterMonth" (change)="applyFilters()" class="form-input">
+                        <option [value]="null">All Months</option>
+                        <option *ngFor="let month of monthOptions" [value]="month.value">{{ month.label }}</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button pButton type="button" label="Clear All" (click)="clearFilters()"
+                        class="p-button-secondary p-button-outlined"></button>
+                </div>
+            </div>
+
+            <p-table [value]="filteredTargets" [paginator]="true" [rows]="30" [rowsPerPageOptions]="[10,25,30,50,100]"
+                styleClass="p-datatable-sm p-datatable-striped targets-table" [loading]="loading"
+                [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords} records">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="col-advertiser">Advertiser</th>
+                        <th class="col-department">Department</th>
+                        <th class="col-month">Month</th>
+                        <th class="col-orders">Orders Target</th>
+                        <th class="col-revenue">Revenue Target</th>
+                        <th class="col-profit">Profit Target</th>
+                        <th class="col-actions" style="width: 140px;">Actions</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-target>
+                    <tr>
+                        <td class="col-advertiser">
+                            <span class="advertiser-name">{{ target.advertiser_name }}</span>
+                        </td>
+                        <td class="col-department">
+                            <span class="department-badge">{{ target.partner_type_display }}</span>
+                        </td>
+                        <td class="col-month">
+                            <span class="month-value">{{ target.month | date: 'MMM yyyy' }}</span>
+                        </td>
+                        <td class="col-orders">
+                            <span class="target-value">{{ target.orders_target | number }}</span>
+                        </td>
+                        <td class="col-revenue">
+                            <span class="target-value currency">{{ target.revenue_target | currency }}</span>
+                        </td>
+                        <td class="col-profit">
+                            <span class="target-value currency">{{ target.profit_target | currency }}</span>
+                        </td>
+                        <td class="col-actions">
+                            <div class="action-buttons">
+                                <button pButton type="button" label="Edit"
+                                    class="p-button-sm p-button-outlined action-edit"
+                                    (click)="editTarget(target)"></button>
+                                <button pButton type="button" icon="pi pi-trash"
+                                    class="p-button-sm p-button-outlined p-button-danger action-delete"
+                                    (click)="deleteTarget(target.id!)"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="7" class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            <p>No targets found</p>
+                            <button pButton type="button" label="Create First Target" (click)="toggleForm()"
+                                class="p-button-sm"></button>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+
+        <!-- Target Form Dialog -->
+        <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '600px'}"
+            [header]="editingTarget ? 'Edit Target' : 'Create New Target'" [draggable]="false" [resizable]="false">
+
+            <div class="target-form">
+                <div class="form-row">
+                    <label for="advertiser">Advertiser *</label>
+                    <select id="advertiser" [(ngModel)]="formData.advertiser" class="form-input">
+                        <option [value]="0" disabled>Select Advertiser</option>
+                        <option *ngFor="let adv of advertisers" [value]="adv.id">{{ adv.name }}</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="partner_type">Department *</label>
+                    <select id="partner_type" [(ngModel)]="formData.partner_type" class="form-input">
+                        <option *ngFor="let type of partnerTypes" [value]="type.value">{{ type.label }}</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="month">Month *</label>
+                    <input type="month" id="month" [(ngModel)]="formData.month" class="form-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="orders_target">Orders Target *</label>
+                    <input type="number" id="orders_target" [(ngModel)]="formData.orders_target" min="0"
+                        class="form-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="revenue_target">Revenue Target *</label>
+                    <input type="number" id="revenue_target" [(ngModel)]="formData.revenue_target" min="0" step="0.01"
+                        class="form-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="profit_target">Profit Target *</label>
+                    <input type="number" id="profit_target" [(ngModel)]="formData.profit_target" min="0" step="0.01"
+                        class="form-input">
+                </div>
+
+                <div class="form-row">
+                    <label for="spend_target">Spend Target</label>
+                    <input type="number" id="spend_target" [(ngModel)]="formData.spend_target" min="0" step="0.01"
+                        class="form-input">
+                </div>
+            </div>
+
+            <ng-template pTemplate="footer">
+                <button pButton type="button" label="Cancel" class="p-button-outlined p-button-secondary"
+                    (click)="toggleForm()"></button>
+                <button pButton type="button" label="Save" class="p-button-success" (click)="saveTarget()"></button>
+            </ng-template>
+        </p-dialog>
+
+        <!-- Footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

@@ -1,0 +1,328 @@
+<div style="min-height: 100vh; background: #f9fafb; display: flex; flex-direction: column;">
+    <app-main-header [showSidebarButton]="false" [activeTab]="'advertisers'">
+    </app-main-header>
+
+    <div class="advertisers-page">
+        <!-- Page Header Section -->
+        <div class="page-header">
+            <div class="header-left">
+                <h2><i class="pi pi-briefcase"></i> Advertiser Management</h2>
+                <p class="subtitle">Configure revenue sharing and default partner payouts for all advertisers</p>
+            </div>
+            <div class="header-actions">
+                <button class="p-button p-button-success manage-advertisers-btn" (click)="showAdd()"
+                    *ngIf="!showAddForm">
+                    Manage Advertisers
+                </button>
+            </div>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+            <i class="pi pi-exclamation-triangle"></i> {{ error }}
+        </div>
+
+        <div class="success-message" *ngIf="successMessage">
+            <i class="pi pi-check-circle"></i> {{ successMessage }}
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-card" *ngIf="showAddForm">
+            <div class="form-header">
+                <h3>
+                    <i class="pi" [ngClass]="editingId ? 'pi-pencil' : 'pi-plus-circle'"></i>
+                    {{ editingId ? 'Edit' : 'Create New' }} Advertiser
+                </h3>
+                <button class="close-btn" (click)="cancelForm()" title="Close form">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-field full-width">
+                    <label>Advertiser Name <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="advertiserName" class="p-inputtext"
+                        placeholder="Enter advertiser name" />
+                </div>
+
+                <div class="form-field">
+                    <label>Attribution Model</label>
+                    <select [(ngModel)]="attribution" class="p-dropdown">
+                        <option value="Coupon">Coupon</option>
+                        <option value="Link">Link</option>
+                    </select>
+                    <small class="field-hint">How users are tracked</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Revenue Rate Type</label>
+                    <select [(ngModel)]="revRateType" class="p-dropdown">
+                        <option value="percent">Percentage</option>
+                        <option value="fixed">Fixed Amount</option>
+                    </select>
+                    <small class="field-hint">Commission structure</small>
+                </div>
+
+                <div class="form-field">
+                    <label>FTU Revenue Rate</label>
+                    <input type="number" [(ngModel)]="revFtuRate" class="p-inputtext" step="0.01" placeholder="0.00" />
+                    <small class="field-hint">First time user commission (% or fixed)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>FTU Fixed Bonus</label>
+                    <input type="number" [(ngModel)]="revFtuFixedBonus" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">Extra fixed amount per FTU order (e.g., 3 AED)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>RTU Revenue Rate</label>
+                    <input type="number" [(ngModel)]="revRtuRate" class="p-inputtext" step="0.01" placeholder="0.00" />
+                    <small class="field-hint">Returning user commission (% or fixed)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>RTU Fixed Bonus</label>
+                    <input type="number" [(ngModel)]="revRtuFixedBonus" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">Extra fixed amount per RTU order</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Currency</label>
+                    <input type="text" [(ngModel)]="currency" class="p-inputtext" maxlength="3" placeholder="USD" />
+                    <small class="field-hint">3-letter currency code</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Exchange Rate to USD</label>
+                    <input type="number" [(ngModel)]="exchangeRate" class="p-inputtext" step="0.0001"
+                        placeholder="1.0000" />
+                    <small class="field-hint">Conversion rate</small>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-section-header full-width">
+                    <h4><i class="pi pi-money-bill"></i> Default Partner Payouts</h4>
+                    <p class="section-description">
+                        These rates will apply to all partners by default. You can override them for specific partners
+                        later.
+                    </p>
+                </div>
+
+                <div class="form-field">
+                    <label>Default Payout Type</label>
+                    <select [(ngModel)]="defaultPayoutRateType" class="p-dropdown">
+                        <option value="percent">Percentage</option>
+                        <option value="fixed">Fixed Amount</option>
+                    </select>
+                    <small class="field-hint">Payout structure</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Default FTU Payout</label>
+                    <input type="number" [(ngModel)]="defaultFtuPayout" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">First time user payout (% or fixed)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Default FTU Fixed Bonus</label>
+                    <input type="number" [(ngModel)]="defaultFtuFixedBonus" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">Extra fixed amount per FTU order (e.g., 3 AED)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Default RTU Payout</label>
+                    <input type="number" [(ngModel)]="defaultRtuPayout" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">Returning user payout (% or fixed)</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Default RTU Fixed Bonus</label>
+                    <input type="number" [(ngModel)]="defaultRtuFixedBonus" class="p-inputtext" step="0.01"
+                        placeholder="0.00" />
+                    <small class="field-hint">Extra fixed amount per RTU order</small>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-section-header full-width">
+                    <h4><i class="pi pi-users"></i> Partner-Specific Payouts</h4>
+                    <p class="section-description">
+                        Override default payouts for specific partners (mega influencers, affiliates with special rates,
+                        etc.)
+                    </p>
+                </div>
+
+                <div class="partner-payouts-section full-width">
+                    <div class="form-field full-width">
+                        <label>Select Advertiser to Configure Payouts <span class="required">*</span></label>
+                        <select [(ngModel)]="selectedAdvertiserForPayouts" class="p-dropdown"
+                            (change)="onAdvertiserForPayoutsChange()">
+                            <option [value]="null">Select Advertiser</option>
+                            <option *ngFor="let adv of advertisers" [value]="adv.id">
+                                {{adv.name}}
+                            </option>
+                        </select>
+                        <small class="field-hint">Select which advertiser to configure special partner payouts
+                            for</small>
+                    </div>
+
+                    <button type="button" class="p-button p-button-outlined add-payout-btn" (click)="addPartnerPayout()"
+                        [disabled]="!selectedAdvertiserForPayouts">
+                        <i class="pi pi-plus"></i> Add Partner Payout
+                    </button>
+
+                    <div class="partner-payout-list" *ngIf="partnerPayouts.length > 0">
+                        <div class="partner-payout-item" *ngFor="let payout of partnerPayouts; let i = index">
+                            <div class="payout-header">
+                                <h5>Partner Payout #{{i + 1}}</h5>
+                                <button type="button" class="remove-btn" (click)="removePartnerPayout(i)"
+                                    title="Remove">
+                                    <i class="pi pi-times"></i>
+                                </button>
+                            </div>
+                            <div class="payout-fields">
+                                <div class="payout-field">
+                                    <label>Partner <span class="required">*</span></label>
+                                    <select [(ngModel)]="payout.partner_id" class="p-dropdown">
+                                        <option [value]="null">Select Partner</option>
+                                        <option *ngFor="let partner of partners" [value]="partner.id">
+                                            {{partner.name}} ({{partner.partner_type}})
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="payout-field">
+                                    <label>Payout Type</label>
+                                    <select [(ngModel)]="payout.rate_type" class="p-dropdown">
+                                        <option value="percent">Percentage</option>
+                                        <option value="fixed">Fixed Amount</option>
+                                    </select>
+                                </div>
+                                <div class="payout-field">
+                                    <label>FTU Payout (%)</label>
+                                    <input type="number" [(ngModel)]="payout.ftu_payout" class="p-inputtext" step="0.01"
+                                        placeholder="e.g., 30" />
+                                </div>
+                                <div class="payout-field">
+                                    <label>FTU Fixed Bonus</label>
+                                    <input type="number" [(ngModel)]="payout.ftu_fixed_bonus" class="p-inputtext"
+                                        step="0.01" placeholder="e.g., 3" />
+                                </div>
+                                <div class="payout-field">
+                                    <label>RTU Payout (%)</label>
+                                    <input type="number" [(ngModel)]="payout.rtu_payout" class="p-inputtext" step="0.01"
+                                        placeholder="e.g., 25" />
+                                </div>
+                                <div class="payout-field">
+                                    <label>RTU Fixed Bonus</label>
+                                    <input type="number" [(ngModel)]="payout.rtu_fixed_bonus" class="p-inputtext"
+                                        step="0.01" placeholder="e.g., 2" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payout-actions" *ngIf="selectedAdvertiserForPayouts && partnerPayouts.length > 0">
+                        <button type="button" class="p-button p-button-success" (click)="savePartnerPayouts()"
+                            [disabled]="loading">
+                            <i class="pi pi-save"></i> Save Partner Payouts
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="p-button p-button-success" (click)="saveAdvertiser()" [disabled]="loading">
+                    <i class="pi pi-check"></i> {{ loading ? 'Saving...' : editingId ? 'Update' : 'Create' }} Advertiser
+                </button>
+                <button class="p-button p-button-secondary p-button-outlined" (click)="cancelForm()"
+                    [disabled]="loading">
+                    <i class="pi pi-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-overlay" *ngIf="loading && !showAddForm">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Loading advertisers...</p>
+        </div>
+
+        <!-- Advertisers Table -->
+        <div class="table-card" *ngIf="!loading">
+            <div class="table-header">
+                <h3><i class="pi pi-list"></i> All Advertisers</h3>
+                <span class="table-count">{{ advertisers.length }} total</span>
+            </div>
+
+            <p-table [value]="advertisers" styleClass="p-datatable-sm advertisers-table">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Name</th>
+                        <th>Attribution</th>
+                        <th>Revenue Type</th>
+                        <th>FTU Rev</th>
+                        <th>RTU Rev</th>
+                        <th>Default Payout</th>
+                        <th>Currency</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-advertiser>
+                    <tr>
+                        <td>
+                            {{ advertiser.name }}
+                            <span *ngIf="advertiser.name === 'Noon'" class="bracket-badge"
+                                title="Uses bracket-based payout system">
+                                BRACKETS
+                            </span>
+                        </td>
+                        <td>{{ advertiser.attribution }}</td>
+                        <td>{{ advertiser.rev_rate_type }}</td>
+                        <td>{{ advertiser.rev_ftu_rate || '-' }}</td>
+                        <td>{{ advertiser.rev_rtu_rate || '-' }}</td>
+                        <td>
+                            <span *ngIf="advertiser.default_ftu_payout || advertiser.default_rtu_payout">
+                                FTU: {{ advertiser.default_ftu_payout || '-' }} / RTU: {{ advertiser.default_rtu_payout
+                                || '-' }}
+                            </span>
+                            <span *ngIf="!advertiser.default_ftu_payout && !advertiser.default_rtu_payout">-</span>
+                        </td>
+                        <td>{{ advertiser.currency }}</td>
+                        <td class="actions">
+                            <button class="action-btn edit-btn" (click)="editAdvertiser(advertiser)"
+                                [disabled]="!canEditAdvertiser(advertiser)"
+                                [title]="canEditAdvertiser(advertiser) ? 'Edit Advertiser' : 'Noon uses bracket-based payouts. Add special rates via Admin → Partner Payouts'"
+                                [style.opacity]="canEditAdvertiser(advertiser) ? '1' : '0.4'"
+                                [style.cursor]="canEditAdvertiser(advertiser) ? 'pointer' : 'not-allowed'">
+                                <i class="pi pi-pencil"></i>
+                            </button>
+                            <button class="action-btn delete-btn" (click)="deleteAdvertiser(advertiser.id)"
+                                title="Delete">
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p>No advertisers found</p>
+                            <button class="p-button p-button-sm p-button-outlined" (click)="showAdd()">
+                                <i class="pi pi-plus"></i> Add Your First Advertiser
+                            </button>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+
+        <!-- Footer -->
+        <app-footer></app-footer>
+    </div>
+</div>

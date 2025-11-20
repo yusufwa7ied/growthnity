@@ -1,0 +1,235 @@
+<div class="partners-wrapper">
+    <app-main-header [showSidebarButton]="false" [activeTab]="'partners'">
+    </app-main-header>
+
+    <div class="partners-page">
+        <!-- Page Header Section -->
+        <div class="page-header">
+            <div class="header-left">
+                <h2><i class="pi pi-users"></i> Partner Management</h2>
+                <p class="subtitle">Manage affiliates, influencers, and media buyers across your network</p>
+            </div>
+            <div class="header-actions">
+                <button pButton type="button" label="Manage Partners" (click)="toggleAddForm()"
+                    class="p-button-success"></button>
+            </div>
+        </div>
+
+        <div class="success-message" *ngIf="successMessage">
+            <i class="pi pi-check-circle"></i> {{ successMessage }}
+        </div>
+
+        <!-- KPI Overview Cards -->
+        <div class="kpi-overview">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon">
+                    <i class="pi pi-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Total Partners</span>
+                    <span class="kpi-value">{{stats.totalPartners}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-assigned">
+                <div class="kpi-icon">
+                    <i class="pi pi-flag"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Affiliates</span>
+                    <span class="kpi-value">{{stats.affiliates}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-unassigned">
+                <div class="kpi-icon">
+                    <i class="pi pi-star"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Influencers</span>
+                    <span class="kpi-value">{{stats.influencers}}</span>
+                </div>
+            </div>
+
+            <div class="kpi-card kpi-advertisers">
+                <div class="kpi-icon">
+                    <i class="pi pi-dollar"></i>
+                </div>
+                <div class="kpi-content">
+                    <span class="kpi-label">Media Buyers</span>
+                    <span class="kpi-value">{{stats.mediaBuyers}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-card" *ngIf="showAddForm">
+            <div class="form-header">
+                <h3>
+                    <i class="pi" [ngClass]="editingId ? 'pi-pencil' : 'pi-plus-circle'"></i>
+                    {{ editingId ? 'Edit' : 'Create New' }} Partner
+                </h3>
+                <button class="close-btn" (click)="toggleAddForm()" title="Close form">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-field full-width">
+                    <label>Partner Name <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="formData.name" class="p-inputtext"
+                        placeholder="Enter partner name" />
+                </div>
+
+                <div class="form-field">
+                    <label>Partner Type <span class="required">*</span></label>
+                    <select [(ngModel)]="formData.partner_type" class="p-dropdown">
+                        <option [value]="null">Select type</option>
+                        <option *ngFor="let type of partnerTypes" [value]="type.value">
+                            {{type.label}}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Email</label>
+                    <input type="email" [(ngModel)]="formData.email" class="p-inputtext"
+                        placeholder="Enter email address" />
+                    <small class="field-hint">Contact email address</small>
+                </div>
+
+                <div class="form-field">
+                    <label>Phone</label>
+                    <input type="text" [(ngModel)]="formData.phone" class="p-inputtext"
+                        placeholder="Enter phone number" />
+                    <small class="field-hint">Contact phone number</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-secondary" (click)="toggleAddForm()">
+                    <i class="pi pi-times"></i>
+                    Cancel
+                </button>
+                <button class="btn-primary" (click)="savePartner()"
+                    [disabled]="!formData.name || !formData.partner_type">
+                    <i class="pi" [ngClass]="editingId ? 'pi-check' : 'pi-plus'"></i>
+                    {{ editingId ? 'Update' : 'Create' }} Partner
+                </button>
+            </div>
+        </div>
+
+        <!-- Partners Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3><i class="pi pi-users"></i> All Partners ({{ filteredPartners.length }})</h3>
+                <div class="table-actions">
+                    <button class="filter-button" [class.active]="showOnlySpecial" (click)="toggleSpecialFilter()"
+                        title="Filter partners with special payouts">
+                        <i class="pi pi-star-fill"></i>
+                        <span class="button-text">Special Payouts Only</span>
+                    </button>
+                    <select [(ngModel)]="selectedTypeFilter" (change)="filterPartners()"
+                        class="p-dropdown filter-dropdown">
+                        <option value="">All Types</option>
+                        <option value="AFF">Affiliate</option>
+                        <option value="INF">Influencer</option>
+                        <option value="MB">Media Buyer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Special Payouts</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let partner of filteredPartners">
+                            <tr [class.has-special]="partner.has_special_payouts">
+                                <td class="partner-name">
+                                    <i class="pi pi-user"></i>
+                                    <strong>{{ partner.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="type-badge" [ngClass]="'type-' + partner.partner_type">
+                                        {{ getPartnerTypeLabel(partner.partner_type) }}
+                                    </span>
+                                </td>
+                                <td class="special-payouts-cell">
+                                    <span *ngIf="!partner.has_special_payouts" class="no-special">-</span>
+                                    <button *ngIf="partner.has_special_payouts" class="special-badge"
+                                        (click)="toggleSpecialPayouts(partner.id)" title="Click to view details">
+                                        <i class="pi pi-star-fill"></i>
+                                        {{ partner.special_payouts_count }} Special Rate{{
+                                        partner.special_payouts_count! > 1 ? 's' : '' }}
+                                    </button>
+                                </td>
+                                <td>{{ partner.email || '-' }}</td>
+                                <td>{{ partner.phone || '-' }}</td>
+                                <td class="actions-col">
+                                    <button class="action-btn edit-btn" (click)="editPartner(partner)"
+                                        title="Edit partner">
+                                        <i class="pi pi-pencil"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" (click)="deletePartner(partner.id)"
+                                        title="Delete partner">
+                                        <i class="pi pi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="expandedPartnerId === partner.id && partner.special_payouts && partner.special_payouts.length > 0"
+                                class="expanded-row">
+                                <td colspan="6" class="special-details">
+                                    <div class="special-payouts-list">
+                                        <h4><i class="pi pi-star-fill"></i> Special Payout Rates for {{ partner.name }}
+                                        </h4>
+                                        <div class="payout-grid">
+                                            <div *ngFor="let sp of partner.special_payouts" class="payout-item">
+                                                <div class="payout-header">
+                                                    <span class="advertiser-name">{{ sp.advertiser }}</span>
+                                                    <span class="rate-type-badge">{{ sp.rate_type }}</span>
+                                                </div>
+                                                <div class="payout-details">
+                                                    <div class="rate-row">
+                                                        <span class="label">FTU:</span>
+                                                        <span class="value">{{ sp.ftu_payout }}%</span>
+                                                        <span class="bonus" *ngIf="sp.ftu_fixed_bonus">+ ${{
+                                                            sp.ftu_fixed_bonus }}</span>
+                                                    </div>
+                                                    <div class="rate-row">
+                                                        <span class="label">RTU:</span>
+                                                        <span class="value">{{ sp.rtu_payout }}%</span>
+                                                        <span class="bonus" *ngIf="sp.rtu_fixed_bonus">+ ${{
+                                                            sp.rtu_fixed_bonus }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-container>
+                        <tr *ngIf="filteredPartners.length === 0">
+                            <td colspan="5" class="empty-message">
+                                <i class="pi pi-inbox"></i>
+                                <p>No partners found. Click "Add New Partner" to get started.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <app-footer></app-footer>
+
+    </div>
+</div>

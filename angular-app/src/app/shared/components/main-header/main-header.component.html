@@ -1,0 +1,32 @@
+<header class="main-header">
+    <div class="header-container">
+        <div class="header-left">
+            <button class="menu-btn" (click)="toggleSidebar()" *ngIf="showSidebarButton">
+                <i class="pi pi-bars"></i>
+            </button>
+            <img src="Brandmark.png" class="logo" (click)="refreshDashboard()">
+            <nav class="nav-links">
+                <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="goToDashboard()">Dashboard</a>
+                <a class="nav-link" [class.active]="activeTab === 'coupons'" *ngIf="isAdmin"
+                    (click)="goToCoupons()">Coupons</a>
+                <a class="nav-link" [class.active]="activeTab === 'advertisers'" *ngIf="isAdmin"
+                    (click)="goToAdvertisers()">Advertisers</a>
+                <a class="nav-link" [class.active]="activeTab === 'partners'" *ngIf="isAdmin"
+                    (click)="goToPartners()">Partners</a>
+                <a class="nav-link" [class.active]="activeTab === 'targets'" *ngIf="isAdmin"
+                    (click)="goToTargets()">Targets</a>
+                <a class="nav-link" [class.active]="activeTab === 'daily-spend'" *ngIf="isMediaBuyer"
+                    (click)="goToMediaBuyerSpend()">Daily Spend</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="user-menu">
+                <span class="user-name">{{ user?.username }}</span>
+                <span class="user-role">{{ displayRole }}</span>
+            </div>
+            <button class="icon-btn" (click)="logout()">
+                <i class="pi pi-sign-out"></i>
+            </button>
+        </div>
+    </div>
+</header>
