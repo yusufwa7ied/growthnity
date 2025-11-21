@@ -1,8 +1,17 @@
 <div class="dashboard">
+  <!-- Loading Overlay -->
+  @if (loading) {
+  <div class="loading-overlay">
+    <p-progressSpinner styleClass="custom-spinner" strokeWidth="4" fill="transparent"
+      animationDuration="1s"></p-progressSpinner>
+    <p class="loading-text">Loading dashboard...</p>
+  </div>
+  }
+
   <app-main-header [showSidebarButton]="false" [activeTab]="'dashboard'">
   </app-main-header>
 
-  <main class="dashboard-main">
+  <main class="dashboard-main" [class.loading-blur]="loading">
     <!-- Floating Filter Button -->
     <button class="floating-filter-btn" (click)="openFilterModal()" [class.has-active]="hasActiveFilters()">
       <div class="btn-icon-wrapper">
