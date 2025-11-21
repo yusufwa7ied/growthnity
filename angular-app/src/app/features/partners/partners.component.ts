@@ -63,13 +63,18 @@ export class PartnersComponent implements OnInit {
     }
 
     loadPartners(): void {
+        this.loading = true;
         this.partnerService.getPartners().subscribe({
             next: (data) => {
                 this.partners = data;
                 this.calculateStats();
                 this.filterPartners();
+                this.loading = false;
             },
-            error: (error) => console.error('Error loading partners:', error)
+            error: (error) => {
+                console.error('Error loading partners:', error);
+                this.loading = false;
+            }
         });
     }
 
