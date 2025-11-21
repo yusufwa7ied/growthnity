@@ -619,6 +619,176 @@ def performance_table_view(request):
     paginated_result = paginator.paginate_queryset(result, request)
     
     return paginator.get_paginated_response(paginated_result)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard_filter_options_view(request):
+    """
+    Returns all available filter options for the dashboard based on user permissions.
+    This ensures dropdowns show all available options, not just what's in the current page.
+    """
+    user = request.user
+    company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+    role = company_user.role.name if company_user and company_user.role else None
+
+    # Get base queryset with same logic as performance_table_view
+    qs = CampaignPerformance.objects.all()
+
+    # Department scoping
+    if company_user and company_user.department:
+        dept = company_user.department.name
+        if dept == "Operations":
+            qs = qs.filter(advertiser__department__name="Operations")
+        elif dept == "Sales":
+            qs = qs.filter(advertiser__department__name="Sales")
+
+    # Role-based filtering
+    full_access_roles = {"Admin", "OpsManager"}
+    if role not in full_access_roles:
+        assignments = AccountAssignment.objects.filter(
+            company_user=company_user
+        ).prefetch_related("advertisers", "partners")
+
+        advertiser_ids = set()
+        partner_ids = set()
+        for a in assignments:
+            advertiser_ids.update(a.advertisers.values_list("id", flat=True))
+            partner_ids.update(a.partners.values_list("id", flat=True))
+
+        if advertiser_ids:
+            qs = qs.filter(advertiser__id__in=advertiser_ids)
+        if partner_ids:
+            qs = qs.filter(partner__id__in=partner_ids)
+
+    # Extract unique filter options
+    advertisers_map = {}
+    partners_map = {}
+    coupons_map = {}
+
+    for cp in qs.select_related('advertiser', 'partner'):
+        # Advertisers
+        if cp.advertiser_id not in advertisers_map:
+            advertisers_map[cp.advertiser_id] = {
+                "advertiser_id": cp.advertiser_id,
+                "campaign": cp.advertiser.name
+            }
+        
+        # Partners
+        if cp.partner_id and cp.partner_id not in partners_map:
+            partners_map[cp.partner_id] = {
+                "partner_id": cp.partner_id,
+                "partner": cp.partner.name
+            }
+        
+        # Coupons
+        if cp.coupon and cp.coupon not in coupons_map:
+            coupons_map[cp.coupon] = {
+                "coupon": cp.coupon,
+                "advertiser_id": cp.advertiser_id,
+                "partner_id": cp.partner_id
+            }
+
+    result = {
+        "advertisers": list(advertisers_map.values()),
+        "partners": list(partners_map.values()),
+        "coupons": list(coupons_map.values())
+    }
+
+    return Response(result)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard_pie_chart_data_view(request):
+    """
+    Returns top campaigns data for pie chart across ALL records (not paginated).
+    Applies same filters as performance table but aggregates across full dataset.
+    """
+    user = request.user
+    company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+    role = company_user.role.name if company_user and company_user.role else None
+
+    # Get filters from request
+    start_date_str = request.GET.get("start_date")
+    end_date_str = request.GET.get("end_date")
+    advertiser_id = request.GET.get("advertiser")
+    partner_id = request.GET.get("partner")
+    coupon = request.GET.get("coupon")
+
+    qs = CampaignPerformance.objects.all()
+
+    # Department scoping
+    if company_user and company_user.department:
+        dept = company_user.department.name
+        if dept == "Operations":
+            qs = qs.filter(advertiser__department__name="Operations")
+        elif dept == "Sales":
+            qs = qs.filter(advertiser__department__name="Sales")
+
+    # Role-based filtering
+    full_access_roles = {"Admin", "OpsManager"}
+    if role not in full_access_roles:
+        assignments = AccountAssignment.objects.filter(
+            company_user=company_user
+        ).prefetch_related("advertisers", "partners")
+
+        advertiser_ids = set()
+        partner_ids = set()
+        for a in assignments:
+            advertiser_ids.update(a.advertisers.values_list("id", flat=True))
+            partner_ids.update(a.partners.values_list("id", flat=True))
+
+        if advertiser_ids:
+            qs = qs.filter(advertiser__id__in=advertiser_ids)
+        if partner_ids:
+            qs = qs.filter(partner__id__in=partner_ids)
+
+    # Apply user filters
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            qs = qs.filter(date__gte=start_date)
+        except:
+            pass
+
+    if end_date_str:
+        try:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            qs = qs.filter(date__lte=end_date)
+        except:
+            pass
+
+    if advertiser_id:
+        qs = qs.filter(advertiser_id=advertiser_id)
+
+    if partner_id:
+        qs = qs.filter(partner_id=partner_id)
+
+    if coupon:
+        qs = qs.filter(coupon=coupon)
+
+    # Aggregate by campaign
+    campaign_totals = {}
+    for cp in qs.select_related('advertiser'):
+        campaign_name = cp.advertiser.name
+        if campaign_name not in campaign_totals:
+            campaign_totals[campaign_name] = {
+                "campaign": campaign_name,
+                "total_revenue": 0
+            }
+        campaign_totals[campaign_name]["total_revenue"] += float(cp.total_revenue or 0)
+
+    # Sort by total_revenue and take top 10
+    sorted_campaigns = sorted(
+        campaign_totals.values(),
+        key=lambda x: x["total_revenue"],
+        reverse=True
+    )[:10]
+
+    return Response(sorted_campaigns)
+
+
 # --- Coupon Management ---
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])

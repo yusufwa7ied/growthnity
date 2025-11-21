@@ -75,6 +75,27 @@ export interface PaginatedTableResponse {
   results: TableRow[];
 }
 
+export interface FilterOptions {
+  advertisers: Array<{
+    advertiser_id: number;
+    campaign: string;
+  }>;
+  partners: Array<{
+    partner_id: number;
+    partner: string;
+  }>;
+  coupons: Array<{
+    coupon: string;
+    advertiser_id: number;
+    partner_id?: number;
+  }>;
+}
+
+export interface PieChartData {
+  campaign: string;
+  total_revenue: number;
+}
+
 export interface DashboardContext {
   username: string;
   role: string;

@@ -116,6 +116,7 @@ export class DashboardComponent implements OnInit {
         this.role = this.user?.role || '';
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
+        this.loadFilterOptions(); // Load all filter options first
         this.loadData();
         this.loadAnalytics();
     }
@@ -391,6 +392,45 @@ export class DashboardComponent implements OnInit {
         this.coupons = this.allCoupons.filter(c => couponCodes.has(c.code));
     }
 
+    loadFilterOptions(): void {
+        // Load all available filter options from the API
+        // This loads the full dataset for dropdowns, respecting user permissions
+        this.dashboardService.getFilterOptions().subscribe({
+            next: (options) => {
+                // Populate advertisers
+                this.allAdvertisers = options.advertisers.map(a => ({
+                    id: a.advertiser_id,
+                    name: a.campaign,
+                    attribution: ''
+                })).sort((a, b) => a.name.localeCompare(b.name));
+
+                // Populate partners
+                this.allPartners = options.partners.map(p => ({
+                    id: p.partner_id,
+                    name: p.partner,
+                    type: ''
+                })).sort((a, b) => a.name.localeCompare(b.name));
+
+                // Populate coupons
+                this.allCoupons = options.coupons.map(c => ({
+                    code: c.coupon,
+                    advertiser: '',
+                    advertiser_id: c.advertiser_id,
+                    partner: '',
+                    partner_id: c.partner_id
+                })).sort((a, b) => a.code.localeCompare(b.code));
+
+                // Initially, show all options in dropdowns
+                this.advertisers = [...this.allAdvertisers];
+                this.partners = [...this.allPartners];
+                this.coupons = [...this.allCoupons];
+            },
+            error: (error) => {
+                console.error('Error loading filter options:', error);
+            }
+        });
+    }
+
     loadData(): void {
         this.loading = true;
         this.dashboardService.getKPIs(this.filters).subscribe({
@@ -420,14 +460,31 @@ export class DashboardComponent implements OnInit {
                 this.totalRecords = response.count;
                 this.tableData = response.results;
                 this.filteredTableData = [...response.results];
-                // Build filters from the table data
-                this.loadFiltersFromTableData();
-                // Build pie chart from table data
-                this.buildPieChart(response.results);
             },
             error: (error) => {
                 console.error('Error loading table data:', error);
                 // Table will remain empty/previous value
+            }
+        });
+
+        // Load pie chart data from separate endpoint (full dataset, not paginated)
+        this.dashboardService.getPieChartData(this.filters).subscribe({
+            next: (chartData) => {
+                // Convert API response to TableRow format for buildPieChart
+                const pieChartRows: TableRow[] = chartData.map(item => ({
+                    date: '',
+                    advertiser_id: 0,
+                    campaign: item.campaign,
+                    coupon: '',
+                    orders: 0,
+                    sales: 0,
+                    revenue: item.total_revenue,
+                    payout: 0
+                }));
+                this.buildPieChart(pieChartRows);
+            },
+            error: (error) => {
+                console.error('Error loading pie chart data:', error);
             }
         });
 

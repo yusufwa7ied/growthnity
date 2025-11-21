@@ -7,10 +7,12 @@ import {
   Coupon,
   DashboardContext,
   DashboardFilters,
+  FilterOptions,
   GraphData,
   KPIData,
   PaginatedTableResponse,
-  Partner
+  Partner,
+  PieChartData
 } from '../models/dashboard.model';
 
 @Injectable({
@@ -59,6 +61,17 @@ export class DashboardService {
   // Get coupons list
   getCoupons(): Observable<Coupon[]> {
     return this.http.get<Coupon[]>(`${this.API_BASE_URL}/coupons/`);
+  }
+
+  // Get all filter options (advertisers, partners, coupons) based on user permissions
+  getFilterOptions(): Observable<FilterOptions> {
+    return this.http.get<FilterOptions>(`${this.API_BASE_URL}/dashboard/filter-options/`);
+  }
+
+  // Get pie chart data for all campaigns (not paginated)
+  getPieChartData(filters: DashboardFilters): Observable<PieChartData[]> {
+    const params = this.buildParams(filters);
+    return this.http.get<PieChartData[]>(`${this.API_BASE_URL}/dashboard/pie-chart-data/`, { params });
   }
 
   // Helper to build HTTP params from filters
