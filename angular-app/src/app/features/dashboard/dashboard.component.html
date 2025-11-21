@@ -705,7 +705,7 @@
 
       <!-- Server-side pagination -->
       <p-paginator [rows]="pageSize" [totalRecords]="totalRecords" [first]="(currentPage - 1) * pageSize"
-        [showCurrentPageReport]="true" [alwaysShowPaginator]="true"
+        [showCurrentPageReport]="true"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} records"
         (onPageChange)="onPageChange($event)" styleClass="mt-2">
       </p-paginator>
