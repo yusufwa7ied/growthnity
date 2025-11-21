@@ -2,6 +2,7 @@
 from rest_framework.response import Response # type: ignore
 
 from rest_framework.permissions import IsAuthenticated # type: ignore
+from rest_framework.pagination import PageNumberPagination # type: ignore
 
 
 from .models import CompanyUser, AccountAssignment, Advertiser, Partner
@@ -19,6 +20,13 @@ from django.db.models import F, Q
 
 from datetime import datetime, date
 from calendar import monthrange
+
+
+# Pagination class for performance table
+class PerformanceTablePagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 
@@ -602,7 +610,11 @@ def performance_table_view(request):
         
         result.append(row)
 
-    return Response(result)
+    # Apply pagination
+    paginator = PerformanceTablePagination()
+    paginated_result = paginator.paginate_queryset(result, request)
+    
+    return paginator.get_paginated_response(paginated_result)
 # --- Coupon Management ---
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
