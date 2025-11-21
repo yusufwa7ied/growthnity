@@ -9,9 +9,8 @@ import {
   DashboardFilters,
   GraphData,
   KPIData,
-  Partner,
   PaginatedTableResponse,
-  TableRow
+  Partner
 } from '../models/dashboard.model';
 
 @Injectable({

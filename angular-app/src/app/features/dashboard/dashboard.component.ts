@@ -32,6 +32,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
         FooterComponent,
         InputText,
         TableModule,
+        Paginator,
         BaseChartDirective,
         MainHeaderComponent
     ],
