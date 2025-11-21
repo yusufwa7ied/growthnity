@@ -132,7 +132,7 @@ export class PartnersComponent implements OnInit {
             phone: partner.phone
         };
         this.showAddForm = true;
-        
+
         // Scroll to top so user sees the form
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

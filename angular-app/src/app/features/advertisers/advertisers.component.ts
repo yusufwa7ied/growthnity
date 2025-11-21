@@ -291,7 +291,7 @@ export class AdvertisersComponent implements OnInit {
         this.defaultRtuFixedBonus = advertiser.default_rtu_fixed_bonus || null;
         this.partnerPayouts = advertiser.partner_payouts ? [...advertiser.partner_payouts] : [];
         this.showAddForm = true;
-        
+
         // Scroll to top so user sees the form
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

@@ -97,6 +97,11 @@ export class DashboardComponent implements OnInit {
     filteredTableData: TableRow[] = [];
     showFilterModal: boolean = false;
 
+    // Pagination
+    currentPage: number = 1;
+    pageSize: number = 50;
+    totalRecords: number = 0;
+
     constructor(
         private authService: AuthService,
         private router: Router,
@@ -408,14 +413,15 @@ export class DashboardComponent implements OnInit {
             }
         });
 
-        this.dashboardService.getTableData(this.filters).subscribe({
-            next: (data) => {
-                this.tableData = data;
-                this.filteredTableData = [...data];
+        this.dashboardService.getTableData(this.filters, this.currentPage, this.pageSize).subscribe({
+            next: (response) => {
+                this.totalRecords = response.count;
+                this.tableData = response.results;
+                this.filteredTableData = [...response.results];
                 // Build filters from the table data
                 this.loadFiltersFromTableData();
                 // Build pie chart from table data
-                this.buildPieChart(data);
+                this.buildPieChart(response.results);
             },
             error: (error) => {
                 console.error('Error loading table data:', error);
@@ -660,8 +666,15 @@ export class DashboardComponent implements OnInit {
             this.filters.date_from = undefined;
             this.filters.date_to = undefined;
         }
+        // Reset to first page when filters change
+        this.currentPage = 1;
         // Only reload data (KPIs, table, charts) - NOT analytics
         // Analytics should always show current month MTD regardless of date filter
+        this.loadData();
+    }
+
+    onPageChange(event: any): void {
+        this.currentPage = event.page + 1; // PrimeNG uses 0-based page index
         this.loadData();
     }
 

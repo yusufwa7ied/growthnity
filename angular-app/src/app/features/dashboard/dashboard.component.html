@@ -653,10 +653,8 @@
           </div>
         </div>
       </ng-template>
-      <p-table [value]="tableSearchTerm ? filteredTableData : tableData" [loading]="loading" [paginator]="true"
-        [rows]="50" [showCurrentPageReport]="true" [alwaysShowPaginator]="true"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} records"
-        styleClass="p-datatable-sm p-datatable-striped" [lazy]="false" responsiveLayout="scroll">
+      <p-table [value]="tableSearchTerm ? filteredTableData : tableData" [loading]="loading" [paginator]="false"
+        styleClass="p-datatable-sm p-datatable-striped" responsiveLayout="scroll">
         <ng-template pTemplate="header">
           <tr>
             <th class="col-date" pSortableColumn="date">Date <p-sortIcon field="date"></p-sortIcon></th>
@@ -704,6 +702,13 @@
           </tr>
         </ng-template>
       </p-table>
+
+      <!-- Server-side pagination -->
+      <p-paginator [rows]="pageSize" [totalRecords]="totalRecords" [first]="(currentPage - 1) * pageSize"
+        [showCurrentPageReport]="true" [alwaysShowPaginator]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} records"
+        (onPageChange)="onPageChange($event)" styleClass="mt-2">
+      </p-paginator>
     </p-card>
   </main>
 
