@@ -286,6 +286,9 @@ export class CouponsComponent implements OnInit {
         this.selectedPartner = row.partner_id || null;
         this.discountPercent = row.discount || null;
         this.geo = row.geo || '';  // geo will be null or string, convert null to empty string for input
+        
+        // Scroll to top so user sees the form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     onFilterAdvertiserChange(): void {
