@@ -80,6 +80,7 @@ export class DashboardComponent implements OnInit {
     // Data
     kpis: KPIData | null = null;
     tableData: TableRow[] = [];
+    filteredTableData: TableRow[] = [];
     graphData: GraphData | null = null;
 
     // Charts
@@ -96,7 +97,6 @@ export class DashboardComponent implements OnInit {
     dateRange: Date[] = [];
     activeDatePreset: string = '';
     tableSearchTerm: string = '';
-    filteredTableData: TableRow[] = [];
     showFilterModal: boolean = false;
 
     // Pagination
@@ -1008,6 +1008,7 @@ export class DashboardComponent implements OnInit {
     }
 
     getFilteredTableCount(): number {
+        // With pagination, show the current page count
         return this.tableSearchTerm ? this.filteredTableData.length : this.tableData.length;
     }
 
