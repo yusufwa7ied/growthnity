@@ -15,6 +15,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-perfpass123}
     ports:
       - "5432:5432"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-east-1
+        awslogs-group: /growthnity/db
+        awslogs-create-group: "true"
+        awslogs-stream: db
 
   # Django Backend
   backend:
@@ -41,6 +48,13 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost,http://44.210.80.248,https://growthnity-app.com}
     depends_on:
       - db
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-east-1
+        awslogs-group: /growthnity/backend
+        awslogs-create-group: "true"
+        awslogs-stream: backend
 
   # Angular Frontend
   frontend:
@@ -53,6 +67,13 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: us-east-1
+        awslogs-group: /growthnity/frontend
+        awslogs-create-group: "true"
+        awslogs-stream: frontend
 
 volumes:
   postgres_data:
