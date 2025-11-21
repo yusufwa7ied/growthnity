@@ -666,7 +666,7 @@ def dashboard_filter_options_view(request):
     partners_map = {}
     coupons_map = {}
 
-    for cp in qs.select_related('advertiser', 'partner'):
+    for cp in qs.select_related('advertiser', 'partner', 'coupon'):
         # Advertisers
         if cp.advertiser_id not in advertisers_map:
             advertisers_map[cp.advertiser_id] = {
@@ -682,9 +682,9 @@ def dashboard_filter_options_view(request):
             }
         
         # Coupons
-        if cp.coupon and cp.coupon not in coupons_map:
-            coupons_map[cp.coupon] = {
-                "coupon": cp.coupon,
+        if cp.coupon and cp.coupon.code not in coupons_map:
+            coupons_map[cp.coupon.code] = {
+                "coupon": cp.coupon.code,
                 "advertiser_id": cp.advertiser_id,
                 "partner_id": cp.partner_id
             }
