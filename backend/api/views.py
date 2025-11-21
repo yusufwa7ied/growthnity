@@ -517,7 +517,11 @@ def performance_table_view(request):
                 "payout": payout,
                 "profit": profit,
             })
-        return Response(result)
+        
+        # Apply pagination for Admin/OpsManager
+        paginator = PerformanceTablePagination()
+        paginated_result = paginator.paginate_queryset(result, request)
+        return paginator.get_paginated_response(paginated_result)
 
     # ======================================================
     # MEMBER RESPONSE
