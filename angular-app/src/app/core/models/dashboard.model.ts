@@ -68,6 +68,13 @@ export interface TableRow {
   profit?: number;
 }
 
+export interface PaginatedTableResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: TableRow[];
+}
+
 export interface DashboardContext {
   username: string;
   role: string;

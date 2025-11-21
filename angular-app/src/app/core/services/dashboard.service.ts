@@ -10,6 +10,7 @@ import {
   GraphData,
   KPIData,
   Partner,
+  PaginatedTableResponse,
   TableRow
 } from '../models/dashboard.model';
 
@@ -38,10 +39,12 @@ export class DashboardService {
     return this.http.get<GraphData>(`${this.API_BASE_URL}/dashboard/graph-data/`, { params });
   }
 
-  // Get table data
-  getTableData(filters: DashboardFilters): Observable<TableRow[]> {
+  // Get table data with pagination
+  getTableData(filters: DashboardFilters, page: number = 1, pageSize: number = 50): Observable<PaginatedTableResponse> {
     let params = this.buildParams(filters);
-    return this.http.get<TableRow[]>(`${this.API_BASE_URL}/dashboard/performance-table/`, { params });
+    params = params.set('page', page.toString());
+    params = params.set('page_size', pageSize.toString());
+    return this.http.get<PaginatedTableResponse>(`${this.API_BASE_URL}/dashboard/performance-table/`, { params });
   }
 
   // Get advertisers list
