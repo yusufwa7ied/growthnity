@@ -9,6 +9,7 @@ import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
 import { MultiSelect } from 'primeng/multiselect';
+import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { Advertiser, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
@@ -32,7 +33,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
         FooterComponent,
         InputText,
         TableModule,
-        Paginator,
+        PaginatorModule,
         BaseChartDirective,
         MainHeaderComponent
     ],
