@@ -14,29 +14,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(249, 250, 251, 0.95);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
+  gap: 1rem;
 }
 
-.loading-text {
-  margin-top: 1rem;
+.loading-overlay i {
   color: #009292;
-  font-size: 1.1rem;
-  font-weight: 500;
 }
 
-.loading-blur {
-  filter: blur(2px);
-  pointer-events: none;
-}
-
-::ng-deep .custom-spinner .p-progress-spinner-circle {
-  stroke: #009292 !important;
+.loading-overlay p {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .main-header {
