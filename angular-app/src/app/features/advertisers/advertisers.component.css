@@ -646,19 +646,28 @@
 }
 
 .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
-    color: var(--brand-teal);
+    z-index: 9999;
     gap: 1rem;
 }
 
+.loading-overlay i {
+    color: #009292;
+}
+
 .loading-overlay p {
-    font-weight: 600;
-    font-size: 1.1rem;
     color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
 }
 
 @media (max-width: 768px) {
