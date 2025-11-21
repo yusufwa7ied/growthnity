@@ -74,9 +74,10 @@ export class LoginComponent implements OnInit {
     this.authService.login(credentials).subscribe({
       next: () => {
         console.log('✅ Login successful, redirecting...');
-        this.isLoading.set(false);
-        // Redirect to dashboard for all users
-        this.router.navigate(['/dashboard']);
+        // Keep loading state until navigation completes
+        this.router.navigate(['/dashboard']).then(() => {
+          this.isLoading.set(false);
+        });
       },
       error: (error) => {
         console.log('❌ Login failed:', error);

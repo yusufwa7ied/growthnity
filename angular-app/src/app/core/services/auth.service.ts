@@ -77,11 +77,8 @@ export class AuthService {
 
   logout(): void {
     this.clearAuth();
-    // Navigate and force a full page reload to clear component state
-    this.router.navigate(['/login']).then(() => {
-      // This ensures clean state on next login
-      window.location.reload();
-    });
+    // Navigate to login without reload for smoother UX
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   /**
