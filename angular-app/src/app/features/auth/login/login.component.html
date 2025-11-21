@@ -49,7 +49,7 @@
 
             <div class="form-actions">
               <p-button type="submit" label="Sign In" icon="pi pi-sign-in" [loading]="isLoading()"
-                [disabled]="isLoading()" styleClass="w-full" size="large"></p-button>
+                [disabled]="isLoading() || loginForm.invalid" styleClass="w-full" size="large"></p-button>
             </div>
 
             <div class="login-footer-links">
