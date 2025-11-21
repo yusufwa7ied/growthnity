@@ -10,7 +10,7 @@
     </div>
 
     <!-- Floating Filter Button -->
-    <button class="floating-filter-btn" (click)="openFilterModal()" [class.has-active]="hasActiveFilters()"
+    <button class="floating-filter-btn" (click)="openFilterModal()" [class.has-active]="hasActiveFilters()">
       <div class="btn-icon-wrapper">
         <i class="pi pi-filter"></i>
         <span class="active-count" *ngIf="hasActiveFilters()">{{ getActiveFilterCount() }}</span>
