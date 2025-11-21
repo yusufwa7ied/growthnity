@@ -56,8 +56,11 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.errorMessage.set('Please enter both username and password.');
+    // Prevent double submission
+    if (this.isLoading() || this.loginForm.invalid) {
+      if (this.loginForm.invalid) {
+        this.errorMessage.set('Please enter both username and password.');
+      }
       return;
     }
 
