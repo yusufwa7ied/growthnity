@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -35,25 +35,32 @@ export class MainHeaderComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Dynamically update activeTab based on current route
+        // Set initial active tab based on current URL
+        this.updateActiveTab(this.router.url);
+
+        // Dynamically update activeTab based on route changes
         this.router.events.pipe(
             filter(event => event instanceof NavigationEnd)
         ).subscribe((event: any) => {
-            const url = event.urlAfterRedirects || '';
-            if (url.includes('/dashboard')) {
-                this.activeTab = 'dashboard';
-            } else if (url.includes('/coupons')) {
-                this.activeTab = 'coupons';
-            } else if (url.includes('/advertisers')) {
-                this.activeTab = 'advertisers';
-            } else if (url.includes('/partners')) {
-                this.activeTab = 'partners';
-            } else if (url.includes('/targets')) {
-                this.activeTab = 'targets';
-            } else if (url.includes('/media-buyer-spend')) {
-                this.activeTab = 'daily-spend';
-            }
+            this.updateActiveTab(event.urlAfterRedirects || event.url || '');
         });
+    }
+
+    private updateActiveTab(url: string): void {
+        // Use exact match to avoid conflicts (e.g., /dashboard matching /coupons)
+        if (url === '/' || url.startsWith('/dashboard')) {
+            this.activeTab = 'dashboard';
+        } else if (url.startsWith('/coupons')) {
+            this.activeTab = 'coupons';
+        } else if (url.startsWith('/advertisers')) {
+            this.activeTab = 'advertisers';
+        } else if (url.startsWith('/partners')) {
+            this.activeTab = 'partners';
+        } else if (url.startsWith('/targets')) {
+            this.activeTab = 'targets';
+        } else if (url.startsWith('/media-buyer-spend')) {
+            this.activeTab = 'daily-spend';
+        }
     }
 
     private getDisplayRole(): string {

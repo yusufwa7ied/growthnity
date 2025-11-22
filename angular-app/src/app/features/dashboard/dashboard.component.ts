@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
@@ -118,16 +118,16 @@ export class DashboardComponent implements OnInit {
         this.role = this.user?.role || '';
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
-        
+
         // Load filter options immediately (cached)
         this.loadFilterOptions();
-        
+
         // Defer heavy data loading using requestAnimationFrame
         // This ensures the UI renders first before loading data, making navigation feel responsive
         requestAnimationFrame(() => {
             this.loading = true;
             this.cdr.markForCheck();
-            
+
             setTimeout(() => {
                 this.loadData();
                 this.loadAnalytics();

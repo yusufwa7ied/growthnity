@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CacheService } from './cache.service';
 import {
   Advertiser,
   Coupon,
@@ -15,6 +14,7 @@ import {
   Partner,
   PieChartData
 } from '../models/dashboard.model';
+import { CacheService } from './cache.service';
 
 @Injectable({
   providedIn: 'root'
