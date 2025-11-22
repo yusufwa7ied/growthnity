@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
@@ -39,6 +39,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
     animations: [
         trigger('slideIn', [
             transition(':enter', [
@@ -108,7 +109,8 @@ export class DashboardComponent implements OnInit {
         private authService: AuthService,
         private router: Router,
         private dashboardService: DashboardService,
-        private analyticsService: AnalyticsService
+        private analyticsService: AnalyticsService,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
@@ -117,14 +119,20 @@ export class DashboardComponent implements OnInit {
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
         
-        // Load filter options first, then load data after a micro-delay to prevent UI blocking
+        // Load filter options immediately (cached)
         this.loadFilterOptions();
         
-        // Use setTimeout to defer heavy data loading and prevent navigation lag
-        setTimeout(() => {
-            this.loadData();
-            this.loadAnalytics();
-        }, 0);
+        // Defer heavy data loading using requestAnimationFrame
+        // This ensures the UI renders first before loading data, making navigation feel responsive
+        requestAnimationFrame(() => {
+            this.loading = true;
+            this.cdr.markForCheck();
+            
+            setTimeout(() => {
+                this.loadData();
+                this.loadAnalytics();
+            }, 0);
+        });
     }
 
     hasActiveFilters(): boolean {

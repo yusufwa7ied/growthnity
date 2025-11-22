@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -11,11 +12,11 @@ import { AuthService } from '../../../core/services/auth.service';
     templateUrl: './main-header.component.html',
     styleUrl: './main-header.component.css'
 })
-export class MainHeaderComponent {
+export class MainHeaderComponent implements OnInit {
     @Input() showSidebarButton: boolean = true;
-    @Input() activeTab: 'dashboard' | 'daily-spend' | 'coupons' | 'advertisers' | 'partners' | 'targets' = 'dashboard';
     @Output() sidebarToggle = new EventEmitter<void>();
 
+    activeTab: 'dashboard' | 'daily-spend' | 'coupons' | 'advertisers' | 'partners' | 'targets' = 'dashboard';
     user: User | null = null;
     role: string = '';
     isAdmin: boolean = false;
@@ -31,6 +32,28 @@ export class MainHeaderComponent {
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
         this.displayRole = this.getDisplayRole();
+    }
+
+    ngOnInit(): void {
+        // Dynamically update activeTab based on current route
+        this.router.events.pipe(
+            filter(event => event instanceof NavigationEnd)
+        ).subscribe((event: any) => {
+            const url = event.urlAfterRedirects || '';
+            if (url.includes('/dashboard')) {
+                this.activeTab = 'dashboard';
+            } else if (url.includes('/coupons')) {
+                this.activeTab = 'coupons';
+            } else if (url.includes('/advertisers')) {
+                this.activeTab = 'advertisers';
+            } else if (url.includes('/partners')) {
+                this.activeTab = 'partners';
+            } else if (url.includes('/targets')) {
+                this.activeTab = 'targets';
+            } else if (url.includes('/media-buyer-spend')) {
+                this.activeTab = 'daily-spend';
+            }
+        });
     }
 
     private getDisplayRole(): string {

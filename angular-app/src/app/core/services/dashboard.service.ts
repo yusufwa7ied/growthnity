@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { CacheService } from './cache.service';
 import {
   Advertiser,
   Coupon,
@@ -21,11 +22,28 @@ import {
 export class DashboardService {
   private readonly API_BASE_URL = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private cacheService: CacheService
+  ) { }
 
   // Get dashboard context (role, permissions, assignments)
   getDashboardContext(): Observable<DashboardContext> {
-    return this.http.get<DashboardContext>(`${this.API_BASE_URL}/dashboard/context/`);
+    return this.cacheService.get(
+      'dashboard-context',
+      this.http.get<DashboardContext>(`${this.API_BASE_URL}/dashboard/context/`),
+      10 * 60 * 1000 // 10 minutes cache
+    );
+  }
+
+  // Get all filter options (advertisers, partners, coupons) based on user permissions
+  // Cache for 10 minutes since filter options don't change often
+  getFilterOptions(): Observable<FilterOptions> {
+    return this.cacheService.get(
+      'filter-options',
+      this.http.get<FilterOptions>(`${this.API_BASE_URL}/dashboard/filter-options/`),
+      10 * 60 * 1000 // 10 minutes cache
+    );
   }
 
   // Get KPI summary data
@@ -50,22 +68,29 @@ export class DashboardService {
 
   // Get advertisers list
   getAdvertisers(): Observable<Advertiser[]> {
-    return this.http.get<Advertiser[]>(`${this.API_BASE_URL}/advertisers/`);
+    return this.cacheService.get(
+      'advertisers-list',
+      this.http.get<Advertiser[]>(`${this.API_BASE_URL}/advertisers/`),
+      10 * 60 * 1000
+    );
   }
 
   // Get partners list
   getPartners(): Observable<Partner[]> {
-    return this.http.get<Partner[]>(`${this.API_BASE_URL}/partners/`);
+    return this.cacheService.get(
+      'partners-list',
+      this.http.get<Partner[]>(`${this.API_BASE_URL}/partners/`),
+      10 * 60 * 1000
+    );
   }
 
   // Get coupons list
   getCoupons(): Observable<Coupon[]> {
-    return this.http.get<Coupon[]>(`${this.API_BASE_URL}/coupons/`);
-  }
-
-  // Get all filter options (advertisers, partners, coupons) based on user permissions
-  getFilterOptions(): Observable<FilterOptions> {
-    return this.http.get<FilterOptions>(`${this.API_BASE_URL}/dashboard/filter-options/`);
+    return this.cacheService.get(
+      'coupons-list',
+      this.http.get<Coupon[]>(`${this.API_BASE_URL}/coupons/`),
+      10 * 60 * 1000
+    );
   }
 
   // Get pie chart data for all campaigns (not paginated)
