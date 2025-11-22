@@ -39,7 +39,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+
     animations: [
         trigger('slideIn', [
             transition(':enter', [
@@ -438,9 +438,11 @@ export class DashboardComponent implements OnInit {
                 this.advertisers = [...this.allAdvertisers];
                 this.partners = [...this.allPartners];
                 this.coupons = [...this.allCoupons];
+                this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading filter options:', error);
+                this.cdr.markForCheck();
             }
         });
     }
@@ -461,11 +463,12 @@ export class DashboardComponent implements OnInit {
                     };
                 }
                 this.loading = false;
+                this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading KPIs:', error);
                 this.loading = false;
-                // KPIs will remain null/previous value, UI should handle gracefully
+                this.cdr.markForCheck();
             }
         });
 
@@ -474,10 +477,11 @@ export class DashboardComponent implements OnInit {
                 this.totalRecords = response.count;
                 this.tableData = response.results;
                 this.filteredTableData = [...response.results];
+                this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading table data:', error);
-                // Table will remain empty/previous value
+                this.cdr.markForCheck();
             }
         });
 
@@ -496,9 +500,11 @@ export class DashboardComponent implements OnInit {
                     payout: 0
                 }));
                 this.buildPieChart(pieChartRows);
+                this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading pie chart data:', error);
+                this.cdr.markForCheck();
             }
         });
 
@@ -506,10 +512,11 @@ export class DashboardComponent implements OnInit {
             next: (data) => {
                 this.graphData = data;
                 this.buildLineChart(data);
+                this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading graph data:', error);
-                // Graph will remain null/previous value
+                this.cdr.markForCheck();
             }
         });
     }
@@ -777,9 +784,11 @@ export class DashboardComponent implements OnInit {
         ).subscribe({
             next: (data) => {
                 this.analytics = data;
+                this.cdr.markForCheck();
             },
             error: (err) => {
                 console.error('Failed to load analytics:', err);
+                this.cdr.markForCheck();
             }
         });
     }
