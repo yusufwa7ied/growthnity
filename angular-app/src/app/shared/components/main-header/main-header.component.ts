@@ -67,26 +67,26 @@ export class MainHeaderComponent {
     }
 
     goToDashboard(): void {
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/dashboard'], { skipLocationChange: false });
     }
 
     goToCoupons(): void {
-        this.router.navigate(['/coupons']);
+        this.router.navigate(['/coupons'], { skipLocationChange: false });
     }
 
     goToAdvertisers(): void {
-        this.router.navigate(['/advertisers']);
+        this.router.navigate(['/advertisers'], { skipLocationChange: false });
     }
 
     goToTargets(): void {
-        this.router.navigate(['/targets']);
+        this.router.navigate(['/targets'], { skipLocationChange: false });
     }
 
     goToPartners(): void {
-        this.router.navigate(['/partners']);
+        this.router.navigate(['/partners'], { skipLocationChange: false });
     }
 
     goToMediaBuyerSpend(): void {
-        this.router.navigate(['/media-buyer-spend']);
+        this.router.navigate(['/media-buyer-spend'], { skipLocationChange: false });
     }
 }

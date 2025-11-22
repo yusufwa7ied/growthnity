@@ -116,9 +116,15 @@ export class DashboardComponent implements OnInit {
         this.role = this.user?.role || '';
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
-        this.loadFilterOptions(); // Load all filter options first
-        this.loadData();
-        this.loadAnalytics();
+        
+        // Load filter options first, then load data after a micro-delay to prevent UI blocking
+        this.loadFilterOptions();
+        
+        // Use setTimeout to defer heavy data loading and prevent navigation lag
+        setTimeout(() => {
+            this.loadData();
+            this.loadAnalytics();
+        }, 0);
     }
 
     hasActiveFilters(): boolean {
@@ -857,7 +863,8 @@ export class DashboardComponent implements OnInit {
         this.coupons = [...this.allCoupons];
 
         // Reload data with no filters
-        this.applyFilters();
+        this.loadData();
+        this.loadAnalytics(); // Add this to reload analytics
     }
 
     exportToCSV(): void {
