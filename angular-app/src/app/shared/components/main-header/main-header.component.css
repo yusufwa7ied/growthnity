@@ -75,6 +75,7 @@
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
+    display: block;
 }
 
 .nav-link:hover {

@@ -552,6 +552,11 @@ form {
   font-size: 1.5rem;
   color: #009292;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
 }
 
 /* Page Footer */
