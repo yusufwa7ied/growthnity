@@ -591,13 +591,30 @@
     margin: 1rem 0;
 }
 
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
 .action-btn {
-    background: transparent;
-    border: none;
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #4b5563;
+    border-radius: 8px;
     cursor: pointer;
-    border-radius: 6px;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .edit-btn {
@@ -605,16 +622,19 @@
 }
 
 .edit-btn:hover {
-    background: #eff6ff;
+    border-color: var(--info-blue);
+    color: var(--info-blue);
+    background: rgba(59, 130, 246, 0.05);
 }
 
 .delete-btn {
     color: var(--error-red);
-    margin-left: 0.5rem;
 }
 
 .delete-btn:hover {
-    background: #fef2f2;
+    border-color: var(--error-red);
+    color: var(--error-red);
+    background: rgba(239, 68, 68, 0.05);
 }
 
 /* Form Styles */

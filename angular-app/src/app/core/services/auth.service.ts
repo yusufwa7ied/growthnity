@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardContext, LoginCredentials, LoginResponse, User } from '../models/user.model';
+import { DashboardContext, LoginCredentials, User } from '../models/user.model';
 
 export interface TokenResponse {
   access: string;
