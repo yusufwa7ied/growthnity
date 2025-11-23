@@ -903,18 +903,10 @@ select.p-dropdown:focus {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.edit-btn {
-    color: var(--brand-teal);
-}
-
 .edit-btn:hover {
     border-color: var(--brand-teal);
     color: var(--brand-teal);
     background: rgba(0, 146, 146, 0.05);
-}
-
-.delete-btn {
-    color: #ef4444;
 }
 
 .delete-btn:hover {

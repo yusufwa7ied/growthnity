@@ -617,23 +617,15 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.edit-btn {
-    color: var(--info-blue);
-}
-
 .edit-btn:hover {
-    border-color: var(--info-blue);
-    color: var(--info-blue);
-    background: rgba(59, 130, 246, 0.05);
-}
-
-.delete-btn {
-    color: var(--error-red);
+    border-color: var(--brand-teal);
+    color: var(--brand-teal);
+    background: rgba(0, 146, 146, 0.05);
 }
 
 .delete-btn:hover {
-    border-color: var(--error-red);
-    color: var(--error-red);
+    border-color: #ef4444;
+    color: #ef4444;
     background: rgba(239, 68, 68, 0.05);
 }
 
