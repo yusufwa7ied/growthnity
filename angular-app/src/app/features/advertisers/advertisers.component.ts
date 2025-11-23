@@ -112,6 +112,8 @@ export class AdvertisersComponent implements OnInit {
         this.defaultFtuFixedBonus = null;
         this.defaultRtuFixedBonus = null;
         this.partnerPayouts = [];
+        this.selectedAdvertiserForPayouts = null;
+        this.error = '';
     }
 
     addPartnerPayout() {
