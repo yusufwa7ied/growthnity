@@ -162,3 +162,15 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+
+# AWS S3 Configuration
+AWS_S3_BUCKET_NAME = config("AWS_S3_BUCKET_NAME", default="growthnity-data")
+AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
+
+# S3 file paths for pipelines
+S3_PIPELINE_FILES = {
+    "noon_namshi": "pipeline-data/noon-namshi.csv",
+    "styli": "pipeline-data/styli_raw_data.csv",
+}

@@ -1684,3 +1684,115 @@ def performance_analytics_view(request):
         response_data["department_breakdown"] = None
     
     return Response(response_data)
+
+
+# =============================================================
+# PIPELINE MANAGEMENT ENDPOINTS
+# =============================================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def trigger_pipeline_upload(request):
+    """
+    Trigger pipeline execution after CSV upload to S3
+    
+    Expected POST data:
+    {
+        "pipeline": "nn" or "styli",
+        "start_date": "2025-11-01",
+        "end_date": "2025-11-23"
+    }
+    
+    Workflow:
+    1. Deletes old CSV file from S3 (if exists)
+    2. Triggers pipeline management command
+    3. Returns status
+    """
+    from django.core.management import call_command
+    from django.conf import settings
+    from api.services.s3_service import s3_service
+    from datetime import datetime
+    
+    # Check permission (only Admin and OpsManager can trigger)
+    try:
+        company_user = CompanyUser.objects.get(user=request.user)
+        if company_user.role.name not in {"Admin", "OpsManager"}:
+            return Response(
+                {"status": "error", "message": "Insufficient permissions"},
+                status=403
+            )
+    except CompanyUser.DoesNotExist:
+        return Response(
+            {"status": "error", "message": "User not found"},
+            status=403
+        )
+    
+    pipeline = request.data.get("pipeline", "").lower()
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+    
+    # Validate inputs
+    if pipeline not in ["nn", "styli"]:
+        return Response(
+            {"status": "error", "message": "Invalid pipeline. Must be 'nn' or 'styli'"},
+            status=400
+        )
+    
+    if not start_date or not end_date:
+        return Response(
+            {"status": "error", "message": "start_date and end_date are required"},
+            status=400
+        )
+    
+    # Validate date format
+    try:
+        datetime.strptime(start_date, "%Y-%m-%d")
+        datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError:
+        return Response(
+            {"status": "error", "message": "Dates must be in YYYY-MM-DD format"},
+            status=400
+        )
+    
+    try:
+        s3_key = settings.S3_PIPELINE_FILES[pipeline]
+        
+        # Check if file was uploaded to S3
+        if not s3_service.file_exists(s3_key):
+            return Response(
+                {"status": "error", "message": f"CSV file not found in S3: {s3_key}"},
+                status=400
+            )
+        
+        print(f"\n{'='*60}")
+        print(f"🚀 TRIGGERING {pipeline.upper()} PIPELINE")
+        print(f"   Date Range: {start_date} → {end_date}")
+        print(f"   S3 File: {s3_key}")
+        print(f"{'='*60}\n")
+        
+        # Run the pipeline
+        if pipeline == "nn":
+            call_command('run_nn', start=start_date, end=end_date, verbosity=2)
+        else:  # styli
+            call_command('run_styli', start=start_date, end=end_date, verbosity=2)
+        
+        print(f"\n{'='*60}")
+        print(f"✅ PIPELINE COMPLETED SUCCESSFULLY")
+        print(f"{'='*60}\n")
+        
+        return Response({
+            "status": "success",
+            "message": f"{pipeline.upper()} pipeline executed successfully",
+            "pipeline": pipeline,
+            "date_range": {"start": start_date, "end": end_date}
+        })
+        
+    except Exception as e:
+        print(f"\n❌ PIPELINE ERROR: {str(e)}\n")
+        import traceback
+        traceback.print_exc()
+        
+        return Response(
+            {"status": "error", "message": f"Pipeline execution failed: {str(e)}"},
+            status=500
+        )

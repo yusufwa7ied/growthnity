@@ -3,6 +3,7 @@
 import pandas as pd
 from datetime import date, datetime
 from django.db import transaction
+from django.conf import settings
 
 from api.models import (
     Advertiser,
@@ -20,13 +21,14 @@ from api.pipelines.helpers import (
     nf,
     nz,
 )
+from api.services.s3_service import s3_service
 
 # ---------------------------------------------------
 # CONFIG
 # ---------------------------------------------------
 
 ADVERTISER_NAME = "Styli"         # must match Advertiser.name
-RAW_LOCAL_FILE = "/Users/yusuf/styli_raw_data.csv"   # you manually export this
+S3_CSV_KEY = settings.S3_PIPELINE_FILES["styli"]  # From settings.S3_PIPELINE_FILES
 
 
 # ---------------------------------------------------
@@ -81,9 +83,9 @@ def run(date_from: date, date_to: date):
 # ---------------------------------------------------
 
 def fetch_raw_data() -> pd.DataFrame:
-    print("📄 Loading local Styli CSV...")
-    df = pd.read_csv(RAW_LOCAL_FILE)
-    print(f"✅ Loaded {len(df)} rows from CSV")
+    print("📄 Loading Styli CSV from S3...")
+    df = s3_service.read_csv_to_df(S3_CSV_KEY)
+    print(f"✅ Loaded {len(df)} rows from S3")
     return df
 
 

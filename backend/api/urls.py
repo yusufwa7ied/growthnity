@@ -18,6 +18,7 @@ from .views import (
     performance_analytics_view,
     coupon_detail_view,
     coupon_history_view,
+    trigger_pipeline_upload,
 )
 from . import views_tracking
 from .views_admin import (
@@ -72,4 +73,7 @@ urlpatterns = [
     # Partner management endpoints
     path("admin/partners/", partners_view, name="admin-partners"),
     path("admin/partners/<int:pk>/", partner_detail_view, name="admin-partner-detail"),
+    
+    # Pipeline management endpoints
+    path("pipeline/trigger/", trigger_pipeline_upload, name="pipeline-trigger"),
 ]

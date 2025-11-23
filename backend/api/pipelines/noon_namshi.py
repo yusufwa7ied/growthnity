@@ -3,6 +3,7 @@
 import pandas as pd
 from datetime import date
 from django.db import transaction
+from django.conf import settings
 
 from api.models import (
     Advertiser,
@@ -20,9 +21,10 @@ from api.pipelines.helpers import (
     nz,
 )
 from api.models import PartnerPayout
+from api.services.s3_service import s3_service
 
 ADVERTISER_NAMES = {"Noon", "Namshi"}  # we'll respect whichever appears per row
-RAW_CSV = "/Users/yusuf/noon-namshi.csv"   # replace with your real path
+S3_CSV_KEY = settings.S3_PIPELINE_FILES["noon_namshi"]  # From settings.S3_PIPELINE_FILES
 
 COUNTRY_MAP = {
     "SA": "SAU",
@@ -280,8 +282,8 @@ def run(date_from: date, date_to: date):
 
 
 def fetch_raw_data() -> pd.DataFrame:
-    print("📄 Loading Noon/Namshi CSV...")
-    df = pd.read_csv(RAW_CSV)
+    print("📄 Loading Noon/Namshi CSV from S3...")
+    df = s3_service.read_csv_to_df(S3_CSV_KEY)
     print(f"✅ Loaded {len(df)} rows")
     return df
 
