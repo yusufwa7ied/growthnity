@@ -5,13 +5,21 @@ import { catchError, map, Observable, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DashboardContext, LoginCredentials, LoginResponse, User } from '../models/user.model';
 
+export interface TokenResponse {
+  access: string;
+  refresh: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly API_BASE_URL = environment.apiUrl;
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'logged_user';
+  private readonly IDLE_TIMEOUT = 15 * 60 * 1000; // 15 minutes idle timeout
+  private idleTimer: any;
 
   // Signal for reactive authentication state
   private isAuthenticatedSignal = signal<boolean>(this.hasToken());
@@ -23,14 +31,18 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) { }
+  ) {
+    this.initializeIdleTimer();
+  }
 
   login(credentials: LoginCredentials): Observable<{ success: boolean; error?: string }> {
-    return this.http.post<LoginResponse>(`${this.API_BASE_URL}/login/`, credentials).pipe(
+    return this.http.post<TokenResponse>(`${this.API_BASE_URL}/login/`, credentials).pipe(
       tap(response => {
         if (response.access) {
           this.setToken(response.access);
+          this.setRefreshToken(response.refresh);
           this.isAuthenticatedSignal.set(true);
+          this.resetIdleTimer();
         }
       }),
       switchMap(response => {
@@ -64,6 +76,64 @@ export class AuthService {
     );
   }
 
+  /**
+   * Refresh the access token using the refresh token
+   */
+  refreshToken(): Observable<TokenResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http.post<TokenResponse>(`${this.API_BASE_URL}/token/refresh/`, { refresh: refreshToken }).pipe(
+      tap(response => {
+        if (response.access) {
+          this.setToken(response.access);
+          if (response.refresh) {
+            this.setRefreshToken(response.refresh);
+          }
+          this.resetIdleTimer();
+        }
+      }),
+      catchError((error) => {
+        // Refresh token invalid or expired - force logout
+        this.clearAuth();
+        this.router.navigate(['/login'], { replaceUrl: true });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Initialize idle timer for auto-logout
+   */
+  private initializeIdleTimer(): void {
+    // Listen for user activity
+    if (typeof window !== 'undefined') {
+      ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(event => {
+        document.addEventListener(event, () => this.resetIdleTimer(), true);
+      });
+    }
+  }
+
+  /**
+   * Reset the idle timer
+   */
+  private resetIdleTimer(): void {
+    if (!this.isAuthenticatedUser()) {
+      return; // Don't set timer if not authenticated
+    }
+
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+    }
+
+    this.idleTimer = setTimeout(() => {
+      console.warn('User idle timeout - logging out');
+      this.logout();
+    }, this.IDLE_TIMEOUT);
+  }
+
   private getDashboardContext(token: string): Observable<DashboardContext> {
     return this.http.get<DashboardContext>(`${this.API_BASE_URL}/dashboard/context/`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -71,6 +141,9 @@ export class AuthService {
   }
 
   logout(): void {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+    }
     this.clearAuth();
     // Navigate to login without reload for smoother UX
     this.router.navigate(['/login'], { replaceUrl: true });
@@ -82,6 +155,7 @@ export class AuthService {
    */
   handleSessionExpired(): void {
     this.clearAuth();
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   private setToken(token: string): void {
@@ -90,6 +164,14 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  private setRefreshToken(token: string): void {
+    localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
+  }
+
+  private getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   private setUser(user: User): void {
@@ -115,6 +197,7 @@ export class AuthService {
 
   private clearAuth(): void {
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.isAuthenticatedSignal.set(false);
     this.currentUserSignal.set(null);

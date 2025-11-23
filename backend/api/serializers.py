@@ -1,5 +1,21 @@
 from rest_framework import serializers # type: ignore
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer # type: ignore
 from .models import Advertiser, Partner, PartnerPayout, DepartmentTarget
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom TokenObtainPair serializer that includes user context in the response
+    """
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims if needed
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # data contains 'access' and 'refresh' tokens
+        return data
 
 class PartnerPayoutSerializer(serializers.ModelSerializer):
     partner_id = serializers.IntegerField(source='partner.id', read_only=True)

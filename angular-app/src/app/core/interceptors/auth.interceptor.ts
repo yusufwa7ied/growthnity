@@ -1,7 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, retry, throwError, timer } from 'rxjs';
+import { catchError, retry, switchMap, throwError, timer } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -34,14 +34,43 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     catchError((error: HttpErrorResponse) => {
-      // Handle authentication errors
-      if (error.status === 401 || error.status === 403) {
-        // Use authService to properly clear all state including signals
-        authService.handleSessionExpired();
+      // Handle authentication errors - try to refresh token
+      if (error.status === 401) {
+        // Skip refresh for login and token endpoints
+        if (req.url.includes('/login/') || req.url.includes('/token/')) {
+          authService.handleSessionExpired();
+          if (!router.url.includes('/login')) {
+            router.navigate(['/login']);
+          }
+          return throwError(() => error);
+        }
 
-        // Only redirect if not already on login page
+        // Try to refresh the token
+        return authService.refreshToken().pipe(
+          switchMap((response) => {
+            // Token refreshed successfully, retry the original request
+            const newToken = response.access;
+            const retryRequest = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${newToken}`
+              }
+            });
+            return next(retryRequest);
+          }),
+          catchError((refreshError) => {
+            // Refresh failed, force logout
+            authService.handleSessionExpired();
+            if (!router.url.includes('/login')) {
+              router.navigate(['/login']);
+            }
+            return throwError(() => error);
+          })
+        );
+      }
+
+      if (error.status === 403) {
+        authService.handleSessionExpired();
         if (!router.url.includes('/login')) {
-          // Silently redirect to login without showing message
           router.navigate(['/login']);
         }
       }

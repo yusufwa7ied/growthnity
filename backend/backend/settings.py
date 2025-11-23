@@ -163,6 +163,26 @@ REST_FRAMEWORK = {
     )
 }
 
+# JWT Configuration - SimpleJWT settings
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token expires in 1 hour
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expires in 7 days
+    'ROTATE_REFRESH_TOKENS': True,  # Rotate refresh token on each refresh
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JTI_CLAIM': 'jti',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
 # AWS S3 Configuration
 AWS_S3_BUCKET_NAME = config("AWS_S3_BUCKET_NAME", default="growthnity-data")
 AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")

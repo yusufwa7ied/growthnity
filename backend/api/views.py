@@ -1,6 +1,6 @@
 
 from rest_framework.response import Response # type: ignore
-
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError # type: ignore
 from rest_framework.permissions import IsAuthenticated # type: ignore
 from rest_framework.pagination import PageNumberPagination # type: ignore
 
@@ -27,6 +27,26 @@ class PerformanceTablePagination(PageNumberPagination):
     page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 100
+
+
+@api_view(['POST'])
+def token_refresh_view(request):
+    """
+    Refresh the access token using the refresh token.
+    Expects: { "refresh": "refresh_token" }
+    Returns: { "access": "new_access_token", "refresh": "refresh_token" }
+    """
+    from rest_framework_simplejwt.views import TokenRefreshView # type: ignore
+    
+    try:
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({'error': 'Refresh token is required'}, status=400)
+        
+        view = TokenRefreshView.as_view()
+        return view(request)
+    except (InvalidToken, TokenError) as e:
+        return Response({'error': 'Invalid or expired refresh token'}, status=401)
 
 
 

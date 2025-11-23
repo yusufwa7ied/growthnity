@@ -1,5 +1,5 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView # type: ignore
 from .views import (
     context_view,
     user_dashboard_context,
@@ -19,6 +19,7 @@ from .views import (
     coupon_detail_view,
     coupon_history_view,
     trigger_pipeline_upload,
+    token_refresh_view,
 )
 from . import views_tracking
 from .views_admin import (
@@ -38,6 +39,7 @@ urlpatterns = [
     path("generate-link/", views_tracking.generate_tracking_link, name="generate-tracking-link"),
     path('context/', context_view),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('dashboard/context/', user_dashboard_context),
     path('dashboard/kpis/', kpis_view),
     path("dashboard/graph-data/", graph_data_view),
