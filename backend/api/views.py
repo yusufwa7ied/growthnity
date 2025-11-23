@@ -708,7 +708,8 @@ def dashboard_filter_options_view(request):
             coupons_map[cp.coupon.code] = {
                 "coupon": cp.coupon.code,
                 "advertiser_id": cp.advertiser_id,
-                "partner_id": cp.partner_id
+                "partner_id": cp.partner_id,
+                "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
     result = {
@@ -1056,14 +1057,26 @@ def coupon_history_view(request, code):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def partner_list_view(request):
+    """
+    Get list of partners with optional filtering by partner_type.
+    Query params:
+    - partner_type: Filter by type (MB, AFF, INF)
+    """
+    partner_type = request.query_params.get('partner_type')
+    
     partners = Partner.objects.all()
+    
+    if partner_type:
+        partners = partners.filter(partner_type=partner_type)
+    
     results = [
         {
-            "id": partner.id,# type: ignore
+            "id": partner.id,
             "name": partner.name,
-            "type": partner.get_partner_type_display(),  # For "Affiliate", "Influencer", etc.# type: ignore
+            "type": partner.get_partner_type_display(),
+            "partner_type": partner.partner_type
         }
-        for partner in partners
+        for partner in partners.order_by('name')
     ]
     return Response(results)
 
@@ -1187,6 +1200,43 @@ from .models import DepartmentTarget
 from .serializers import DepartmentTargetSerializer
 from rest_framework import status # type: ignore
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def team_members_list(request):
+    """
+    Get list of team members (CompanyUser) for dropdown selection.
+    Returns list of team members with ID and username.
+    """
+    try:
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        
+        if not company_user:
+            return Response({"error": "User not found"}, status=404)
+        
+        # Get team members based on user's department
+        if company_user.department:
+            team_members = CompanyUser.objects.filter(
+                department=company_user.department
+            ).select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
+        else:
+            # If user has no department, return all company users (for admin)
+            team_members = CompanyUser.objects.select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
+        
+        members_list = []
+        for member in team_members:
+            full_name = f"{member['user__first_name']} {member['user__last_name']}".strip()
+            members_list.append({
+                "id": member['id'],
+                "username": member['user__username'],
+                "name": full_name or member['user__username']
+            })
+        
+        return Response(members_list, status=200)
+    except Exception as e:
+        print(f"Error fetching team members: {e}")
+        return Response({"error": str(e)}, status=400)
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def targets_list(request):
@@ -1196,6 +1246,32 @@ def targets_list(request):
     """
     if request.method == 'GET':
         targets = DepartmentTarget.objects.all().select_related('advertiser').order_by('-month', 'advertiser__name', 'partner_type')
+        
+        # Role-based filtering
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        
+        if company_user and company_user.role:
+            role = company_user.role.name
+            
+            # For non-admin roles, filter by department and assigned_to
+            if role not in {"Admin", "OpsManager"}:
+                from django.db.models import Q
+                if company_user.department:
+                    # Team member sees:
+                    # 1. Department-level targets for their department (assigned_to is null)
+                    # 2. Individual targets assigned to them
+                    targets = targets.filter(
+                        partner_type__in={
+                            "media_buying": "MB",
+                            "affiliate": "AFF", 
+                            "influencer": "INF"
+                        }.get(company_user.department, company_user.department)
+                    ).filter(
+                        Q(assigned_to__isnull=True) | Q(assigned_to=company_user)
+                    )
+                else:
+                    targets = DepartmentTarget.objects.none()
         
         # Optional filters
         advertiser_id = request.query_params.get('advertiser_id')
@@ -1215,8 +1291,13 @@ def targets_list(request):
     elif request.method == 'POST':
         serializer = DepartmentTargetSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            instance = serializer.save()
+            # Re-fetch the instance to include related data in response
+            instance = DepartmentTarget.objects.select_related('advertiser').get(pk=instance.pk)
+            response_serializer = DepartmentTargetSerializer(instance)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        print(f"Serializer errors: {serializer.errors}")
+        print(f"Request data: {request.data}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -1229,7 +1310,7 @@ def target_detail(request, pk):
     DELETE: Delete target
     """
     try:
-        target = DepartmentTarget.objects.get(pk=pk)
+        target = DepartmentTarget.objects.select_related('advertiser').get(pk=pk)
     except DepartmentTarget.DoesNotExist:
         return Response({"error": "Target not found"}, status=status.HTTP_404_NOT_FOUND)
     
@@ -1240,8 +1321,11 @@ def target_detail(request, pk):
     elif request.method == 'PUT':
         serializer = DepartmentTargetSerializer(target, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            instance = serializer.save()
+            # Re-fetch with related data
+            instance = DepartmentTarget.objects.select_related('advertiser').get(pk=instance.pk)
+            response_serializer = DepartmentTargetSerializer(instance)
+            return Response(response_serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
@@ -1311,10 +1395,14 @@ def get_department_breakdown(month_start, month_end, advertiser_id=None, partner
             profit = revenue - payout
         
         # Get targets for this department
-        dept_target = DepartmentTarget.objects.filter(
-            month=month_start,
-            partner_type=dept_info["partner_type"]
-        ).first()
+        target_filters = {
+            "month": month_start,
+            "partner_type": dept_info["partner_type"]
+        }
+        if advertiser_id:
+            target_filters["advertiser_id"] = advertiser_id
+        
+        dept_target = DepartmentTarget.objects.filter(**target_filters).first()
         
         if dept_target:
             orders_target = dept_target.orders_target
@@ -1325,12 +1413,12 @@ def get_department_breakdown(month_start, month_end, advertiser_id=None, partner
             revenue_pct = (revenue / revenue_target * 100) if revenue_target > 0 else 0
             profit_pct = (profit / profit_target * 100) if profit_target > 0 else 0
         else:
-            orders_target = 0
-            revenue_target = 0
-            profit_target = 0
-            orders_pct = 0
-            revenue_pct = 0
-            profit_pct = 0
+            orders_target = None
+            revenue_target = None
+            profit_target = None
+            orders_pct = None
+            revenue_pct = None
+            profit_pct = None
         
         breakdown.append({
             "code": dept_code,
@@ -1341,13 +1429,13 @@ def get_department_breakdown(month_start, month_end, advertiser_id=None, partner
             "payout": round(payout, 2),
             "targets": {
                 "orders": orders_target,
-                "revenue": round(revenue_target, 2),
-                "profit": round(profit_target, 2)
+                "revenue": round(revenue_target, 2) if revenue_target is not None else None,
+                "profit": round(profit_target, 2) if profit_target is not None else None
             },
             "achievement": {
-                "orders_pct": round(orders_pct, 2),
-                "revenue_pct": round(revenue_pct, 2),
-                "profit_pct": round(profit_pct, 2)
+                "orders_pct": round(orders_pct, 2) if orders_pct is not None else None,
+                "revenue_pct": round(revenue_pct, 2) if revenue_pct is not None else None,
+                "profit_pct": round(profit_pct, 2) if profit_pct is not None else None
             }
         })
     
@@ -1537,24 +1625,84 @@ def performance_analytics_view(request):
     if partner_type:
         target_qs = target_qs.filter(partner_type=partner_type)
     
-    target = target_qs.first()
+    # For non-admin users, prioritize individual targets
+    # Admin/OpsManager: 
+    #   - When filtering by specific advertiser/partner, show all targets (department + individual)
+    #   - Otherwise show department-level targets only
+    monthly_orders_target = None
+    monthly_revenue_target = None
+    monthly_profit_target = None
+    monthly_spend_target = None
     
-    if target:
-        monthly_orders_target = int(target.orders_target)
-        monthly_revenue_target = float(target.revenue_target)
-        monthly_profit_target = float(target.profit_target)
-        monthly_spend_target = float(target.spend_target or 0)
+    if company_user and company_user.role:
+        role = company_user.role.name
+        if role not in {"Admin", "OpsManager"}:
+            # First try to get individual target for this user
+            from django.db.models import Q
+            target = target_qs.filter(Q(assigned_to=company_user)).first()
+            if not target:
+                # Fall back to department-level target (assigned_to = null)
+                target = target_qs.filter(assigned_to__isnull=True).first()
+            
+            if target:
+                monthly_orders_target = int(target.orders_target)
+                monthly_revenue_target = float(target.revenue_target)
+                monthly_profit_target = float(target.profit_target)
+                monthly_spend_target = float(target.spend_target or 0)
+        else:
+            # Admin/OpsManager
+            if advertiser_id and partner_type:
+                # When viewing specific advertiser/partner combo, sum all targets
+                targets = target_qs.all()
+            else:
+                # Otherwise show only department-level targets
+                targets = target_qs.filter(assigned_to__isnull=True)
+            
+            # Sum up all matching targets
+            if targets.exists():
+                target_agg = targets.aggregate(
+                    total_orders=Sum('orders_target'),
+                    total_revenue=Sum('revenue_target'),
+                    total_profit=Sum('profit_target'),
+                    total_spend=Sum('spend_target')
+                )
+                # Only set if aggregation returned non-null values
+                if target_agg['total_orders'] is not None:
+                    monthly_orders_target = int(target_agg['total_orders'])
+                if target_agg['total_revenue'] is not None:
+                    monthly_revenue_target = float(target_agg['total_revenue'])
+                if target_agg['total_profit'] is not None:
+                    monthly_profit_target = float(target_agg['total_profit'])
+                if target_agg['total_spend'] is not None:
+                    monthly_spend_target = float(target_agg['total_spend'])
     else:
-        monthly_orders_target = 0
-        monthly_revenue_target = 0
-        monthly_profit_target = 0
-        monthly_spend_target = 0
+        target = target_qs.filter(assigned_to__isnull=True).first()
+        if target:
+            monthly_orders_target = int(target.orders_target)
+            monthly_revenue_target = float(target.revenue_target)
+            monthly_profit_target = float(target.profit_target)
+            monthly_spend_target = float(target.spend_target or 0)
     
-    # Calculate percentages
-    mtd_orders_pct = (mtd_orders / monthly_orders_target * 100) if monthly_orders_target > 0 else 0
-    mtd_revenue_pct = (mtd_revenue / monthly_revenue_target * 100) if monthly_revenue_target > 0 else 0
-    mtd_profit_pct = (mtd_profit / monthly_profit_target * 100) if monthly_profit_target > 0 else 0
-    mtd_spend_pct = (mtd_spend / monthly_spend_target * 100) if monthly_spend_target > 0 else 0
+    # Calculate percentages - return None if no target
+    if monthly_orders_target is not None:
+        mtd_orders_pct = (mtd_orders / monthly_orders_target * 100) if monthly_orders_target > 0 else 0
+    else:
+        mtd_orders_pct = None
+    
+    if monthly_revenue_target is not None:
+        mtd_revenue_pct = (mtd_revenue / monthly_revenue_target * 100) if monthly_revenue_target > 0 else 0
+    else:
+        mtd_revenue_pct = None
+    
+    if monthly_profit_target is not None:
+        mtd_profit_pct = (mtd_profit / monthly_profit_target * 100) if monthly_profit_target > 0 else 0
+    else:
+        mtd_profit_pct = None
+    
+    if monthly_spend_target is not None:
+        mtd_spend_pct = (mtd_spend / monthly_spend_target * 100) if monthly_spend_target > 0 else 0
+    else:
+        mtd_spend_pct = None
     
     # Calculate run rate (projected month-end)
     if days_elapsed > 0:
@@ -1577,18 +1725,20 @@ def performance_analytics_view(request):
         projected_profit = 0
         projected_spend = 0
     
-    run_rate_orders_pct = (projected_orders / monthly_orders_target * 100) if monthly_orders_target > 0 else 0
-    run_rate_revenue_pct = (projected_revenue / monthly_revenue_target * 100) if monthly_revenue_target > 0 else 0
-    run_rate_profit_pct = (projected_profit / monthly_profit_target * 100) if monthly_profit_target > 0 else 0
+    run_rate_orders_pct = (projected_orders / monthly_orders_target * 100) if (monthly_orders_target and monthly_orders_target > 0) else None
+    run_rate_revenue_pct = (projected_revenue / monthly_revenue_target * 100) if (monthly_revenue_target and monthly_revenue_target > 0) else None
+    run_rate_profit_pct = (projected_profit / monthly_profit_target * 100) if (monthly_profit_target and monthly_profit_target > 0) else None
     
     # Calculate pacing
     expected_progress_pct = (days_elapsed / days_in_month * 100) if days_in_month > 0 else 0
-    orders_pacing = mtd_orders_pct - expected_progress_pct
-    revenue_pacing = mtd_revenue_pct - expected_progress_pct
-    profit_pacing = mtd_profit_pct - expected_progress_pct
+    orders_pacing = (mtd_orders_pct - expected_progress_pct) if mtd_orders_pct is not None else None
+    revenue_pacing = (mtd_revenue_pct - expected_progress_pct) if mtd_revenue_pct is not None else None
+    profit_pacing = (mtd_profit_pct - expected_progress_pct) if mtd_profit_pct is not None else None
     
     # Determine pacing status
     def get_pacing_status(pacing_value):
+        if pacing_value is None:
+            return "On Track"
         if pacing_value >= 5:
             return "Ahead"
         elif pacing_value <= -5:
@@ -1600,13 +1750,13 @@ def performance_analytics_view(request):
     
     # Calculate required daily performance
     if days_remaining > 0:
-        required_daily_orders = (monthly_orders_target - mtd_orders) / days_remaining
-        required_daily_revenue = (monthly_revenue_target - mtd_revenue) / days_remaining
-        required_daily_profit = (monthly_profit_target - mtd_profit) / days_remaining
+        required_daily_orders = (monthly_orders_target - mtd_orders) / days_remaining if monthly_orders_target is not None else 0
+        required_daily_revenue = (monthly_revenue_target - mtd_revenue) / days_remaining if monthly_revenue_target is not None else 0
+        required_daily_profit = (monthly_profit_target - mtd_profit) / days_remaining if monthly_profit_target is not None else 0
     else:
-        required_daily_orders = monthly_orders_target / days_in_month if days_in_month > 0 else 0
-        required_daily_revenue = monthly_revenue_target / days_in_month if days_in_month > 0 else 0
-        required_daily_profit = monthly_profit_target / days_in_month if days_in_month > 0 else 0
+        required_daily_orders = (monthly_orders_target / days_in_month) if (monthly_orders_target and days_in_month > 0) else 0
+        required_daily_revenue = (monthly_revenue_target / days_in_month) if (monthly_revenue_target and days_in_month > 0) else 0
+        required_daily_profit = (monthly_profit_target / days_in_month) if (monthly_profit_target and days_in_month > 0) else 0
     
     # Daily achievement
     daily_orders_achievement = (today_orders / required_daily_orders * 100) if required_daily_orders > 0 else 0
@@ -1638,16 +1788,16 @@ def performance_analytics_view(request):
         
         "targets": {
             "orders": monthly_orders_target,
-            "revenue": round(monthly_revenue_target, 2),
-            "profit": round(monthly_profit_target, 2),
-            "spend": round(monthly_spend_target, 2)
+            "revenue": round(monthly_revenue_target, 2) if monthly_revenue_target is not None else None,
+            "profit": round(monthly_profit_target, 2) if monthly_profit_target is not None else None,
+            "spend": round(monthly_spend_target, 2) if monthly_spend_target is not None else None
         },
         
         "achievement_pct": {
-            "orders": round(mtd_orders_pct, 2),
-            "revenue": round(mtd_revenue_pct, 2),
-            "profit": round(mtd_profit_pct, 2),
-            "spend": round(mtd_spend_pct, 2)
+            "orders": round(mtd_orders_pct, 2) if mtd_orders_pct is not None else None,
+            "revenue": round(mtd_revenue_pct, 2) if mtd_revenue_pct is not None else None,
+            "profit": round(mtd_profit_pct, 2) if mtd_profit_pct is not None else None,
+            "spend": round(mtd_spend_pct, 2) if mtd_spend_pct is not None else None
         },
         
         "run_rate": {
@@ -1655,16 +1805,16 @@ def performance_analytics_view(request):
             "projected_revenue": round(projected_revenue, 2),
             "projected_profit": round(projected_profit, 2),
             "projected_spend": round(projected_spend, 2),
-            "orders_pct": round(run_rate_orders_pct, 2),
-            "revenue_pct": round(run_rate_revenue_pct, 2),
-            "profit_pct": round(run_rate_profit_pct, 2)
+            "orders_pct": round(run_rate_orders_pct, 2) if run_rate_orders_pct is not None else None,
+            "revenue_pct": round(run_rate_revenue_pct, 2) if run_rate_revenue_pct is not None else None,
+            "profit_pct": round(run_rate_profit_pct, 2) if run_rate_profit_pct is not None else None
         },
         
         "pacing": {
             "expected_progress_pct": round(expected_progress_pct, 2),
-            "orders_pacing": round(orders_pacing, 2),
-            "revenue_pacing": round(revenue_pacing, 2),
-            "profit_pacing": round(profit_pacing, 2),
+            "orders_pacing": round(orders_pacing, 2) if orders_pacing is not None else None,
+            "revenue_pacing": round(revenue_pacing, 2) if revenue_pacing is not None else None,
+            "profit_pacing": round(profit_pacing, 2) if profit_pacing is not None else None,
             "status": pacing_status
         },
         

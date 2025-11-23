@@ -25,6 +25,7 @@ export interface Coupon {
   advertiser_id: number;
   partner: string;
   partner_id?: number;
+  partner_type?: string;
   geo?: string;
   discount?: number;
 }
@@ -88,6 +89,7 @@ export interface FilterOptions {
     coupon: string;
     advertiser_id: number;
     partner_id?: number;
+    partner_type?: string;
   }>;
 }
 

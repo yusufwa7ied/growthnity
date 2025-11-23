@@ -571,6 +571,16 @@ class DepartmentTarget(models.Model):
         related_name="partner_targets"
     )
     partner_type = models.CharField(max_length=3, choices=PARTNER_TYPE_CHOICES)
+    
+    # Optional: Assign to specific team member (for Affiliate/Influencer individual targets)
+    assigned_to = models.ForeignKey(
+        CompanyUser,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="individual_targets",
+        help_text="Leave blank for department-level target, select for individual team member target"
+    )
 
     # Common targets
     orders_target = models.IntegerField()
@@ -581,12 +591,13 @@ class DepartmentTarget(models.Model):
     spend_target = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
 
     class Meta:
-        unique_together = ("month", "advertiser", "partner_type")
+        unique_together = ("month", "advertiser", "partner_type", "assigned_to")
         verbose_name = "Target"
         verbose_name_plural = "Targets"
 
     def __str__(self):
-        return f"{self.advertiser.name} | {self.get_partner_type_display()} - {self.month.strftime('%B %Y')}" # type: ignore
+        target_type = f" | {self.assigned_to.user.username}" if self.assigned_to else f" | {self.get_partner_type_display()}"
+        return f"{self.advertiser.name}{target_type} - {self.month.strftime('%B %Y')}" # type: ignore
     
 class CampaignPerformance(models.Model):
     date = models.DateField()

@@ -26,6 +26,10 @@ export class TargetsComponent implements OnInit {
   targets: TargetWithActuals[] = [];
   filteredTargets: TargetWithActuals[] = [];
   advertisers: Advertiser[] = [];
+  partners: any[] = [];
+  filteredPartners: any[] = [];
+  teamMembers: any[] = [];
+  filteredTeamMembers: any[] = [];
   user: User | null = null;
   role: string = '';
 
@@ -56,6 +60,7 @@ export class TargetsComponent implements OnInit {
     month: new Date().toISOString().substring(0, 7), // YYYY-MM format
     advertiser: 0,
     partner_type: 'MB',
+    assigned_to: null,
     orders_target: 0,
     revenue_target: 0,
     profit_target: 0,
@@ -79,12 +84,23 @@ export class TargetsComponent implements OnInit {
     this.user = this.authService.currentUser();
     this.role = this.user?.role || '';
     this.loadAdvertisers();
+    this.loadTeamMembers();
     this.loadTargets();
   }
 
   loadAdvertisers(): void {
     this.dashboardService.getAdvertisers().subscribe(data => {
       this.advertisers = data;
+    });
+  }
+
+  loadTeamMembers(): void {
+    this.dashboardService.getTeamMembers().subscribe({
+      next: (data) => {
+        this.teamMembers = data;
+        this.filteredTeamMembers = [...this.teamMembers];
+      },
+      error: (err) => console.error('Error loading team members:', err)
     });
   }
 
@@ -196,6 +212,10 @@ export class TargetsComponent implements OnInit {
     this.showForm = true;
   }
 
+  onPartnerTypeChange(partnerType: string): void {
+    this.formData.assigned_to = null; // Reset member selection when type changes
+  }
+
   deleteTarget(id: number): void {
     if (confirm('Are you sure you want to delete this target?')) {
       this.targetsService.deleteTarget(id).subscribe({
@@ -241,6 +261,7 @@ export class TargetsComponent implements OnInit {
       month: new Date().toISOString().substring(0, 7), // YYYY-MM format
       advertiser: 0,
       partner_type: 'MB',
+      assigned_to: null,
       orders_target: 0,
       revenue_target: 0,
       profit_target: 0,

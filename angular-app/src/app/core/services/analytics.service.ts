@@ -18,17 +18,17 @@ export interface PerformanceAnalytics {
     };
 
     targets: {
-        orders: number;
-        revenue: number;
-        profit: number;
-        spend: number;
+        orders: number | null;
+        revenue: number | null;
+        profit: number | null;
+        spend: number | null;
     };
 
     achievement_pct: {
-        orders: number;
-        revenue: number;
-        profit: number;
-        spend: number;
+        orders: number | null;
+        revenue: number | null;
+        profit: number | null;
+        spend: number | null;
     };
 
     run_rate: {
@@ -82,14 +82,14 @@ export interface DepartmentBreakdown {
     profit: number;
     payout: number;
     targets: {
-        orders: number;
-        revenue: number;
-        profit: number;
+        orders: number | null;
+        revenue: number | null;
+        profit: number | null;
     };
     achievement: {
-        orders_pct: number;
-        revenue_pct: number;
-        profit_pct: number;
+        orders_pct: number | null;
+        revenue_pct: number | null;
+        profit_pct: number | null;
     };
 }
 

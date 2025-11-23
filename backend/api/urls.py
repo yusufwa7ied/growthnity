@@ -20,6 +20,7 @@ from .views import (
     coupon_history_view,
     trigger_pipeline_upload,
     token_refresh_view,
+    team_members_list,
 )
 from . import views_tracking
 from .views_admin import (
@@ -52,6 +53,7 @@ urlpatterns = [
     path("coupons/<str:code>/history/", coupon_history_view, name="coupon-history"),
     path("partners/", partner_list_view, name="partner-list"),
     path("advertisers/", advertiser_list_view, name="advertiser-list"),
+    path("team-members/", team_members_list, name="team-members-list"),
     path("payouts/", partner_payouts_view, name="partner-payouts"),# type: ignore
     path("payouts/<int:pk>/", partner_payout_detail_view, name="partner-payout-detail"),# type: ignore
     

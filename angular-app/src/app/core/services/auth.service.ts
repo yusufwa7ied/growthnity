@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, map, Observable, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DashboardContext, LoginCredentials, User } from '../models/user.model';
+import { CacheService } from './cache.service';
 
 export interface TokenResponse {
   access: string;
@@ -30,7 +31,8 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private cacheService: CacheService
   ) {
     this.initializeIdleTimer();
   }
@@ -201,5 +203,7 @@ export class AuthService {
     localStorage.removeItem(this.USER_KEY);
     this.isAuthenticatedSignal.set(false);
     this.currentUserSignal.set(null);
+    // Clear all cached data when user logs out
+    this.cacheService.invalidateAll();
   }
 }

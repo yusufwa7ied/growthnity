@@ -84,6 +84,12 @@ export class DashboardService {
     );
   }
 
+  // Get partners filtered by partner_type
+  getPartnersByType(partnerType: string): Observable<Partner[]> {
+    const params = new HttpParams().set('partner_type', partnerType);
+    return this.http.get<Partner[]>(`${this.API_BASE_URL}/partners/`, { params });
+  }
+
   // Get coupons list
   getCoupons(): Observable<Coupon[]> {
     return this.cacheService.get(
@@ -97,6 +103,11 @@ export class DashboardService {
   getPieChartData(filters: DashboardFilters): Observable<PieChartData[]> {
     const params = this.buildParams(filters);
     return this.http.get<PieChartData[]>(`${this.API_BASE_URL}/dashboard/pie-chart-data/`, { params });
+  }
+
+  // Get team members list
+  getTeamMembers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_BASE_URL}/team-members/`);
   }
 
   // Helper to build HTTP params from filters

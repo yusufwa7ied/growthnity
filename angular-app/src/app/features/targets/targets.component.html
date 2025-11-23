@@ -113,6 +113,7 @@
                     <tr>
                         <th class="col-advertiser">Advertiser</th>
                         <th class="col-department">Department</th>
+                        <th class="col-member">Assigned To</th>
                         <th class="col-month">Month</th>
                         <th class="col-orders">Orders Target</th>
                         <th class="col-revenue">Revenue Target</th>
@@ -127,6 +128,11 @@
                         </td>
                         <td class="col-department">
                             <span class="department-badge">{{ target.partner_type_display }}</span>
+                        </td>
+                        <td class="col-member">
+                            <span class="member-badge" *ngIf="target.assigned_to_username; else noDept">{{
+                                target.assigned_to_username }}</span>
+                            <ng-template #noDept><span style="color: #9ca3af;">Department Level</span></ng-template>
                         </td>
                         <td class="col-month">
                             <span class="month-value">{{ target.month | date: 'MMM yyyy' }}</span>
@@ -152,7 +158,7 @@
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="7" class="empty-message">
+                        <td colspan="8" class="empty-message">
                             <i class="pi pi-inbox"></i>
                             <p>No targets found</p>
                             <button pButton type="button" label="Create First Target" (click)="toggleForm()"
@@ -178,9 +184,21 @@
 
                 <div class="form-row">
                     <label for="partner_type">Department *</label>
-                    <select id="partner_type" [(ngModel)]="formData.partner_type" class="form-input">
+                    <select id="partner_type" [(ngModel)]="formData.partner_type"
+                        (change)="onPartnerTypeChange(formData.partner_type)" class="form-input">
                         <option *ngFor="let type of partnerTypes" [value]="type.value">{{ type.label }}</option>
                     </select>
+                </div>
+
+                <div class="form-row">
+                    <label for="assigned_to">Assign to Team Member (Optional)</label>
+                    <select id="assigned_to" [(ngModel)]="formData.assigned_to" class="form-input">
+                        <option [value]="null">Department Level (No Member Selected)</option>
+                        <option *ngFor="let member of teamMembers" [value]="member.id">{{ member.name || member.username
+                            }}</option>
+                    </select>
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">Leave blank for department-level
+                        targets, select a team member for individual targets</small>
                 </div>
 
                 <div class="form-row">

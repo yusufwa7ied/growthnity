@@ -56,11 +56,13 @@ class PartnerSerializer(serializers.ModelSerializer):
 class DepartmentTargetSerializer(serializers.ModelSerializer):
     advertiser_name = serializers.CharField(source='advertiser.name', read_only=True)
     partner_type_display = serializers.CharField(source='get_partner_type_display', read_only=True)
+    assigned_to_username = serializers.CharField(source='assigned_to.user.username', read_only=True, required=False, allow_null=True)
     
     class Meta:
         model = DepartmentTarget
         fields = [
             "id", "month", "advertiser", "advertiser_name", 
             "partner_type", "partner_type_display",
+            "assigned_to", "assigned_to_username",
             "orders_target", "revenue_target", "profit_target", "spend_target"
         ]

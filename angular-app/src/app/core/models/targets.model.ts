@@ -5,6 +5,8 @@ export interface DepartmentTarget {
     advertiser_name?: string;
     partner_type: 'MB' | 'AFF' | 'INF';
     partner_type_display?: string;
+    assigned_to?: number | null; // CompanyUser ID
+    assigned_to_username?: string | null; // Team member username
     orders_target: number;
     revenue_target: number;
     profit_target: number;

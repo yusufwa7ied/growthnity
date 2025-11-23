@@ -345,8 +345,9 @@ export class DashboardComponent implements OnInit {
             (!Array.isArray(this.filters.partner_id) || this.filters.partner_id.length > 0);
         const hasCouponFilter = this.filters.coupon_code != null &&
             (!Array.isArray(this.filters.coupon_code) || this.filters.coupon_code.length > 0);
+        const hasDepartmentFilter = this.filters.partner_type != null && this.filters.partner_type !== '';
 
-        if (!hasAdvertiserFilter && !hasPartnerFilter && !hasCouponFilter) {
+        if (!hasAdvertiserFilter && !hasPartnerFilter && !hasCouponFilter && !hasDepartmentFilter) {
             // No filters - restore all
             this.advertisers = [...this.allAdvertisers];
             this.partners = [...this.allPartners];
@@ -354,8 +355,11 @@ export class DashboardComponent implements OnInit {
             return;
         }
 
-        // Build advertiser options: filter by partner + coupon (NOT by advertiser itself)
+        // Build advertiser options: filter by department + partner + coupon (NOT by advertiser itself)
         let couponsForAdvertisers = [...this.allCoupons];
+        if (hasDepartmentFilter) {
+            couponsForAdvertisers = couponsForAdvertisers.filter(c => c.partner_type === this.filters.partner_type);
+        }
         if (hasPartnerFilter) {
             const ids = Array.isArray(this.filters.partner_id) ? this.filters.partner_id : [this.filters.partner_id];
             couponsForAdvertisers = couponsForAdvertisers.filter(c => c.partner_id && ids.includes(c.partner_id));
@@ -371,8 +375,11 @@ export class DashboardComponent implements OnInit {
         }
         this.advertisers = this.allAdvertisers.filter(a => advertiserIds.has(a.id));
 
-        // Build partner options: filter by advertiser + coupon (NOT by partner itself)
+        // Build partner options: filter by department + advertiser + coupon (NOT by partner itself)
         let couponsForPartners = [...this.allCoupons];
+        if (hasDepartmentFilter) {
+            couponsForPartners = couponsForPartners.filter(c => c.partner_type === this.filters.partner_type);
+        }
         if (hasAdvertiserFilter) {
             const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
             couponsForPartners = couponsForPartners.filter(c => ids.includes(c.advertiser_id));
@@ -388,8 +395,11 @@ export class DashboardComponent implements OnInit {
         }
         this.partners = this.allPartners.filter(p => partnerIds.has(p.id));
 
-        // Build coupon options: filter by advertiser + partner (NOT by coupon itself)
+        // Build coupon options: filter by department + advertiser + partner (NOT by coupon itself)
         let couponsForCoupons = [...this.allCoupons];
+        if (hasDepartmentFilter) {
+            couponsForCoupons = couponsForCoupons.filter(c => c.partner_type === this.filters.partner_type);
+        }
         if (hasAdvertiserFilter) {
             const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
             couponsForCoupons = couponsForCoupons.filter(c => ids.includes(c.advertiser_id));
@@ -431,7 +441,8 @@ export class DashboardComponent implements OnInit {
                     advertiser: '',
                     advertiser_id: c.advertiser_id,
                     partner: '',
-                    partner_id: c.partner_id
+                    partner_id: c.partner_id,
+                    partner_type: c.partner_type
                 })).sort((a, b) => a.code.localeCompare(b.code));
 
                 // Initially, show all options in dropdowns
@@ -801,7 +812,8 @@ export class DashboardComponent implements OnInit {
         }
     }
 
-    getAchievementColor(pct: number): string {
+    getAchievementColor(pct: number | null): string {
+        if (pct === null) return '#e5e7eb';
         if (pct >= 100) return '#22c55e';
         if (pct >= 75) return '#3b82f6';
         if (pct >= 50) return '#f59e0b';
