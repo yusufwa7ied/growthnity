@@ -1733,18 +1733,25 @@ def trigger_pipeline_upload(request):
             status=403
         )
     
-    pipeline = request.data.get("pipeline", "").lower()
+    pipeline_arg = request.data.get("pipeline", "").lower()
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
     
-    logger.info(f"Pipeline trigger request: pipeline={pipeline}, start={start_date}, end={end_date}")
+    logger.info(f"Pipeline trigger request: pipeline={pipeline_arg}, start={start_date}, end={end_date}")
     
-    # Validate inputs
-    if pipeline not in ["nn", "styli"]:
+    # Map short names to full pipeline keys
+    pipeline_map = {
+        "nn": "noon_namshi",
+        "styli": "styli"
+    }
+    
+    if pipeline_arg not in pipeline_map:
         return Response(
             {"status": "error", "message": "Invalid pipeline. Must be 'nn' or 'styli'"},
             status=400
         )
+    
+    pipeline = pipeline_map[pipeline_arg]  # Get full pipeline name
     
     if not start_date or not end_date:
         return Response(
@@ -1788,7 +1795,7 @@ def trigger_pipeline_upload(request):
         def run_pipeline_bg():
             try:
                 logger.info(f"[BACKGROUND] Starting {pipeline.upper()} pipeline execution")
-                if pipeline == "nn":
+                if pipeline == "noon_namshi":
                     logger.info(f"[BACKGROUND] Calling: run_nn --start {start_date} --end {end_date}")
                     call_command('run_nn', start=start_date, end=end_date, verbosity=2)
                 else:  # styli
