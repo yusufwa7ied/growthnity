@@ -110,6 +110,14 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  /**
+   * Check if user is currently authenticated
+   * Used by auth guard to determine route access
+   */
+  isAuthenticatedUser(): boolean {
+    return this.isAuthenticated();
+  }
+
   private clearAuth(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
