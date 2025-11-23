@@ -75,5 +75,5 @@ urlpatterns = [
     path("admin/partners/<int:pk>/", partner_detail_view, name="admin-partner-detail"),
     
     # Pipeline management endpoints
-    path("pipeline/trigger/", trigger_pipeline_upload, name="pipeline-trigger"),
+    path("pipelines/trigger/", trigger_pipeline_upload, name="pipeline-trigger"),
 ]
