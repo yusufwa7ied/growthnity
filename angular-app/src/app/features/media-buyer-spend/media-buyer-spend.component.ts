@@ -92,11 +92,9 @@ export class MediaBuyerSpendComponent implements OnInit {
   loadAdvertisers() {
     this.advertiserService.getAdvertisers().subscribe({
       next: (data) => {
-        console.log('Loaded advertisers:', data);
         this.allAdvertisers = data.map(a => ({ label: a.name, value: a }));
         // Use the same advertisers for filtering
         this.advertisers = data.map(a => ({ label: a.name, value: a }));
-        console.log('Mapped advertisers:', this.allAdvertisers);
       },
       error: (err) => console.error('Error loading advertisers:', err)
     });
@@ -109,15 +107,11 @@ export class MediaBuyerSpendComponent implements OnInit {
       return;
     }
 
-    console.log('Loading coupons for advertiser:', this.selectedAdvertiser.value.name);
     this.advertiserService.getCoupons().subscribe({
       next: (data) => {
-        console.log('All coupons from API:', data);
         // Filter coupons for selected advertiser
         const filteredCoupons = data.filter((c: any) => c.advertiser_id === this.selectedAdvertiser.value.id);
-        console.log('Filtered coupons:', filteredCoupons);
         this.coupons = filteredCoupons.map(c => ({ label: c.code, value: c }));
-        console.log('Mapped coupons for dropdown:', this.coupons);
 
         // Reset coupon selection when advertiser changes
         this.selectedCoupon = null;

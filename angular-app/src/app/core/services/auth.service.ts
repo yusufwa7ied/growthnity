@@ -26,10 +26,8 @@ export class AuthService {
   ) { }
 
   login(credentials: LoginCredentials): Observable<{ success: boolean; error?: string }> {
-    console.log('🌐 AuthService: Calling login API...');
     return this.http.post<LoginResponse>(`${this.API_BASE_URL}/login/`, credentials).pipe(
       tap(response => {
-        console.log('🌐 AuthService: Token received');
         if (response.access) {
           this.setToken(response.access);
           this.isAuthenticatedSignal.set(true);
@@ -37,10 +35,8 @@ export class AuthService {
       }),
       switchMap(response => {
         // Wait for user context before completing login
-        console.log('🌐 AuthService: Fetching dashboard context...');
         return this.getDashboardContext(response.access).pipe(
           tap(context => {
-            console.log('🌐 AuthService: Context received:', context.role);
             const user: User = {
               username: credentials.username,
               role: context.role,
@@ -54,7 +50,6 @@ export class AuthService {
         );
       }),
       catchError((error) => {
-        console.log('🌐 AuthService: Login error:', error.status, error.message);
         this.clearAuth();
         let errorMessage = 'Login failed. Please try again.';
 

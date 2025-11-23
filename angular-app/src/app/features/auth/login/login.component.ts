@@ -58,14 +58,12 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     // Prevent double submission
     if (this.isLoading() || this.loginForm.invalid) {
-      console.log('🚫 Submit blocked - isLoading:', this.isLoading(), 'invalid:', this.loginForm.invalid);
       if (this.loginForm.invalid) {
         this.errorMessage.set('Please enter both username and password.');
       }
       return;
     }
 
-    console.log('🔐 Starting login...');
     this.isLoading.set(true);
     this.errorMessage.set('');
 
@@ -73,14 +71,12 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(credentials).subscribe({
       next: () => {
-        console.log('✅ Login successful, redirecting...');
         // Keep loading state until navigation completes
         this.router.navigate(['/dashboard']).then(() => {
           this.isLoading.set(false);
         });
       },
       error: (error) => {
-        console.log('❌ Login failed:', error);
         this.isLoading.set(false);
         this.errorMessage.set(error.error || 'Login failed. Please try again.');
       }

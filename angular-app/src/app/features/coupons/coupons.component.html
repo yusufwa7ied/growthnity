@@ -252,7 +252,6 @@
                 [globalFilterFields]="['code','advertiser','partner','geo']">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th style="width: 50px;"></th>
                         <th class="col-code">Coupon Code</th>
                         <th class="col-advertiser">Advertiser</th>
                         <th class="col-partner">Partner Status</th>
@@ -263,12 +262,6 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-row>
                     <tr>
-                        <td>
-                            <button pButton type="button"
-                                [icon]="expandedRows[row.code] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                                class="p-button-text p-button-rounded p-button-sm" (click)="toggleHistory(row.code)"
-                                pTooltip="View assignment history"></button>
-                        </td>
                         <td class="col-code">
                             <span class="coupon-code">{{row.code}}</span>
                         </td>
@@ -295,16 +288,21 @@
                         </td>
                         <td class="col-actions">
                             <div class="action-buttons">
-                                <button pButton type="button" label="Edit"
-                                    class="p-button-sm p-button-outlined action-edit"
-                                    (click)="editCoupon(row)"></button>
+                                <button pButton type="button" icon="pi pi-chevron-right"
+                                    class="p-button-text p-button-rounded p-button-sm action-history"
+                                    (click)="toggleHistory(row.code)" pTooltip="View assignment history"
+                                    tooltipPosition="top" style="color: #495057; margin-right: 0.5rem;"></button>
+                                <button pButton type="button" icon="pi pi-pencil"
+                                    class="p-button-text p-button-rounded p-button-sm action-edit"
+                                    (click)="editCoupon(row)" pTooltip="Edit coupon"
+                                    tooltipPosition="top" style="color: #495057;"></button>
                             </div>
                         </td>
                     </tr>
 
                     <!-- Expandable History Row -->
                     <tr *ngIf="expandedRows[row.code]">
-                        <td colspan="7" style="padding: 0; background: #f8f9fa;">
+                        <td colspan="6" style="padding: 0; background: #f8f9fa;">
                             <div style="padding: 1rem; border-top: 1px solid #dee2e6;">
                                 <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #495057;">
                                     <i class="pi pi-history"></i> Assignment History
