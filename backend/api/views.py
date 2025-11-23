@@ -1772,25 +1772,30 @@ def trigger_pipeline_upload(request):
         )
     
     try:
-        s3_key = settings.S3_PIPELINE_FILES.get(pipeline)
-        if not s3_key:
-            logger.error(f"S3_PIPELINE_FILES not configured for pipeline: {pipeline}")
-            return Response(
-                {"status": "error", "message": f"Pipeline {pipeline} not configured"},
-                status=500
-            )
+        # Only check S3 for S3-based pipelines (NN, Styli)
+        s3_based_pipelines = ["noon_namshi", "styli"]
         
-        logger.info(f"Checking S3 file: {s3_key}")
+        if pipeline in s3_based_pipelines:
+            s3_key = settings.S3_PIPELINE_FILES.get(pipeline)
+            if not s3_key:
+                logger.error(f"S3_PIPELINE_FILES not configured for pipeline: {pipeline}")
+                return Response(
+                    {"status": "error", "message": f"Pipeline {pipeline} not configured"},
+                    status=500
+                )
+            
+            logger.info(f"Checking S3 file: {s3_key}")
+            
+            # Check if file was uploaded to S3
+            if not s3_service.file_exists(s3_key):
+                logger.error(f"CSV file not found in S3: {s3_key}")
+                return Response(
+                    {"status": "error", "message": f"CSV file not found in S3: {s3_key}"},
+                    status=400
+                )
+            
+            logger.info(f"✓ File exists in S3: {s3_key}")
         
-        # Check if file was uploaded to S3
-        if not s3_service.file_exists(s3_key):
-            logger.error(f"CSV file not found in S3: {s3_key}")
-            return Response(
-                {"status": "error", "message": f"CSV file not found in S3: {s3_key}"},
-                status=400
-            )
-        
-        logger.info(f"✓ File exists in S3: {s3_key}")
         logger.info(f"🚀 TRIGGERING {pipeline.upper()} PIPELINE IN BACKGROUND | Date Range: {start_date} → {end_date}")
         
         # Define function to run pipeline in background
