@@ -1742,12 +1742,14 @@ def trigger_pipeline_upload(request):
     # Map short names to full pipeline keys
     pipeline_map = {
         "nn": "noon_namshi",
-        "styli": "styli"
+        "styli": "styli",
+        "drn": "drnutrition",
+        "spr": "springrose"
     }
     
     if pipeline_arg not in pipeline_map:
         return Response(
-            {"status": "error", "message": "Invalid pipeline. Must be 'nn' or 'styli'"},
+            {"status": "error", "message": "Invalid pipeline. Must be 'nn', 'styli', 'drn', or 'spr'"},
             status=400
         )
     
@@ -1798,9 +1800,15 @@ def trigger_pipeline_upload(request):
                 if pipeline == "noon_namshi":
                     logger.info(f"[BACKGROUND] Calling: run_nn --start {start_date} --end {end_date}")
                     call_command('run_nn', start=start_date, end=end_date, verbosity=2)
-                else:  # styli
+                elif pipeline == "styli":
                     logger.info(f"[BACKGROUND] Calling: run_styli --start {start_date} --end {end_date}")
                     call_command('run_styli', start=start_date, end=end_date, verbosity=2)
+                elif pipeline == "drnutrition":
+                    logger.info(f"[BACKGROUND] Calling: run_drn --start {start_date} --end {end_date}")
+                    call_command('run_drn', start=start_date, end=end_date, verbosity=2)
+                elif pipeline == "springrose":
+                    logger.info(f"[BACKGROUND] Calling: run_spr --start {start_date} --end {end_date}")
+                    call_command('run_spr', start=start_date, end=end_date, verbosity=2)
                 logger.info(f"[BACKGROUND] ✅ PIPELINE {pipeline.upper()} COMPLETED SUCCESSFULLY")
             except Exception as e:
                 logger.error(f"[BACKGROUND] ❌ PIPELINE ERROR: {str(e)}", exc_info=True)
