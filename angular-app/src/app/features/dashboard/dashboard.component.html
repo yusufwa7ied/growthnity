@@ -507,10 +507,10 @@
                   </div>
                   <div class="dept-metric">
                     <span class="dept-metric-label">Revenue:</span>
-                    <span class="dept-metric-value">${{ dept.revenue / 1000 | number:'1.0-0' }}K</span>
+                    <span class="dept-metric-value">${{ dept.revenue | trimDecimals:2 }}</span>
                     <span class="dept-separator">/</span>
-                    <span class="dept-metric-target">{{ dept.targets.revenue !== null ? ('$' + (dept.targets.revenue /
-                      1000 | number:'1.0-0') + 'K') : 'No target set' }}</span>
+                    <span class="dept-metric-target">{{ dept.targets.revenue !== null ? ('$' + (dept.targets.revenue
+                      | trimDecimals:2)) : 'No target set' }}</span>
                     <span class="dept-metric-pct"
                       [style.color]="dept.achievement.revenue_pct !== null ? getAchievementColor(dept.achievement.revenue_pct) : '#9ca3af'">
                       {{ dept.achievement.revenue_pct !== null ? (dept.achievement.revenue_pct | number:'1.0-0') + '%' :
@@ -519,10 +519,10 @@
                   </div>
                   <div class="dept-metric">
                     <span class="dept-metric-label">Profit:</span>
-                    <span class="dept-metric-value">${{ dept.profit / 1000 | number:'1.0-0' }}K</span>
+                    <span class="dept-metric-value">${{ dept.profit | trimDecimals:2 }}</span>
                     <span class="dept-separator">/</span>
-                    <span class="dept-metric-target">{{ dept.targets.profit !== null ? ('$' + (dept.targets.profit /
-                      1000 | number:'1.0-0') + 'K') : 'No target set' }}</span>
+                    <span class="dept-metric-target">{{ dept.targets.profit !== null ? ('$' + (dept.targets.profit
+                      | trimDecimals:2)) : 'No target set' }}</span>
                     <span class="dept-metric-pct"
                       [style.color]="dept.achievement.profit_pct !== null ? getAchievementColor(dept.achievement.profit_pct) : '#9ca3af'">
                       {{ dept.achievement.profit_pct !== null ? (dept.achievement.profit_pct | number:'1.0-0') + '%' :
@@ -562,10 +562,10 @@
                   <span class="target-label">Revenue</span>
                 </div>
                 <div class="target-numbers">
-                  <span class="actual">${{ analytics.mtd.revenue / 1000 | number:'1.0-0' }}K</span>
+                  <span class="actual">${{ analytics.mtd.revenue | trimDecimals:2 }}</span>
                   <span class="separator">/</span>
-                  <span class="target">{{ analytics.targets.revenue !== null ? ('$' + (analytics.targets.revenue / 1000
-                    | number:'1.0-0') + 'K') : 'No target set' }}</span>
+                  <span class="target">{{ analytics.targets.revenue !== null ? ('$' + (analytics.targets.revenue
+                    | trimDecimals:2)) : 'No target set' }}</span>
                 </div>
                 <div class="target-bar-mini" *ngIf="analytics.targets.revenue !== null">
                   <div class="target-fill" [style.width.%]="analytics.achievement_pct.revenue || 0"
@@ -584,10 +584,10 @@
                   <span class="target-label">Profit</span>
                 </div>
                 <div class="target-numbers">
-                  <span class="actual">${{ analytics.mtd.profit / 1000 | number:'1.0-0' }}K</span>
+                  <span class="actual">${{ analytics.mtd.profit | trimDecimals:2 }}</span>
                   <span class="separator">/</span>
-                  <span class="target">{{ analytics.targets.profit !== null ? ('$' + (analytics.targets.profit / 1000 |
-                    number:'1.0-0') + 'K') : 'No target set' }}</span>
+                  <span class="target">{{ analytics.targets.profit !== null ? ('$' + (analytics.targets.profit |
+                    trimDecimals:2)) : 'No target set' }}</span>
                 </div>
                 <div class="target-bar-mini" *ngIf="analytics.targets.profit !== null">
                   <div class="target-fill" [style.width.%]="analytics.achievement_pct.profit || 0"
@@ -607,10 +607,10 @@
                   <span class="target-dept dept-mb">MB</span>
                 </div>
                 <div class="target-numbers">
-                  <span class="actual">${{ analytics.mtd.spend / 1000 | number:'1.0-0' }}K</span>
+                  <span class="actual">${{ analytics.mtd.spend | trimDecimals:2 }}</span>
                   <span class="separator">/</span>
-                  <span class="target">{{ analytics.targets.spend !== null ? ('$' + (analytics.targets.spend / 1000 |
-                    number:'1.0-0') + 'K') : 'No target set' }}</span>
+                  <span class="target">{{ analytics.targets.spend !== null ? ('$' + (analytics.targets.spend |
+                    trimDecimals:2)) : 'No target set' }}</span>
                 </div>
                 <div class="target-bar-mini" *ngIf="analytics.targets.spend !== null">
                   <div class="target-fill" [style.width.%]="analytics.achievement_pct.spend"

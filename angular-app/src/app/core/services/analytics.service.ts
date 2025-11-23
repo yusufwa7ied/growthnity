@@ -102,19 +102,29 @@ export class AnalyticsService {
     constructor(private http: HttpClient) { }
 
     getPerformanceAnalytics(
-        advertiserId?: number,
-        partnerId?: number,
+        advertiserIds?: number | number[],
+        partnerIds?: number | number[],
         partnerType?: string,
         month?: string
     ): Observable<PerformanceAnalytics> {
         let params = new HttpParams();
 
-        if (advertiserId) {
-            params = params.set('advertiser_id', advertiserId.toString());
+        // Support both single value and array for advertiserIds
+        if (advertiserIds) {
+            const ids = Array.isArray(advertiserIds) ? advertiserIds : [advertiserIds];
+            ids.forEach(id => {
+                params = params.append('advertiser_id', id.toString());
+            });
         }
-        if (partnerId) {
-            params = params.set('partner_id', partnerId.toString());
+
+        // Support both single value and array for partnerIds
+        if (partnerIds) {
+            const ids = Array.isArray(partnerIds) ? partnerIds : [partnerIds];
+            ids.forEach(id => {
+                params = params.append('partner_id', id.toString());
+            });
         }
+
         if (partnerType) {
             params = params.set('partner_type', partnerType);
         }

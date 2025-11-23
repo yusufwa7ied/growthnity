@@ -97,26 +97,32 @@ export class MainHeaderComponent implements OnInit {
     }
 
     goToDashboard(): void {
+        this.activeTab = 'dashboard';
         this.router.navigate(['/dashboard'], { skipLocationChange: false });
     }
 
     goToCoupons(): void {
+        this.activeTab = 'coupons';
         this.router.navigate(['/coupons'], { skipLocationChange: false });
     }
 
     goToAdvertisers(): void {
+        this.activeTab = 'advertisers';
         this.router.navigate(['/advertisers'], { skipLocationChange: false });
     }
 
     goToTargets(): void {
+        this.activeTab = 'targets';
         this.router.navigate(['/targets'], { skipLocationChange: false });
     }
 
     goToPartners(): void {
+        this.activeTab = 'partners';
         this.router.navigate(['/partners'], { skipLocationChange: false });
     }
 
     goToMediaBuyerSpend(): void {
+        this.activeTab = 'daily-spend';
         this.router.navigate(['/media-buyer-spend'], { skipLocationChange: false });
     }
 }

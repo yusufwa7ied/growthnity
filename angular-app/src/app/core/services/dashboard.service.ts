@@ -110,6 +110,12 @@ export class DashboardService {
     return this.http.get<any[]>(`${this.API_BASE_URL}/team-members/`);
   }
 
+  // Get team members filtered by department (partner_type)
+  getTeamMembersByDepartment(partnerType: string): Observable<any[]> {
+    const params = new HttpParams().set('department', partnerType);
+    return this.http.get<any[]>(`${this.API_BASE_URL}/team-members/`, { params });
+  }
+
   // Helper to build HTTP params from filters
   private buildParams(filters: DashboardFilters): HttpParams {
     let params = new HttpParams();

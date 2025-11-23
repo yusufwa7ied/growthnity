@@ -732,11 +732,11 @@ def dashboard_pie_chart_data_view(request):
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
     role = company_user.role.name if company_user and company_user.role else None
 
-    # Get filters from request
+    # Get filters from request - SUPPORT MULTIPLE VALUES
     start_date_str = request.GET.get("start_date")
     end_date_str = request.GET.get("end_date")
-    advertiser_id = request.GET.get("advertiser")
-    partner_id = request.GET.get("partner")
+    advertiser_ids = request.GET.getlist("advertiser_id")  # Support multiple
+    partner_ids = request.GET.getlist("partner_id")        # Support multiple
     coupon = request.GET.get("coupon")
 
     qs = CampaignPerformance.objects.all()
@@ -758,18 +758,18 @@ def dashboard_pie_chart_data_view(request):
             company_user=company_user
         ).prefetch_related("advertisers", "partners")
 
-        advertiser_ids = set()
-        partner_ids = set()
+        assigned_advertiser_ids = set()
+        assigned_partner_ids = set()
         for a in assignments:
-            advertiser_ids.update(a.advertisers.values_list("id", flat=True))
-            partner_ids.update(a.partners.values_list("id", flat=True))
+            assigned_advertiser_ids.update(a.advertisers.values_list("id", flat=True))
+            assigned_partner_ids.update(a.partners.values_list("id", flat=True))
 
-        if advertiser_ids:
-            qs = qs.filter(advertiser__id__in=advertiser_ids)
-        if partner_ids:
-            qs = qs.filter(partner__id__in=partner_ids)
+        if assigned_advertiser_ids:
+            qs = qs.filter(advertiser__id__in=assigned_advertiser_ids)
+        if assigned_partner_ids:
+            qs = qs.filter(partner__id__in=assigned_partner_ids)
 
-    # Apply user filters
+    # Apply user filters - SUPPORT MULTIPLE VALUES
     if start_date_str:
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -784,11 +784,11 @@ def dashboard_pie_chart_data_view(request):
         except:
             pass
 
-    if advertiser_id:
-        qs = qs.filter(advertiser_id=advertiser_id)
+    if advertiser_ids:
+        qs = qs.filter(advertiser_id__in=advertiser_ids)
 
-    if partner_id:
-        qs = qs.filter(partner_id=partner_id)
+    if partner_ids:
+        qs = qs.filter(partner_id__in=partner_ids)
 
     if coupon:
         qs = qs.filter(coupon=coupon)
@@ -1206,6 +1206,7 @@ def team_members_list(request):
     """
     Get list of team members (CompanyUser) for dropdown selection.
     Returns list of team members with ID and username.
+    Optional query parameter: department (MB, AFF, INF) to filter by partner_type
     """
     try:
         user = request.user
@@ -1214,13 +1215,32 @@ def team_members_list(request):
         if not company_user:
             return Response({"error": "User not found"}, status=404)
         
-        # Get team members based on user's department
-        if company_user.department:
+        # Check if filtering by department/partner_type
+        department_filter = request.query_params.get('department')
+        
+        # Map partner_type abbreviations to department names
+        department_map = {
+            "MB": "media_buying",
+            "AFF": "affiliate",
+            "INF": "influencer"
+        }
+        
+        # Determine which department to filter by
+        if department_filter and department_filter in department_map:
+            filter_dept = department_map[department_filter]
+        elif company_user.department:
+            filter_dept = company_user.department
+        else:
+            # Admin with no department - return all
+            filter_dept = None
+        
+        # Get team members
+        if filter_dept:
             team_members = CompanyUser.objects.filter(
-                department=company_user.department
+                department=filter_dept
             ).select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
         else:
-            # If user has no department, return all company users (for admin)
+            # Return all company users (for admin)
             team_members = CompanyUser.objects.select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
         
         members_list = []
@@ -1236,6 +1256,9 @@ def team_members_list(request):
     except Exception as e:
         print(f"Error fetching team members: {e}")
         return Response({"error": str(e)}, status=400)
+
+
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -1339,7 +1362,7 @@ def target_detail(request, pk):
 
 # ============ PERFORMANCE ANALYTICS API ============
 
-def get_department_breakdown(month_start, month_end, advertiser_id=None, partner_id=None):
+def get_department_breakdown(month_start, month_end, advertiser_ids=None, partner_ids=None):
     """Calculate performance breakdown by department"""
     departments = {
         "MB": {"partner_type": "MB", "name": "Media Buying"},
@@ -1356,10 +1379,10 @@ def get_department_breakdown(month_start, month_end, advertiser_id=None, partner
             partner__partner_type=dept_info["partner_type"]
         )
         
-        if advertiser_id:
-            dept_qs = dept_qs.filter(advertiser_id=advertiser_id)
-        if partner_id:
-            dept_qs = dept_qs.filter(partner_id=partner_id)
+        if advertiser_ids:
+            dept_qs = dept_qs.filter(advertiser_id__in=advertiser_ids)
+        if partner_ids:
+            dept_qs = dept_qs.filter(partner_id__in=partner_ids)
         
         dept_agg = dept_qs.aggregate(
             total_orders=Sum("total_orders"),
@@ -1394,24 +1417,29 @@ def get_department_breakdown(month_start, month_end, advertiser_id=None, partner
             payout = original_payout
             profit = revenue - payout
         
-        # Get targets for this department
+        # Get targets for this department - sum ALL targets (both department-level and individual)
         target_filters = {
             "month": month_start,
             "partner_type": dept_info["partner_type"]
         }
-        if advertiser_id:
-            target_filters["advertiser_id"] = advertiser_id
+        if advertiser_ids:
+            dept_targets = DepartmentTarget.objects.filter(**target_filters, advertiser_id__in=advertiser_ids)
+        else:
+            dept_targets = DepartmentTarget.objects.filter(**target_filters)
         
-        dept_target = DepartmentTarget.objects.filter(**target_filters).first()
-        
-        if dept_target:
-            orders_target = dept_target.orders_target
-            revenue_target = float(dept_target.revenue_target)
-            profit_target = float(dept_target.profit_target)
+        if dept_targets.exists():
+            target_agg = dept_targets.aggregate(
+                total_orders=Sum('orders_target'),
+                total_revenue=Sum('revenue_target'),
+                total_profit=Sum('profit_target')
+            )
+            orders_target = int(target_agg['total_orders']) if target_agg['total_orders'] is not None else None
+            revenue_target = float(target_agg['total_revenue']) if target_agg['total_revenue'] is not None else None
+            profit_target = float(target_agg['total_profit']) if target_agg['total_profit'] is not None else None
             
-            orders_pct = (orders / orders_target * 100) if orders_target > 0 else 0
-            revenue_pct = (revenue / revenue_target * 100) if revenue_target > 0 else 0
-            profit_pct = (profit / profit_target * 100) if profit_target > 0 else 0
+            orders_pct = (orders / orders_target * 100) if orders_target and orders_target > 0 else 0
+            revenue_pct = (revenue / revenue_target * 100) if revenue_target and revenue_target > 0 else 0
+            profit_pct = (profit / profit_target * 100) if profit_target and profit_target > 0 else 0
         else:
             orders_target = None
             revenue_target = None
@@ -1456,23 +1484,17 @@ def performance_analytics_view(request):
     user = request.user
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
     
-    # Get filter parameters
-    advertiser_id = request.GET.get('advertiser_id')
-    if advertiser_id:
-        try:
-            advertiser_id = int(advertiser_id)
-        except:
-            advertiser_id = None
+    # Get filter parameters - support multiple values
+    advertiser_ids = request.GET.getlist('advertiser_id')
+    advertiser_ids = [int(aid) for aid in advertiser_ids if aid.isdigit()] if advertiser_ids else None
     
-    partner_id = request.GET.get('partner_id')
-    if partner_id:
-        try:
-            partner_id = int(partner_id)
-        except:
-            partner_id = None
+    partner_ids = request.GET.getlist('partner_id')
+    partner_ids = [int(pid) for pid in partner_ids if pid.isdigit()] if partner_ids else None
     
     partner_type = request.GET.get('partner_type')
     month_param = request.GET.get('month')
+    
+    print(f"🔍 ANALYTICS DEBUG: advertiser_ids={advertiser_ids}, partner_ids={partner_ids}, partner_type={partner_type}")
     
     # Determine target month (default to current month)
     if month_param:
@@ -1523,10 +1545,10 @@ def performance_analytics_view(request):
                 partner_type = "INF"
     
     # Apply filters
-    if advertiser_id:
-        perf_qs = perf_qs.filter(advertiser_id=advertiser_id)
-    if partner_id:
-        perf_qs = perf_qs.filter(partner_id=partner_id)
+    if advertiser_ids:
+        perf_qs = perf_qs.filter(advertiser_id__in=advertiser_ids)
+    if partner_ids:
+        perf_qs = perf_qs.filter(partner_id__in=partner_ids)
     if partner_type:
         perf_qs = perf_qs.filter(partner__partner_type=partner_type)
     
@@ -1620,8 +1642,19 @@ def performance_analytics_view(request):
         month=month_start
     )
     
-    if advertiser_id:
-        target_qs = target_qs.filter(advertiser_id=advertiser_id)
+    # Apply department scoping to targets (same as performance data)
+    if company_user and company_user.department:
+        dept = company_user.department
+        dept_map = {
+            "media_buying": "MB",
+            "affiliate": "AFF",
+            "influencer": "INF"
+        }
+        if dept in dept_map:
+            target_qs = target_qs.filter(partner_type=dept_map[dept])
+    
+    if advertiser_ids:
+        target_qs = target_qs.filter(advertiser_id__in=advertiser_ids)
     if partner_type:
         target_qs = target_qs.filter(partner_type=partner_type)
     
@@ -1637,26 +1670,31 @@ def performance_analytics_view(request):
     if company_user and company_user.role:
         role = company_user.role.name
         if role not in {"Admin", "OpsManager"}:
-            # First try to get individual target for this user
+            # Sum ALL targets assigned to this user (individual targets) + department-level targets
             from django.db.models import Q
-            target = target_qs.filter(Q(assigned_to=company_user)).first()
-            if not target:
-                # Fall back to department-level target (assigned_to = null)
-                target = target_qs.filter(assigned_to__isnull=True).first()
+            user_targets = target_qs.filter(
+                Q(assigned_to=company_user) | Q(assigned_to__isnull=True)
+            )
             
-            if target:
-                monthly_orders_target = int(target.orders_target)
-                monthly_revenue_target = float(target.revenue_target)
-                monthly_profit_target = float(target.profit_target)
-                monthly_spend_target = float(target.spend_target or 0)
+            if user_targets.exists():
+                target_agg = user_targets.aggregate(
+                    total_orders=Sum('orders_target'),
+                    total_revenue=Sum('revenue_target'),
+                    total_profit=Sum('profit_target'),
+                    total_spend=Sum('spend_target')
+                )
+                if target_agg['total_orders'] is not None:
+                    monthly_orders_target = int(target_agg['total_orders'])
+                if target_agg['total_revenue'] is not None:
+                    monthly_revenue_target = float(target_agg['total_revenue'])
+                if target_agg['total_profit'] is not None:
+                    monthly_profit_target = float(target_agg['total_profit'])
+                if target_agg['total_spend'] is not None:
+                    monthly_spend_target = float(target_agg['total_spend'])
         else:
             # Admin/OpsManager
-            if advertiser_id and partner_type:
-                # When viewing specific advertiser/partner combo, sum all targets
-                targets = target_qs.all()
-            else:
-                # Otherwise show only department-level targets
-                targets = target_qs.filter(assigned_to__isnull=True)
+            # Sum ALL targets (both department-level and individual) for accurate totals
+            targets = target_qs.all()
             
             # Sum up all matching targets
             if targets.exists():
@@ -1676,12 +1714,23 @@ def performance_analytics_view(request):
                 if target_agg['total_spend'] is not None:
                     monthly_spend_target = float(target_agg['total_spend'])
     else:
-        target = target_qs.filter(assigned_to__isnull=True).first()
-        if target:
-            monthly_orders_target = int(target.orders_target)
-            monthly_revenue_target = float(target.revenue_target)
-            monthly_profit_target = float(target.profit_target)
-            monthly_spend_target = float(target.spend_target or 0)
+        # No user/role: aggregate all department-level targets
+        dept_targets = target_qs.filter(assigned_to__isnull=True)
+        if dept_targets.exists():
+            target_agg = dept_targets.aggregate(
+                total_orders=Sum('orders_target'),
+                total_revenue=Sum('revenue_target'),
+                total_profit=Sum('profit_target'),
+                total_spend=Sum('spend_target')
+            )
+            if target_agg['total_orders'] is not None:
+                monthly_orders_target = int(target_agg['total_orders'])
+            if target_agg['total_revenue'] is not None:
+                monthly_revenue_target = float(target_agg['total_revenue'])
+            if target_agg['total_profit'] is not None:
+                monthly_profit_target = float(target_agg['total_profit'])
+            if target_agg['total_spend'] is not None:
+                monthly_spend_target = float(target_agg['total_spend'])
     
     # Calculate percentages - return None if no target
     if monthly_orders_target is not None:
@@ -1844,9 +1893,10 @@ def performance_analytics_view(request):
     # Add department breakdown for admin/ops manager (only when not filtering by department)
     if company_user and company_user.role and company_user.role.name in {"Admin", "OpsManager"} and not partner_type:
         try:
-            response_data["department_breakdown"] = get_department_breakdown(month_start, month_end, advertiser_id, partner_id)
+            print(f"🔍 Calling get_department_breakdown with advertiser_ids={advertiser_ids}, partner_ids={partner_ids}")
+            response_data["department_breakdown"] = get_department_breakdown(month_start, month_end, advertiser_ids, partner_ids)
         except Exception as e:
-            print(f"Error getting department breakdown: {e}")
+            print(f"❌ Error getting department breakdown: {e}")
             import traceback
             traceback.print_exc()
             response_data["department_breakdown"] = None

@@ -170,71 +170,75 @@
         </div>
 
         <!-- Target Form Dialog -->
-        <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '600px'}"
-            [header]="editingTarget ? 'Edit Target' : 'Create New Target'" [draggable]="false" [resizable]="false">
+        <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '700px'}"
+            [header]="editingTarget ? 'Edit Target' : 'Create New Target'" [draggable]="false" [resizable]="false"
+            [maximizable]="false">
 
-            <div class="target-form">
-                <div class="form-row">
-                    <label for="advertiser">Advertiser *</label>
-                    <select id="advertiser" [(ngModel)]="formData.advertiser" class="form-input">
-                        <option [value]="0" disabled>Select Advertiser</option>
+            <form>
+                <div class="form-group">
+                    <label for="advertiser">Advertiser <span class="required">*</span></label>
+                    <select [(ngModel)]="formData.advertiser" name="advertiser" id="advertiser" class="form-control"
+                        required>
+                        <option value="">Select Advertiser</option>
                         <option *ngFor="let adv of advertisers" [value]="adv.id">{{ adv.name }}</option>
                     </select>
                 </div>
 
-                <div class="form-row">
-                    <label for="partner_type">Department *</label>
-                    <select id="partner_type" [(ngModel)]="formData.partner_type"
-                        (change)="onPartnerTypeChange(formData.partner_type)" class="form-input">
-                        <option *ngFor="let type of partnerTypes" [value]="type.value">{{ type.label }}</option>
+                <div class="form-group">
+                    <label for="partner_type">Department <span class="required">*</span></label>
+                    <select [(ngModel)]="formData.partner_type" name="partner_type" id="partner_type"
+                        class="form-control" (change)="onPartnerTypeChange(formData.partner_type)" required>
+                        <option value="">Select Department</option>
+                        <option value="MB">Media Buying</option>
+                        <option value="AFF">Affiliate</option>
+                        <option value="INF">Influencer</option>
                     </select>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
                     <label for="assigned_to">Assign to Team Member (Optional)</label>
-                    <select id="assigned_to" [(ngModel)]="formData.assigned_to" class="form-input">
-                        <option [value]="null">Department Level (No Member Selected)</option>
-                        <option *ngFor="let member of teamMembers" [value]="member.id">{{ member.name || member.username
-                            }}</option>
+                    <select [(ngModel)]="formData.assigned_to" name="assigned_to" id="assigned_to" class="form-control">
+                        <option [value]="null">Leave blank for department-level target</option>
+                        <option *ngFor="let member of teamMembers" [value]="member.id">{{ member.name }}</option>
                     </select>
-                    <small style="color: #6b7280; margin-top: 4px; display: block;">Leave blank for department-level
-                        targets, select a team member for individual targets</small>
                 </div>
 
-                <div class="form-row">
-                    <label for="month">Month *</label>
-                    <input type="month" id="month" [(ngModel)]="formData.month" class="form-input">
+                <div class="form-group">
+                    <label for="month">Month <span class="required">*</span></label>
+                    <input type="month" [(ngModel)]="formData.month" name="month" id="month" class="form-control"
+                        required>
                 </div>
 
-                <div class="form-row">
-                    <label for="orders_target">Orders Target *</label>
-                    <input type="number" id="orders_target" [(ngModel)]="formData.orders_target" min="0"
-                        class="form-input">
+                <div class="form-group">
+                    <label for="orders_target">Orders Target <span class="required">*</span></label>
+                    <input type="number" [(ngModel)]="formData.orders_target" name="orders_target" id="orders_target"
+                        class="form-control" min="0" required>
                 </div>
 
-                <div class="form-row">
-                    <label for="revenue_target">Revenue Target *</label>
-                    <input type="number" id="revenue_target" [(ngModel)]="formData.revenue_target" min="0" step="0.01"
-                        class="form-input">
+                <div class="form-group">
+                    <label for="revenue_target">Revenue Target <span class="required">*</span></label>
+                    <input type="number" [(ngModel)]="formData.revenue_target" name="revenue_target" id="revenue_target"
+                        class="form-control" min="0" step="0.01" required>
                 </div>
 
-                <div class="form-row">
-                    <label for="profit_target">Profit Target *</label>
-                    <input type="number" id="profit_target" [(ngModel)]="formData.profit_target" min="0" step="0.01"
-                        class="form-input">
+                <div class="form-group">
+                    <label for="profit_target">Profit Target <span class="required">*</span></label>
+                    <input type="number" [(ngModel)]="formData.profit_target" name="profit_target" id="profit_target"
+                        class="form-control" min="0" step="0.01" required>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
                     <label for="spend_target">Spend Target</label>
-                    <input type="number" id="spend_target" [(ngModel)]="formData.spend_target" min="0" step="0.01"
-                        class="form-input">
+                    <input type="number" [(ngModel)]="formData.spend_target" name="spend_target" id="spend_target"
+                        class="form-control" min="0" step="0.01">
                 </div>
-            </div>
+            </form>
 
             <ng-template pTemplate="footer">
-                <button pButton type="button" label="Cancel" class="p-button-outlined p-button-secondary"
-                    (click)="toggleForm()"></button>
-                <button pButton type="button" label="Save" class="p-button-success" (click)="saveTarget()"></button>
+                <button type="button" pButton label="Cancel" icon="pi pi-times" (click)="toggleForm()"
+                    class="p-button-text"></button>
+                <button type="button" pButton label="Save" icon="pi pi-check" (click)="saveTarget()"
+                    class="p-button-success"></button>
             </ng-template>
         </p-dialog>
 

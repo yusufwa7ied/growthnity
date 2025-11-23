@@ -18,7 +18,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
 @Component({
   selector: 'app-targets',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, TableModule, DialogModule, TooltipModule, MainHeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent],
   templateUrl: './targets.component.html',
   styleUrl: './targets.component.css'
 })
@@ -84,23 +84,13 @@ export class TargetsComponent implements OnInit {
     this.user = this.authService.currentUser();
     this.role = this.user?.role || '';
     this.loadAdvertisers();
-    this.loadTeamMembers();
+    // Don't load team members on init - they'll be loaded when department is selected
     this.loadTargets();
   }
 
   loadAdvertisers(): void {
     this.dashboardService.getAdvertisers().subscribe(data => {
       this.advertisers = data;
-    });
-  }
-
-  loadTeamMembers(): void {
-    this.dashboardService.getTeamMembers().subscribe({
-      next: (data) => {
-        this.teamMembers = data;
-        this.filteredTeamMembers = [...this.teamMembers];
-      },
-      error: (err) => console.error('Error loading team members:', err)
     });
   }
 
@@ -214,6 +204,24 @@ export class TargetsComponent implements OnInit {
 
   onPartnerTypeChange(partnerType: string): void {
     this.formData.assigned_to = null; // Reset member selection when type changes
+
+    // Load team members for the selected department (partner_type)
+    if (partnerType) {
+      this.dashboardService.getTeamMembersByDepartment(partnerType).subscribe({
+        next: (data) => {
+          // Transform team members data for dropdown
+          this.teamMembers = data.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            username: m.username
+          }));
+        },
+        error: (err) => {
+          console.error('Error loading team members for department:', err);
+          this.teamMembers = [];
+        }
+      });
+    }
   }
 
   deleteTarget(id: number): void {

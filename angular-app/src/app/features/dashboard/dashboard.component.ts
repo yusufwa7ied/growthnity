@@ -19,6 +19,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
 
 @Component({
     selector: 'app-dashboard',
@@ -35,7 +36,8 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
         TableModule,
         PaginatorModule,
         BaseChartDirective,
-        MainHeaderComponent
+        MainHeaderComponent,
+        TrimDecimalsPipe
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.css',
@@ -770,12 +772,14 @@ export class DashboardComponent implements OnInit {
     }
 
     loadAnalytics(): void {
-        const advertiserId = Array.isArray(this.filters.advertiser_id)
-            ? this.filters.advertiser_id[0]
-            : this.filters.advertiser_id;
-        const partnerId = Array.isArray(this.filters.partner_id)
-            ? this.filters.partner_id[0]
-            : this.filters.partner_id;
+        // Support multiple advertiser IDs - send all of them
+        const advertiserIds = Array.isArray(this.filters.advertiser_id)
+            ? this.filters.advertiser_id
+            : this.filters.advertiser_id ? [this.filters.advertiser_id] : undefined;
+
+        const partnerIds = Array.isArray(this.filters.partner_id)
+            ? this.filters.partner_id
+            : this.filters.partner_id ? [this.filters.partner_id] : undefined;
 
         // Determine partner type: use filter if set (admin), otherwise use user's department
         let partnerType: string | undefined;
@@ -788,8 +792,8 @@ export class DashboardComponent implements OnInit {
         }
 
         this.analyticsService.getPerformanceAnalytics(
-            advertiserId || undefined,
-            partnerId || undefined,
+            advertiserIds,
+            partnerIds,
             partnerType,
             undefined // current month by default
         ).subscribe({

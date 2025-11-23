@@ -699,25 +699,9 @@
     background: white;
 }
 
+/* Dialog */
 ::ng-deep .p-dialog-mask {
     background-color: rgba(0, 0, 0, 0.5);
-}
-
-::ng-deep .p-inputnumber-input,
-::ng-deep .p-dropdown,
-::ng-deep .p-calendar .p-inputtext {
-    width: 100%;
-    border-radius: 8px;
-    border: 1.5px solid #d1d5db;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.9375rem;
-}
-
-::ng-deep .p-inputnumber-input:focus,
-::ng-deep .p-dropdown:not(.p-disabled):hover,
-::ng-deep .p-calendar .p-inputtext:focus {
-    border-color: var(--brand-teal);
-    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
 }
 
 /* Footer Styles */
@@ -761,4 +745,42 @@
 
 .footer-divider {
     color: #d1d5db;
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.form-control {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--brand-teal);
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
+.required {
+    color: #ef4444;
 }
