@@ -1704,24 +1704,30 @@ def trigger_pipeline_upload(request):
     }
     
     Workflow:
-    1. Deletes old CSV file from S3 (if exists)
-    2. Triggers pipeline management command
-    3. Returns status
+    1. Validates file exists in S3
+    2. Starts pipeline execution in background thread
+    3. Returns success immediately
     """
+    import logging
+    import threading
     from django.core.management import call_command
     from django.conf import settings
     from api.services.s3_service import s3_service
     from datetime import datetime
     
+    logger = logging.getLogger('django')
+    
     # Check permission (only Admin and OpsManager can trigger)
     try:
         company_user = CompanyUser.objects.get(user=request.user)
         if company_user.role.name not in {"Admin", "OpsManager"}:
+            logger.warning(f"Insufficient permissions for user {request.user}")
             return Response(
                 {"status": "error", "message": "Insufficient permissions"},
                 status=403
             )
     except CompanyUser.DoesNotExist:
+        logger.error(f"CompanyUser not found for user {request.user}")
         return Response(
             {"status": "error", "message": "User not found"},
             status=403
@@ -1730,6 +1736,8 @@ def trigger_pipeline_upload(request):
     pipeline = request.data.get("pipeline", "").lower()
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
+    
+    logger.info(f"Pipeline trigger request: pipeline={pipeline}, start={start_date}, end={end_date}")
     
     # Validate inputs
     if pipeline not in ["nn", "styli"]:
@@ -1755,44 +1763,57 @@ def trigger_pipeline_upload(request):
         )
     
     try:
-        s3_key = settings.S3_PIPELINE_FILES[pipeline]
+        s3_key = settings.S3_PIPELINE_FILES.get(pipeline)
+        if not s3_key:
+            logger.error(f"S3_PIPELINE_FILES not configured for pipeline: {pipeline}")
+            return Response(
+                {"status": "error", "message": f"Pipeline {pipeline} not configured"},
+                status=500
+            )
+        
+        logger.info(f"Checking S3 file: {s3_key}")
         
         # Check if file was uploaded to S3
         if not s3_service.file_exists(s3_key):
+            logger.error(f"CSV file not found in S3: {s3_key}")
             return Response(
                 {"status": "error", "message": f"CSV file not found in S3: {s3_key}"},
                 status=400
             )
         
-        print(f"\n{'='*60}")
-        print(f"🚀 TRIGGERING {pipeline.upper()} PIPELINE")
-        print(f"   Date Range: {start_date} → {end_date}")
-        print(f"   S3 File: {s3_key}")
-        print(f"{'='*60}\n")
+        logger.info(f"✓ File exists in S3: {s3_key}")
+        logger.info(f"🚀 TRIGGERING {pipeline.upper()} PIPELINE IN BACKGROUND | Date Range: {start_date} → {end_date}")
         
-        # Run the pipeline
-        if pipeline == "nn":
-            call_command('run_nn', start=start_date, end=end_date, verbosity=2)
-        else:  # styli
-            call_command('run_styli', start=start_date, end=end_date, verbosity=2)
+        # Define function to run pipeline in background
+        def run_pipeline_bg():
+            try:
+                logger.info(f"[BACKGROUND] Starting {pipeline.upper()} pipeline execution")
+                if pipeline == "nn":
+                    logger.info(f"[BACKGROUND] Calling: run_nn --start {start_date} --end {end_date}")
+                    call_command('run_nn', start=start_date, end=end_date, verbosity=2)
+                else:  # styli
+                    logger.info(f"[BACKGROUND] Calling: run_styli --start {start_date} --end {end_date}")
+                    call_command('run_styli', start=start_date, end=end_date, verbosity=2)
+                logger.info(f"[BACKGROUND] ✅ PIPELINE {pipeline.upper()} COMPLETED SUCCESSFULLY")
+            except Exception as e:
+                logger.error(f"[BACKGROUND] ❌ PIPELINE ERROR: {str(e)}", exc_info=True)
         
-        print(f"\n{'='*60}")
-        print(f"✅ PIPELINE COMPLETED SUCCESSFULLY")
-        print(f"{'='*60}\n")
+        # Start pipeline in background thread
+        thread = threading.Thread(target=run_pipeline_bg, daemon=True)
+        thread.start()
         
+        # Return immediately
         return Response({
-            "status": "success",
-            "message": f"{pipeline.upper()} pipeline executed successfully",
+            "status": "queued",
+            "message": f"{pipeline.upper()} pipeline queued for execution",
             "pipeline": pipeline,
             "date_range": {"start": start_date, "end": end_date}
         })
         
     except Exception as e:
-        print(f"\n❌ PIPELINE ERROR: {str(e)}\n")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"❌ REQUEST VALIDATION ERROR: {str(e)}", exc_info=True)
         
         return Response(
-            {"status": "error", "message": f"Pipeline execution failed: {str(e)}"},
+            {"status": "error", "message": f"Request validation failed: {str(e)}"},
             status=500
         )
