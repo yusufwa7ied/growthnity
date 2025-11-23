@@ -294,17 +294,19 @@
                         </td>
                         <td>{{ advertiser.currency }}</td>
                         <td class="actions">
-                            <button class="action-btn edit-btn" (click)="editAdvertiser(advertiser)"
-                                [disabled]="!canEditAdvertiser(advertiser)"
-                                [title]="canEditAdvertiser(advertiser) ? 'Edit Advertiser' : 'Noon uses bracket-based payouts. Add special rates via Admin → Partner Payouts'"
-                                [style.opacity]="canEditAdvertiser(advertiser) ? '1' : '0.4'"
-                                [style.cursor]="canEditAdvertiser(advertiser) ? 'pointer' : 'not-allowed'">
-                                <i class="pi pi-pencil"></i>
-                            </button>
-                            <button class="action-btn delete-btn" (click)="deleteAdvertiser(advertiser.id)"
-                                title="Delete">
-                                <i class="pi pi-trash"></i>
-                            </button>
+                            <div class="action-buttons">
+                                <button pButton type="button" icon="pi pi-pencil"
+                                    class="p-button-text p-button-rounded p-button-sm action-edit"
+                                    [disabled]="!canEditAdvertiser(advertiser)"
+                                    (click)="editAdvertiser(advertiser)"
+                                    [style.opacity]="canEditAdvertiser(advertiser) ? '1' : '0.4'"
+                                    [style.cursor]="canEditAdvertiser(advertiser) ? 'pointer' : 'not-allowed'"
+                                    style="color: #495057; margin-right: 0.5rem;"></button>
+                                <button pButton type="button" icon="pi pi-trash"
+                                    class="p-button-text p-button-rounded p-button-sm action-delete"
+                                    (click)="deleteAdvertiser(advertiser.id)"
+                                    style="color: #dc3545;"></button>
+                            </div>
                         </td>
                     </tr>
                 </ng-template>
