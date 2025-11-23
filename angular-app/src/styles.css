@@ -107,7 +107,7 @@ body {
 /* PrimeNG Cursor Pointers for Interactive Components */
 ::ng-deep .p-dropdown:not(.p-disabled),
 ::ng-deep .p-menu .p-menuitem-link,
-::ng-deep .p-datatable tbody > tr > td[role="gridcell"] button,
+::ng-deep .p-datatable tbody>tr>td[role="gridcell"] button,
 ::ng-deep .p-tree .p-treenode-content,
 ::ng-deep .p-accordion .p-accordion-header {
   cursor: pointer;

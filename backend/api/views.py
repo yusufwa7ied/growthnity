@@ -637,11 +637,13 @@ def dashboard_filter_options_view(request):
 
     # Department scoping
     if company_user and company_user.department:
-        dept = company_user.department.name
-        if dept == "Operations":
-            qs = qs.filter(advertiser__department__name="Operations")
-        elif dept == "Sales":
-            qs = qs.filter(advertiser__department__name="Sales")
+        dept = company_user.department
+        if dept == "affiliate":
+            qs = qs.filter(partner__partner_type="AFF")
+        elif dept == "influencer":
+            qs = qs.filter(partner__partner_type="INF")
+        elif dept == "media_buying":
+            qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
     full_access_roles = {"Admin", "OpsManager"}
@@ -720,11 +722,13 @@ def dashboard_pie_chart_data_view(request):
 
     # Department scoping
     if company_user and company_user.department:
-        dept = company_user.department.name
-        if dept == "Operations":
-            qs = qs.filter(advertiser__department__name="Operations")
-        elif dept == "Sales":
-            qs = qs.filter(advertiser__department__name="Sales")
+        dept = company_user.department
+        if dept == "affiliate":
+            qs = qs.filter(partner__partner_type="AFF")
+        elif dept == "influencer":
+            qs = qs.filter(partner__partner_type="INF")
+        elif dept == "media_buying":
+            qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
     full_access_roles = {"Admin", "OpsManager"}
