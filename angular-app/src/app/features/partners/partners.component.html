@@ -182,14 +182,12 @@
                                 <td>{{ partner.phone || '-' }}</td>
                                 <td class="actions-col">
                                     <div class="action-buttons">
-                                        <button pButton type="button" icon="pi pi-pencil"
-                                            class="p-button-text p-button-rounded p-button-sm action-edit"
-                                            (click)="editPartner(partner)" pTooltip="Edit partner"
-                                            tooltipPosition="top" style="color: #495057; margin-right: 0.5rem;"></button>
-                                        <button pButton type="button" icon="pi pi-trash"
-                                            class="p-button-text p-button-rounded p-button-sm action-delete"
-                                            (click)="deletePartner(partner.id)" pTooltip="Delete partner"
-                                            tooltipPosition="top" style="color: #dc3545;"></button>
+                                        <button class="action-btn edit-btn" (click)="editPartner(partner)">
+                                            <i class="pi pi-pencil"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn" (click)="deletePartner(partner.id)">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
