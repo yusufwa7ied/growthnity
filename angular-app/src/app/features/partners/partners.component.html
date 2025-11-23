@@ -181,14 +181,16 @@
                                 <td>{{ partner.email || '-' }}</td>
                                 <td>{{ partner.phone || '-' }}</td>
                                 <td class="actions-col">
-                                    <button class="action-btn edit-btn" (click)="editPartner(partner)"
-                                        title="Edit partner">
-                                        <i class="pi pi-pencil"></i>
-                                    </button>
-                                    <button class="action-btn delete-btn" (click)="deletePartner(partner.id)"
-                                        title="Delete partner">
-                                        <i class="pi pi-trash"></i>
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button pButton type="button" icon="pi pi-pencil"
+                                            class="p-button-text p-button-rounded p-button-sm action-edit"
+                                            (click)="editPartner(partner)" pTooltip="Edit partner"
+                                            tooltipPosition="top" style="color: #495057; margin-right: 0.5rem;"></button>
+                                        <button pButton type="button" icon="pi pi-trash"
+                                            class="p-button-text p-button-rounded p-button-sm action-delete"
+                                            (click)="deletePartner(partner.id)" pTooltip="Delete partner"
+                                            tooltipPosition="top" style="color: #dc3545;"></button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr *ngIf="expandedPartnerId === partner.id && partner.special_payouts && partner.special_payouts.length > 0"

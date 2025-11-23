@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 import { Advertiser } from '../../core/models/dashboard.model';
 import { DepartmentTarget, TargetWithActuals } from '../../core/models/targets.model';
 import { User } from '../../core/models/user.model';
@@ -17,7 +18,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
 @Component({
   selector: 'app-targets',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, TableModule, DialogModule, MainHeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, TableModule, DialogModule, TooltipModule, MainHeaderComponent, FooterComponent],
   templateUrl: './targets.component.html',
   styleUrl: './targets.component.css'
 })

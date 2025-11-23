@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 import { User } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { Partner, PartnerFormData, PartnerService } from '../../core/services/partner.service';
@@ -13,7 +14,7 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
 @Component({
     selector: 'app-partners',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, TableModule, MainHeaderComponent, FooterComponent],
+    imports: [CommonModule, FormsModule, ButtonModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent],
     templateUrl: './partners.component.html',
     styleUrls: ['./partners.component.css']
 })
