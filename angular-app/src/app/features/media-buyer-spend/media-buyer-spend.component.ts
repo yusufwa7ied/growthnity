@@ -74,6 +74,7 @@ export class MediaBuyerSpendComponent implements OnInit {
   saving = false;
   showSkeletons = true;
   showAddForm = false;
+  private skeletonMinDuration = 500; // Minimum ms to show skeleton
 
   constructor(
     private spendService: MediaBuyerSpendService,
@@ -149,18 +150,28 @@ export class MediaBuyerSpendComponent implements OnInit {
   loadSpendRecords() {
     this.loading = true;
     this.showSkeletons = true;
+    const startTime = Date.now();
 
     this.spendService.getSpendRecords().subscribe({
       next: (data) => {
         this.allSpendRecords = data;
         this.applyFilters();
-        this.showSkeletons = false;
-        this.loading = false;
+        // Ensure minimum skeleton display duration
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+        setTimeout(() => {
+          this.showSkeletons = false;
+          this.loading = false;
+        }, delay);
       },
       error: (err) => {
         console.error('Error loading spend records:', err);
-        this.showSkeletons = false;
-        this.loading = false;
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+        setTimeout(() => {
+          this.showSkeletons = false;
+          this.loading = false;
+        }, delay);
       }
     });
   }

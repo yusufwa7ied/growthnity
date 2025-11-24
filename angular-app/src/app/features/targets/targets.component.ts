@@ -38,6 +38,7 @@ export class TargetsComponent implements OnInit {
   showSkeletons = true;
   showForm = false;
   editingTarget: DepartmentTarget | null = null;
+  private skeletonMinDuration = 500; // Minimum ms to show skeleton
 
   // Filters
   showCurrentMonthOnly = false;
@@ -99,18 +100,28 @@ export class TargetsComponent implements OnInit {
 
   loadTargets(): void {
     this.loading = true;
+    const startTime = Date.now();
     this.targetsService.getTargets().subscribe({
       next: (data) => {
         this.targets = data as TargetWithActuals[];
         this.filteredTargets = [...this.targets];
         this.calculateStats();
         this.buildFilterOptions();
-        this.showSkeletons = false;
-        this.loading = false;
+        // Ensure minimum skeleton display duration
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+        setTimeout(() => {
+          this.showSkeletons = false;
+          this.loading = false;
+        }, delay);
       },
       error: () => {
-        this.showSkeletons = false;
-        this.loading = false;
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+        setTimeout(() => {
+          this.showSkeletons = false;
+          this.loading = false;
+        }, delay);
       }
     });
   }

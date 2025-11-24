@@ -32,6 +32,7 @@ export class CouponsComponent implements OnInit {
     isAdmin: boolean = false;
     loading: boolean = false;
     showSkeletons: boolean = true;
+    private skeletonMinDuration = 500; // Minimum ms to show skeleton
 
     // Form toggle states
     showNewCouponForm: boolean = false;
@@ -103,6 +104,7 @@ export class CouponsComponent implements OnInit {
     loadData(): void {
         this.loading = true;
         this.showSkeletons = true;
+        const startTime = Date.now();
         this.couponService.getCoupons().subscribe({
             next: (data) => {
                 this.coupons = data;
@@ -113,13 +115,22 @@ export class CouponsComponent implements OnInit {
                 this.couponOptions = [...this.allCouponOptions];
                 this.calculateStats();
                 this.applyFilters(); // Apply current filters to refresh the table
-                this.showSkeletons = false;
-                this.loading = false;
+                // Ensure minimum skeleton display duration
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
             },
             error: () => {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load coupons' });
-                this.showSkeletons = false;
-                this.loading = false;
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
             }
         });
 

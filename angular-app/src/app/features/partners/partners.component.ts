@@ -28,6 +28,7 @@ export class PartnersComponent implements OnInit {
     successMessage = '';
     loading = false;
     showSkeletons = true;
+    private skeletonMinDuration = 500; // Minimum ms to show skeleton
     selectedTypeFilter = '';
     filteredPartners: Partner[] = [];
     expandedPartnerId: number | null = null;
@@ -68,18 +69,28 @@ export class PartnersComponent implements OnInit {
     loadPartners(): void {
         this.loading = true;
         this.showSkeletons = true;
+        const startTime = Date.now();
         this.partnerService.getPartners().subscribe({
             next: (data) => {
                 this.partners = data;
                 this.calculateStats();
                 this.filterPartners();
-                this.showSkeletons = false;
-                this.loading = false;
+                // Ensure minimum skeleton display duration
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
             },
             error: (error) => {
                 console.error('Error loading partners:', error);
-                this.showSkeletons = false;
-                this.loading = false;
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
             }
         });
     }

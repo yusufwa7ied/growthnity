@@ -25,6 +25,7 @@ export class AdvertisersComponent implements OnInit {
     loading = false;
     showSkeletons = true;
     error = '';
+    private skeletonMinDuration = 500; // Minimum ms to show skeleton
     successMessage = '';
 
     // Form fields
@@ -75,16 +76,26 @@ export class AdvertisersComponent implements OnInit {
         this.loading = true;
         this.showSkeletons = true;
         this.error = '';
+        const startTime = Date.now();
         this.advertiserService.getAdvertisers().subscribe({
             next: (data) => {
                 this.advertisers = data;
-                this.showSkeletons = false;
-                this.loading = false;
+                // Ensure minimum skeleton display duration
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
             },
             error: (err) => {
                 this.error = 'Failed to load advertisers';
-                this.showSkeletons = false;
-                this.loading = false;
+                const elapsed = Date.now() - startTime;
+                const delay = Math.max(0, this.skeletonMinDuration - elapsed);
+                setTimeout(() => {
+                    this.showSkeletons = false;
+                    this.loading = false;
+                }, delay);
                 console.error(err);
             }
         });
