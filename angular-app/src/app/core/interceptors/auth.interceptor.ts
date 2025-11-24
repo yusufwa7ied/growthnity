@@ -36,8 +36,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Handle authentication errors - try to refresh token
       if (error.status === 401) {
-        // Skip refresh for login and token endpoints
-        if (req.url.includes('/login/') || req.url.includes('/token/')) {
+        // Skip refresh for login endpoint - just logout
+        if (req.url.includes('/login/')) {
+          authService.handleSessionExpired();
+          if (!router.url.includes('/login')) {
+            router.navigate(['/login']);
+          }
+          return throwError(() => error);
+        }
+
+        // For token/refresh/ endpoint, don't try to refresh again - just logout
+        if (req.url.includes('/token/refresh/')) {
           authService.handleSessionExpired();
           if (!router.url.includes('/login')) {
             router.navigate(['/login']);
