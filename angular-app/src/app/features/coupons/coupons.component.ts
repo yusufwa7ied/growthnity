@@ -41,7 +41,6 @@ export class CouponsComponent implements OnInit {
     // Form data
     newCouponCodes: string = '';
     selectedAdvertiser: number | null = null;
-    selectedAdvertiserForAssignment: number | null = null; // For assign coupons form
     selectedPartner: number | null = null;
     discountPercent: number | null = null;
     geo: string = '';
@@ -169,7 +168,6 @@ export class CouponsComponent implements OnInit {
     resetForm(): void {
         this.newCouponCodes = '';
         this.selectedAdvertiser = null;
-        this.selectedAdvertiserForAssignment = null;
         this.selectedPartner = null;
         this.discountPercent = null;
         this.geo = '';
@@ -263,7 +261,7 @@ export class CouponsComponent implements OnInit {
                     payload.discount_percent = this.discountPercent;
                 }
 
-                this.couponService.updateCoupon(code, payload, this.selectedAdvertiserForAssignment || undefined).subscribe({
+                this.couponService.updateCoupon(code, payload).subscribe({
                     next: (response) => {
                         successes++;
                         if (successes + failures === total) {
@@ -300,7 +298,6 @@ export class CouponsComponent implements OnInit {
         // Prefill assign form to quickly edit a coupon
         this.showAssignCouponForm = true;
         this.showNewCouponForm = false;
-        this.selectedAdvertiserForAssignment = row.advertiser_id;
         this.selectedExistingCoupons = [row.code];
         this.selectedPartner = row.partner_id || null;
         this.discountPercent = row.discount || null;
@@ -325,31 +322,6 @@ export class CouponsComponent implements OnInit {
         this.applyFilters();
     }
 
-    /**
-     * When user selects an advertiser in the "Assign Coupons" form,
-     * filter the coupon options to show only coupons for that advertiser
-     */
-    onAssignAdvertiserChange(): void {
-        if (!this.selectedAdvertiserForAssignment) {
-            this.couponOptions = [];
-            this.selectedExistingCoupons = [];
-            return;
-        }
-
-        // Filter coupons to only show those for the selected advertiser
-        const filteredCoupons = this.allCoupons.filter(
-            c => c.advertiser_id === this.selectedAdvertiserForAssignment
-        );
-
-        // Convert to dropdown options
-        this.couponOptions = filteredCoupons.map(c => ({
-            label: c.code + (c.partner ? ` (→ ${c.partner})` : ' (unassigned)'),
-            value: c.code
-        }));
-
-        // Clear previously selected coupons
-        this.selectedExistingCoupons = [];
-    }
 
     /**
      * Dynamically filter dropdown options based on current filter selections.

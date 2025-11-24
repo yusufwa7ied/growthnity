@@ -914,9 +914,9 @@ def coupons_view(request):
             except:
                 return Response({"error": "Invalid discount_percent format."}, status=400)
 
-        # Check if the coupon already exists
-        if Coupon.objects.filter(code=code).exists():
-            return Response({"error": f"Coupon {code} already exists. Use PATCH to update."}, status=400)
+        # Check if the coupon already exists for THIS advertiser (same code can exist for different advertisers)
+        if Coupon.objects.filter(code=code, advertiser=advertiser).exists():
+            return Response({"error": f"Coupon {code} already exists for {advertiser.name}. Use PATCH to update."}, status=400)
 
         # Create a new coupon
         coupon = Coupon.objects.create(
