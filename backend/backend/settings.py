@@ -32,7 +32,7 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(","
 # Application definition
 
 INSTALLED_APPS = [
-    "unfold",  # Must be before django.contrib.admin
+    "jazzmin",  # Must be before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -223,4 +223,41 @@ UNFOLD = {
             "900": "#0c3d5c",
         }
     }
+}
+
+# Django Jazzmin Admin Configuration
+JAZZMIN_SETTINGS = {
+    "site_title": "Growthnity",
+    "site_header": "Growthnity Admin",
+    "site_brand": "Growthnity",
+    "welcome_sign": "Welcome to Growthnity Admin",
+    "copyright": "Growthnity Inc.",
+    "search_model": "auth.User",
+    "user_avatar": None,
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["api.Advertiser", "api.Coupon", "api.Partner"],
+    "icons": {
+        "api.Advertiser": "fas fa-building",
+        "api.Coupon": "fas fa-ticket-alt",
+        "api.Partner": "fas fa-handshake",
+        "api.CampaignPerformance": "fas fa-chart-bar",
+        "api.DepartmentTarget": "fas fa-bullseye",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    "default_icon_parents": "fas fa-chevron-right",
+    "default_icon_children": "fas fa-arrow-right",
+    "related_modal_active": True,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": True,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.permission": "vertical_tabs",
+    },
 }
