@@ -3,13 +3,13 @@
     </app-main-header>
 
     <div class="coupons-page">
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" *ngIf="loading">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p>Loading coupons...</p>
-        </div>
+    <!-- Loading Banner (non-blocking) -->
+    <div class="loading-banner" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Loading coupons...</span>
+    </div>
 
-        <!-- Page Header Section -->
+    <!-- Page Header Section -->
         <div class="page-header">
             <div class="header-left">
                 <h2><i class="pi pi-ticket"></i> Coupon Management</h2>

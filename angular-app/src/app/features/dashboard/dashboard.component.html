@@ -3,10 +3,10 @@
   </app-main-header>
 
   <main class="dashboard-main">
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" *ngIf="loading">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-      <p>Loading dashboard...</p>
+    <!-- Loading Banner (non-blocking) -->
+    <div class="loading-banner" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Loading data...</span>
     </div>
 
     <!-- Floating Filter Button -->

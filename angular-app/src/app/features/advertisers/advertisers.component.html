@@ -247,9 +247,10 @@
             </div>
         </div>
 
-        <div class="loading-overlay" *ngIf="loading && !showAddForm">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p>Loading advertisers...</p>
+        <!-- Loading Banner (non-blocking) -->
+        <div class="loading-banner" *ngIf="loading && !showAddForm">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Loading advertisers...</span>
         </div>
 
         <!-- Advertisers Table -->

@@ -3,10 +3,10 @@
     </app-main-header>
 
     <div class="spend-page">
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" *ngIf="loading">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p>Loading spend data...</p>
+        <!-- Loading Banner (non-blocking) -->
+        <div class="loading-banner" *ngIf="loading">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Loading spend data...</span>
         </div>
 
         <!-- Page Header Section -->

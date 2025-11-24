@@ -39,6 +39,42 @@
     margin: 0;
 }
 
+/* Loading Banner - Non-blocking progress indicator */
+.loading-banner {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(90deg, #e0f7f6 0%, #cff0f0 100%);
+    border-bottom: 2px solid #009292;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 100;
+    animation: slideDown 0.3s ease-out;
+}
+
+.loading-banner i {
+    color: #009292;
+    font-size: 1rem;
+}
+
+.loading-banner span {
+    color: #009292;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 .spend-wrapper {
     min-height: 100vh;
     background: #f9fafb !important;
