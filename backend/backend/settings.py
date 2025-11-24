@@ -202,29 +202,6 @@ S3_PIPELINE_FILES = {
     "styli": "pipeline-data/styli_raw_data.csv",
 }
 
-# Django Unfold Admin Configuration
-UNFOLD = {
-    "SITE_HEADER": "Growthnity Admin",
-    "SITE_TITLE": "Growthnity Admin",
-    "INDEX_TITLE": "Welcome to Growthnity",
-    "ENVIRONMENT": "production" if not DEBUG else "development",
-    "THEME": "light",
-    "COLORS": {
-        "primary": {
-            "50": "#f0f9ff",
-            "100": "#e0f2fe",
-            "200": "#bae6fd",
-            "300": "#7dd3fc",
-            "400": "#38bdf8",
-            "500": "#0ea5e9",
-            "600": "#0284c7",
-            "700": "#0369a1",
-            "800": "#075985",
-            "900": "#0c3d5c",
-        }
-    }
-}
-
 # Django Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
     "site_title": "Growthnity",
@@ -238,13 +215,19 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
-    "order_with_respect_to": ["api.Advertiser", "api.Coupon", "api.Partner"],
+    "order_with_respect_to": ["api.Advertiser", "api.Coupon", "api.Partner", "api.Partner", "api.MediaBuyerDailySpend"],
     "icons": {
         "api.Advertiser": "fas fa-building",
         "api.Coupon": "fas fa-ticket-alt",
         "api.Partner": "fas fa-handshake",
         "api.CampaignPerformance": "fas fa-chart-bar",
         "api.DepartmentTarget": "fas fa-bullseye",
+        "api.DrNutritionTransaction": "fas fa-receipt",
+        "api.StyliTransaction": "fas fa-shopping-cart",
+        "api.NoonNamshiTransaction": "fas fa-store",
+        "api.SpringRoseTransaction": "fas fa-flowers",
+        "api.MediaBuyerDailySpend": "fas fa-dollar-sign",
+        "api.PartnerPayout": "fas fa-money-bill-wave",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
     },
@@ -260,4 +243,9 @@ JAZZMIN_SETTINGS = {
         "auth.user": "collapsible",
         "auth.permission": "vertical_tabs",
     },
+    "show_search": True,
+    "search_extra_queries": [],
+    "recent_actions_limit": 5,
+    "list_max_show_all": 200,
+    "list_per_page": 25,
 }
