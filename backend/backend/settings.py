@@ -70,7 +70,7 @@ else:
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:8000,http://127.0.0.1:8000,http://44.210.80.248"
+    default="http://localhost:8000,http://127.0.0.1:8000,http://44.210.80.248,https://growthnity-app.com"
 ).split(",")
 
 TEMPLATES = [
