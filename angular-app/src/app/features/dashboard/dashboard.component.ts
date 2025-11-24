@@ -12,6 +12,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { catchError, forkJoin, of } from 'rxjs';
 import { Advertiser, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
 import { AnalyticsService, PerformanceAnalytics } from '../../core/services/analytics.service';
@@ -109,6 +110,11 @@ export class DashboardComponent implements OnInit {
     currentPage: number = 1;
     pageSize: number = 50;
     totalRecords: number = 0;
+
+    // Debouncing
+    private filterDebounceTimer: any;
+    private lastFilterChangeTime: number = 0;
+    private readonly DEBOUNCE_DELAY: number = 300; // milliseconds
 
     constructor(
         private authService: AuthService,
@@ -297,8 +303,7 @@ export class DashboardComponent implements OnInit {
             this.filters.partner_type = null;
         }
         this.recomputeFilterDropdowns();
-        this.loadData();
-        this.loadAnalytics();
+        this.debouncedLoadData();
     }
 
     onAdvertiserChangeRealtime(): void {
@@ -308,9 +313,8 @@ export class DashboardComponent implements OnInit {
         }
         // Instantly recompute other dropdown options
         this.recomputeFilterDropdowns();
-        // Load data and analytics immediately
-        this.loadData();
-        this.loadAnalytics();
+        // Load data and analytics with debounce
+        this.debouncedLoadData();
     }
 
     onPartnerChangeRealtime(): void {
@@ -320,9 +324,8 @@ export class DashboardComponent implements OnInit {
         }
         // Instantly recompute other dropdown options
         this.recomputeFilterDropdowns();
-        // Load data immediately
-        this.loadData();
-        this.loadAnalytics();
+        // Load data and analytics with debounce
+        this.debouncedLoadData();
     }
 
     onCouponChangeRealtime(): void {
@@ -332,9 +335,24 @@ export class DashboardComponent implements OnInit {
         }
         // Instantly recompute other dropdown options
         this.recomputeFilterDropdowns();
-        // Load data immediately
-        this.loadData();
-        this.loadAnalytics();
+        // Load data and analytics with debounce
+        this.debouncedLoadData();
+    }
+
+    /**
+     * Debounced data loading to prevent excessive API calls during rapid filter changes
+     */
+    private debouncedLoadData(): void {
+        // Clear existing timer
+        if (this.filterDebounceTimer) {
+            clearTimeout(this.filterDebounceTimer);
+        }
+
+        // Set new timer
+        this.filterDebounceTimer = setTimeout(() => {
+            this.loadData();
+            this.loadAnalytics();
+        }, this.DEBOUNCE_DELAY);
     }
 
     /**
@@ -465,75 +483,76 @@ export class DashboardComponent implements OnInit {
 
     loadData(): void {
         this.loading = true;
-        this.dashboardService.getKPIs(this.filters).subscribe({
-            next: (data) => {
-                this.kpis = data;
-                // Add mock trend data for demonstration (in production, this would come from backend)
-                if (this.kpis && !this.kpis.trends) {
-                    this.kpis.trends = {
-                        orders_change: this.calculateMockTrend(this.kpis.total_orders),
-                        sales_change: this.calculateMockTrend(this.kpis.total_sales),
-                        revenue_change: this.calculateMockTrend(this.kpis.total_revenue),
-                        payout_change: this.calculateMockTrend(this.kpis.total_payout),
-                        profit_change: this.calculateMockTrend(this.kpis.total_profit)
-                    };
+        this.showSkeletons = true;
+
+        // Parallelize all data fetching requests using forkJoin
+        forkJoin({
+            kpis: this.dashboardService.getKPIs(this.filters),
+            tableData: this.dashboardService.getTableData(this.filters, this.currentPage, this.pageSize),
+            pieChartData: this.dashboardService.getPieChartData(this.filters),
+            graphData: this.dashboardService.getGraphData(this.filters)
+        }).pipe(
+            catchError(error => {
+                console.error('Error loading dashboard data:', error);
+                return of({
+                    kpis: null,
+                    tableData: { count: 0, results: [] },
+                    pieChartData: [],
+                    graphData: null
+                });
+            })
+        ).subscribe({
+            next: (results) => {
+                // Process KPIs
+                if (results.kpis) {
+                    this.kpis = results.kpis;
+                    if (!this.kpis.trends) {
+                        this.kpis.trends = {
+                            orders_change: this.calculateMockTrend(this.kpis.total_orders),
+                            sales_change: this.calculateMockTrend(this.kpis.total_sales),
+                            revenue_change: this.calculateMockTrend(this.kpis.total_revenue),
+                            payout_change: this.calculateMockTrend(this.kpis.total_payout),
+                            profit_change: this.calculateMockTrend(this.kpis.total_profit)
+                        };
+                    }
                 }
+
+                // Process table data
+                if (results.tableData) {
+                    this.totalRecords = results.tableData.count;
+                    this.tableData = results.tableData.results;
+                    this.filteredTableData = [...results.tableData.results];
+                }
+
+                // Process pie chart data
+                if (results.pieChartData && results.pieChartData.length > 0) {
+                    const pieChartRows: TableRow[] = results.pieChartData.map(item => ({
+                        date: '',
+                        advertiser_id: 0,
+                        campaign: item.campaign,
+                        coupon: '',
+                        orders: 0,
+                        sales: 0,
+                        revenue: item.total_revenue,
+                        payout: 0
+                    }));
+                    this.buildPieChart(pieChartRows);
+                }
+
+                // Process graph data
+                if (results.graphData) {
+                    this.graphData = results.graphData;
+                    this.buildLineChart(results.graphData);
+                }
+
                 this.showSkeletons = false;
                 this.loading = false;
                 this.cdr.markForCheck();
             },
             error: (error) => {
-                console.error('Error loading KPIs:', error);
+                console.error('Fatal error loading dashboard data:', error);
                 this.showSkeletons = false;
                 this.loading = false;
-                this.cdr.markForCheck();
-            }
-        });
-
-        this.dashboardService.getTableData(this.filters, this.currentPage, this.pageSize).subscribe({
-            next: (response) => {
-                this.totalRecords = response.count;
-                this.tableData = response.results;
-                this.filteredTableData = [...response.results];
-                this.cdr.markForCheck();
-            },
-            error: (error) => {
-                console.error('Error loading table data:', error);
-                this.cdr.markForCheck();
-            }
-        });
-
-        // Load pie chart data from separate endpoint (full dataset, not paginated)
-        this.dashboardService.getPieChartData(this.filters).subscribe({
-            next: (chartData) => {
-                // Convert API response to TableRow format for buildPieChart
-                const pieChartRows: TableRow[] = chartData.map(item => ({
-                    date: '',
-                    advertiser_id: 0,
-                    campaign: item.campaign,
-                    coupon: '',
-                    orders: 0,
-                    sales: 0,
-                    revenue: item.total_revenue,
-                    payout: 0
-                }));
-                this.buildPieChart(pieChartRows);
-                this.cdr.markForCheck();
-            },
-            error: (error) => {
-                console.error('Error loading pie chart data:', error);
-                this.cdr.markForCheck();
-            }
-        });
-
-        this.dashboardService.getGraphData(this.filters).subscribe({
-            next: (data) => {
-                this.graphData = data;
-                this.buildLineChart(data);
-                this.cdr.markForCheck();
-            },
-            error: (error) => {
-                console.error('Error loading graph data:', error);
                 this.cdr.markForCheck();
             }
         });

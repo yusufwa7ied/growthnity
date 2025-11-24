@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Advertiser,
@@ -21,6 +22,12 @@ import { CacheService } from './cache.service';
 })
 export class DashboardService {
   private readonly API_BASE_URL = environment.apiUrl;
+
+  // Cache for in-flight requests to prevent duplicate API calls
+  private kpiCache: Map<string, Observable<KPIData>> = new Map();
+  private tableDataCache: Map<string, Observable<PaginatedTableResponse>> = new Map();
+  private graphDataCache: Map<string, Observable<GraphData>> = new Map();
+  private pieChartCache: Map<string, Observable<PieChartData[]>> = new Map();
 
   constructor(
     private http: HttpClient,
@@ -47,23 +54,69 @@ export class DashboardService {
   }
 
   // Get KPI summary data
+  // Uses request deduplication - multiple subscribers to same request share response
   getKPIs(filters: DashboardFilters): Observable<KPIData> {
-    let params = this.buildParams(filters);
-    return this.http.get<KPIData>(`${this.API_BASE_URL}/dashboard/kpis/`, { params });
+    const cacheKey = this.buildCacheKey('kpis', filters);
+
+    if (this.kpiCache.has(cacheKey)) {
+      return this.kpiCache.get(cacheKey)!;
+    }
+
+    const request = this.http.get<KPIData>(`${this.API_BASE_URL}/dashboard/kpis/`, {
+      params: this.buildParams(filters)
+    }).pipe(
+      shareReplay(1) // Share single request among subscribers
+    );
+
+    this.kpiCache.set(cacheKey, request);
+    // Clear cache after 30 seconds to allow fresh data
+    setTimeout(() => this.kpiCache.delete(cacheKey), 30000);
+
+    return request;
   }
 
   // Get graph data
+  // Uses request deduplication
   getGraphData(filters: DashboardFilters): Observable<GraphData> {
-    let params = this.buildParams(filters);
-    return this.http.get<GraphData>(`${this.API_BASE_URL}/dashboard/graph-data/`, { params });
+    const cacheKey = this.buildCacheKey('graph-data', filters);
+
+    if (this.graphDataCache.has(cacheKey)) {
+      return this.graphDataCache.get(cacheKey)!;
+    }
+
+    const request = this.http.get<GraphData>(`${this.API_BASE_URL}/dashboard/graph-data/`, {
+      params: this.buildParams(filters)
+    }).pipe(
+      shareReplay(1)
+    );
+
+    this.graphDataCache.set(cacheKey, request);
+    setTimeout(() => this.graphDataCache.delete(cacheKey), 30000);
+
+    return request;
   }
 
   // Get table data with pagination
+  // Uses request deduplication
   getTableData(filters: DashboardFilters, page: number = 1, pageSize: number = 50): Observable<PaginatedTableResponse> {
+    const cacheKey = this.buildCacheKey(`table-data-p${page}`, filters);
+
+    if (this.tableDataCache.has(cacheKey)) {
+      return this.tableDataCache.get(cacheKey)!;
+    }
+
     let params = this.buildParams(filters);
     params = params.set('page', page.toString());
     params = params.set('page_size', pageSize.toString());
-    return this.http.get<PaginatedTableResponse>(`${this.API_BASE_URL}/dashboard/performance-table/`, { params });
+
+    const request = this.http.get<PaginatedTableResponse>(`${this.API_BASE_URL}/dashboard/performance-table/`, { params }).pipe(
+      shareReplay(1)
+    );
+
+    this.tableDataCache.set(cacheKey, request);
+    setTimeout(() => this.tableDataCache.delete(cacheKey), 30000);
+
+    return request;
   }
 
   // Get advertisers list
@@ -100,9 +153,24 @@ export class DashboardService {
   }
 
   // Get pie chart data for all campaigns (not paginated)
+  // Uses request deduplication
   getPieChartData(filters: DashboardFilters): Observable<PieChartData[]> {
-    const params = this.buildParams(filters);
-    return this.http.get<PieChartData[]>(`${this.API_BASE_URL}/dashboard/pie-chart-data/`, { params });
+    const cacheKey = this.buildCacheKey('pie-chart-data', filters);
+
+    if (this.pieChartCache.has(cacheKey)) {
+      return this.pieChartCache.get(cacheKey)!;
+    }
+
+    const request = this.http.get<PieChartData[]>(`${this.API_BASE_URL}/dashboard/pie-chart-data/`, {
+      params: this.buildParams(filters)
+    }).pipe(
+      shareReplay(1)
+    );
+
+    this.pieChartCache.set(cacheKey, request);
+    setTimeout(() => this.pieChartCache.delete(cacheKey), 30000);
+
+    return request;
   }
 
   // Get team members list
@@ -143,5 +211,18 @@ export class DashboardService {
     }
 
     return params;
+  }
+
+  // Helper to build cache key from endpoint and filters
+  private buildCacheKey(endpoint: string, filters: DashboardFilters): string {
+    const filterParts = [
+      filters.partner_type || '',
+      Array.isArray(filters.advertiser_id) ? filters.advertiser_id.join(',') : (filters.advertiser_id || ''),
+      Array.isArray(filters.partner_id) ? filters.partner_id.join(',') : (filters.partner_id || ''),
+      Array.isArray(filters.coupon_code) ? filters.coupon_code.join(',') : (filters.coupon_code || ''),
+      filters.date_from || '',
+      filters.date_to || ''
+    ].join('|');
+    return `${endpoint}:${filterParts}`;
   }
 }
