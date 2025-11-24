@@ -253,6 +253,21 @@
             <span>Loading advertisers...</span>
         </div>
 
+        <!-- Skeleton Loaders -->
+        <div class="table-card" *ngIf="loading">
+            <div class="table-header">
+                <h3><i class="pi pi-list"></i> All Advertisers</h3>
+                <span class="table-count skeleton-count"></span>
+            </div>
+            <div class="skeleton-table">
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+            </div>
+        </div>
+
         <!-- Advertisers Table -->
         <div class="table-card" *ngIf="!loading">
             <div class="table-header">

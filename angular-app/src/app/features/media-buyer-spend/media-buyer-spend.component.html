@@ -156,7 +156,16 @@
                 </div>
             </div>
 
-            <p-table [value]="spendRecords" [loading]="loading" [paginator]="true" [rows]="10"
+            <!-- Skeleton Loaders -->
+            <div *ngIf="loading" class="skeleton-table">
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+            </div>
+
+            <p-table *ngIf="!loading" [value]="spendRecords" [loading]="loading" [paginator]="true" [rows]="10"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
                 styleClass="spend-table">

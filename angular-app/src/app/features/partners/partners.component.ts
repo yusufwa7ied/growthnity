@@ -10,11 +10,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { Partner, PartnerFormData, PartnerService } from '../../core/services/partner.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
     selector: 'app-partners',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent],
+    imports: [CommonModule, FormsModule, ButtonModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent, SkeletonLoaderComponent],
     templateUrl: './partners.component.html',
     styleUrls: ['./partners.component.css']
 })

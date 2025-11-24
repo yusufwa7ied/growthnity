@@ -3,13 +3,13 @@
     </app-main-header>
 
     <div class="coupons-page">
-    <!-- Loading Banner (non-blocking) -->
-    <div class="loading-banner" *ngIf="loading">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Loading coupons...</span>
-    </div>
+        <!-- Loading Banner (non-blocking) -->
+        <div class="loading-banner" *ngIf="loading">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Loading coupons...</span>
+        </div>
 
-    <!-- Page Header Section -->
+        <!-- Page Header Section -->
         <div class="page-header">
             <div class="header-left">
                 <h2><i class="pi pi-ticket"></i> Coupon Management</h2>
@@ -246,9 +246,19 @@
                 </div>
             </div>
 
-            <p-table [value]="filteredCoupons" [paginator]="true" [rows]="30" [rowsPerPageOptions]="[10,25,30,50,100]"
-                styleClass="p-datatable-sm p-datatable-striped coupons-table" [loading]="loading"
-                [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords} records"
+            <!-- Skeleton Loaders -->
+            <div *ngIf="loading" class="skeleton-table">
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+            </div>
+
+            <p-table *ngIf="!loading" [value]="filteredCoupons" [paginator]="true" [rows]="30"
+                [rowsPerPageOptions]="[10,25,30,50,100]" styleClass="p-datatable-sm p-datatable-striped coupons-table"
+                [loading]="loading" [showCurrentPageReport]="true"
+                currentPageReportTemplate="{first}-{last} of {totalRecords} records"
                 [globalFilterFields]="['code','advertiser','partner','geo']">
                 <ng-template pTemplate="header">
                     <tr>

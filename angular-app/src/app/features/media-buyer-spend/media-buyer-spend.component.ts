@@ -12,6 +12,7 @@ import { AdvertiserService } from '../../core/services/advertiser.service';
 import { MediaBuyerSpend, MediaBuyerSpendService, Platform } from '../../core/services/media-buyer-spend.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-media-buyer-spend',
@@ -26,7 +27,8 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
     InputNumber,
     Card,
     MainHeaderComponent,
-    FooterComponent
+    FooterComponent,
+    SkeletonLoaderComponent
   ],
   templateUrl: './media-buyer-spend.component.html',
   styleUrl: './media-buyer-spend.component.css'

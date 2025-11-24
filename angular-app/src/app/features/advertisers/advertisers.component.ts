@@ -8,11 +8,12 @@ import { Advertiser, AdvertiserFormData, AdvertiserService, PartnerPayout } from
 import { AuthService } from '../../core/services/auth.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
     selector: 'app-advertisers',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, MainHeaderComponent, FooterComponent],
+    imports: [CommonModule, FormsModule, TableModule, MainHeaderComponent, FooterComponent, SkeletonLoaderComponent],
     templateUrl: './advertisers.component.html',
     styleUrl: './advertisers.component.css'
 })

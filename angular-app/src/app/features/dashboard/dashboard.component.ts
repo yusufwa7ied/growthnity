@@ -19,6 +19,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
 
 @Component({
@@ -37,6 +38,7 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         PaginatorModule,
         BaseChartDirective,
         MainHeaderComponent,
+        SkeletonLoaderComponent,
         TrimDecimalsPipe
     ],
     templateUrl: './dashboard.component.html',
@@ -97,6 +99,7 @@ export class DashboardComponent implements OnInit {
     // UI State
     sidebarVisible: boolean = false;
     loading: boolean = false;
+    showSkeletons: boolean = true;
     dateRange: Date[] = [];
     activeDatePreset: string = '';
     tableSearchTerm: string = '';
@@ -475,11 +478,13 @@ export class DashboardComponent implements OnInit {
                         profit_change: this.calculateMockTrend(this.kpis.total_profit)
                     };
                 }
+                this.showSkeletons = false;
                 this.loading = false;
                 this.cdr.markForCheck();
             },
             error: (error) => {
                 console.error('Error loading KPIs:', error);
+                this.showSkeletons = false;
                 this.loading = false;
                 this.cdr.markForCheck();
             }

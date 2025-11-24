@@ -18,11 +18,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { CouponService } from '../../core/services/coupon.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
     selector: 'app-coupons',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, Card, Textarea, Select, MultiSelect, TableModule, ToastModule, InputNumber, InputText, TooltipModule, MainHeaderComponent, FooterComponent],
+    imports: [CommonModule, FormsModule, ButtonModule, Card, Textarea, Select, MultiSelect, TableModule, ToastModule, InputNumber, InputText, TooltipModule, MainHeaderComponent, FooterComponent, SkeletonLoaderComponent],
     providers: [MessageService],
     templateUrl: './coupons.component.html',
     styleUrls: ['./coupons.component.css']

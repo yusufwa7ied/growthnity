@@ -106,9 +106,19 @@
                 </div>
             </div>
 
-            <p-table [value]="filteredTargets" [paginator]="true" [rows]="30" [rowsPerPageOptions]="[10,25,30,50,100]"
-                styleClass="p-datatable-sm p-datatable-striped targets-table" [loading]="loading"
-                [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} of {totalRecords} records">
+            <!-- Skeleton Loaders -->
+            <div *ngIf="loading" class="skeleton-table">
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+            </div>
+
+            <p-table *ngIf="!loading" [value]="filteredTargets" [paginator]="true" [rows]="30"
+                [rowsPerPageOptions]="[10,25,30,50,100]" styleClass="p-datatable-sm p-datatable-striped targets-table"
+                [loading]="loading" [showCurrentPageReport]="true"
+                currentPageReportTemplate="{first}-{last} of {totalRecords} records">
                 <ng-template pTemplate="header">
                     <tr>
                         <th class="col-advertiser">Advertiser</th>

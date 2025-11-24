@@ -14,11 +14,12 @@ import { DashboardService } from '../../core/services/dashboard.service';
 import { TargetsService } from '../../core/services/targets.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { MainHeaderComponent } from '../../shared/components/main-header/main-header.component';
+import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-targets',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, TableModule, TooltipModule, MainHeaderComponent, FooterComponent, SkeletonLoaderComponent],
   templateUrl: './targets.component.html',
   styleUrl: './targets.component.css'
 })

@@ -131,12 +131,12 @@
                 <h3><i class="pi pi-users"></i> All Partners ({{ filteredPartners.length }})</h3>
                 <div class="table-actions">
                     <button class="filter-button" [class.active]="showOnlySpecial" (click)="toggleSpecialFilter()"
-                        title="Filter partners with special payouts">
+                        title="Filter partners with special payouts" [disabled]="loading">
                         <i class="pi pi-star-fill"></i>
                         <span class="button-text">Special Payouts Only</span>
                     </button>
                     <select [(ngModel)]="selectedTypeFilter" (change)="filterPartners()"
-                        class="p-dropdown filter-dropdown">
+                        class="p-dropdown filter-dropdown" [disabled]="loading">
                         <option value="">All Types</option>
                         <option value="AFF">Affiliate</option>
                         <option value="INF">Influencer</option>
@@ -145,7 +145,16 @@
                 </div>
             </div>
 
-            <div class="table-wrapper">
+            <!-- Skeleton Loaders -->
+            <div *ngIf="loading" class="skeleton-table">
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+                <app-skeleton-loader type="table-row"></app-skeleton-loader>
+            </div>
+
+            <div class="table-wrapper" *ngIf="!loading">
                 <table class="data-table">
                     <thead>
                         <tr>
