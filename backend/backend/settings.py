@@ -32,6 +32,7 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(","
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",  # Must be before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -199,4 +200,27 @@ AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
 S3_PIPELINE_FILES = {
     "noon_namshi": "pipeline-data/noon-namshi.csv",
     "styli": "pipeline-data/styli_raw_data.csv",
+}
+
+# Django Unfold Admin Configuration
+UNFOLD = {
+    "SITE_HEADER": "Growthnity Admin",
+    "SITE_TITLE": "Growthnity Admin",
+    "INDEX_TITLE": "Welcome to Growthnity",
+    "ENVIRONMENT": "production" if not DEBUG else "development",
+    "THEME": "light",
+    "COLORS": {
+        "primary": {
+            "50": "#f0f9ff",
+            "100": "#e0f2fe",
+            "200": "#bae6fd",
+            "300": "#7dd3fc",
+            "400": "#38bdf8",
+            "500": "#0ea5e9",
+            "600": "#0284c7",
+            "700": "#0369a1",
+            "800": "#075985",
+            "900": "#0c3d5c",
+        }
+    }
 }
