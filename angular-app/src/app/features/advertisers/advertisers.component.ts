@@ -23,6 +23,7 @@ export class AdvertisersComponent implements OnInit {
     user: User | null = null;
     role: string = '';
     loading = false;
+    showSkeletons = true;
     error = '';
     successMessage = '';
 
@@ -72,14 +73,17 @@ export class AdvertisersComponent implements OnInit {
 
     loadAdvertisers() {
         this.loading = true;
+        this.showSkeletons = true;
         this.error = '';
         this.advertiserService.getAdvertisers().subscribe({
             next: (data) => {
                 this.advertisers = data;
+                this.showSkeletons = false;
                 this.loading = false;
             },
             error: (err) => {
                 this.error = 'Failed to load advertisers';
+                this.showSkeletons = false;
                 this.loading = false;
                 console.error(err);
             }

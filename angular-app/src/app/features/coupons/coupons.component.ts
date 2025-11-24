@@ -31,6 +31,7 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
 export class CouponsComponent implements OnInit {
     isAdmin: boolean = false;
     loading: boolean = false;
+    showSkeletons: boolean = true;
 
     // Form toggle states
     showNewCouponForm: boolean = false;
@@ -101,6 +102,7 @@ export class CouponsComponent implements OnInit {
 
     loadData(): void {
         this.loading = true;
+        this.showSkeletons = true;
         this.couponService.getCoupons().subscribe({
             next: (data) => {
                 this.coupons = data;
@@ -111,10 +113,12 @@ export class CouponsComponent implements OnInit {
                 this.couponOptions = [...this.allCouponOptions];
                 this.calculateStats();
                 this.applyFilters(); // Apply current filters to refresh the table
+                this.showSkeletons = false;
                 this.loading = false;
             },
             error: () => {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load coupons' });
+                this.showSkeletons = false;
                 this.loading = false;
             }
         });

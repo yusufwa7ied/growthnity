@@ -72,6 +72,7 @@ export class MediaBuyerSpendComponent implements OnInit {
 
   loading = false;
   saving = false;
+  showSkeletons = true;
   showAddForm = false;
 
   constructor(
@@ -147,15 +148,18 @@ export class MediaBuyerSpendComponent implements OnInit {
 
   loadSpendRecords() {
     this.loading = true;
+    this.showSkeletons = true;
 
     this.spendService.getSpendRecords().subscribe({
       next: (data) => {
         this.allSpendRecords = data;
         this.applyFilters();
+        this.showSkeletons = false;
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading spend records:', err);
+        this.showSkeletons = false;
         this.loading = false;
       }
     });

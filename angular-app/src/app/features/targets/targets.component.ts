@@ -35,6 +35,7 @@ export class TargetsComponent implements OnInit {
   role: string = '';
 
   loading = false;
+  showSkeletons = true;
   showForm = false;
   editingTarget: DepartmentTarget | null = null;
 
@@ -84,6 +85,7 @@ export class TargetsComponent implements OnInit {
   ngOnInit(): void {
     this.user = this.authService.currentUser();
     this.role = this.user?.role || '';
+    this.showSkeletons = true;
     this.loadAdvertisers();
     // Don't load team members on init - they'll be loaded when department is selected
     this.loadTargets();
@@ -103,9 +105,13 @@ export class TargetsComponent implements OnInit {
         this.filteredTargets = [...this.targets];
         this.calculateStats();
         this.buildFilterOptions();
+        this.showSkeletons = false;
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        this.showSkeletons = false;
+        this.loading = false;
+      }
     });
   }
 

@@ -27,6 +27,7 @@ export class PartnersComponent implements OnInit {
     editingId: number | null = null;
     successMessage = '';
     loading = false;
+    showSkeletons = true;
     selectedTypeFilter = '';
     filteredPartners: Partner[] = [];
     expandedPartnerId: number | null = null;
@@ -66,15 +67,18 @@ export class PartnersComponent implements OnInit {
 
     loadPartners(): void {
         this.loading = true;
+        this.showSkeletons = true;
         this.partnerService.getPartners().subscribe({
             next: (data) => {
                 this.partners = data;
                 this.calculateStats();
                 this.filterPartners();
+                this.showSkeletons = false;
                 this.loading = false;
             },
             error: (error) => {
                 console.error('Error loading partners:', error);
+                this.showSkeletons = false;
                 this.loading = false;
             }
         });
