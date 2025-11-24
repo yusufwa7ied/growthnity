@@ -3,12 +3,6 @@
   </app-main-header>
 
   <main class="dashboard-main">
-    <!-- Loading Banner (non-blocking) -->
-    <div class="loading-banner" *ngIf="loading">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Loading data...</span>
-    </div>
-
     <!-- Floating Filter Button -->
     <button class="floating-filter-btn" (click)="openFilterModal()" [class.has-active]="hasActiveFilters()">
       <div class="btn-icon-wrapper">

@@ -95,7 +95,7 @@ export class DashboardComponent implements OnInit {
 
     // Analytics
     analytics: PerformanceAnalytics | null = null;
-    showAnalytics: boolean = true;
+    showAnalytics: boolean = false;
 
     // UI State
     sidebarVisible: boolean = false;
