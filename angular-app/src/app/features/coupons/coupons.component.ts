@@ -45,7 +45,7 @@ export class CouponsComponent implements OnInit {
     discountPercent: number | null = null;
     geo: string = '';
     selectedExistingCoupons: string[] = [];
-    selectedCouponAdvertisers: { [couponCode: string]: number } = {};  // Map coupon code to advertiser_id
+    selectedCouponAdvertisers: { [key: string]: number } = {};  // Map coupon code+advertiser to advertiser_id
 
     // All available options (never filtered)
     allAdvertisers: any[] = [];
@@ -111,14 +111,20 @@ export class CouponsComponent implements OnInit {
                 this.coupons = data;
                 this.allCoupons = data;
                 this.filteredCoupons = data;
-                // Precompute ALL options (never filtered)
-                this.allCouponOptions = this.allCoupons.map(c => ({ label: c.code, value: c.code }));
+                
+                // Build coupon options with advertiser info for display
+                // Use compound key (code|advertiser_id) to handle duplicate codes
+                this.allCouponOptions = this.allCoupons.map(c => ({
+                    label: `${c.code} (${c.advertiser})`,
+                    value: `${c.code}|${c.advertiser_id}`  // Compound key
+                }));
                 this.couponOptions = [...this.allCouponOptions];
                 
-                // Build map of coupon code to advertiser ID (for multi-advertiser support)
+                // Build map of compound key to advertiser ID
                 this.selectedCouponAdvertisers = {};
                 this.allCoupons.forEach(c => {
-                    this.selectedCouponAdvertisers[c.code] = c.advertiser_id;
+                    const key = `${c.code}|${c.advertiser_id}`;
+                    this.selectedCouponAdvertisers[key] = c.advertiser_id;
                 });
                 
                 this.calculateStats();
@@ -261,7 +267,10 @@ export class CouponsComponent implements OnInit {
             let failures = 0;
             const total = this.selectedExistingCoupons.length;
 
-            this.selectedExistingCoupons.forEach(code => {
+            this.selectedExistingCoupons.forEach(couponKey => {
+                // couponKey is in format "code|advertiser_id"
+                const [code, advertiserId] = couponKey.split('|');
+                
                 const payload: any = {
                     partner: this.selectedPartner || null,  // Allow null to unassign
                     geo: this.geo || null,  // Always send geo field, use null to clear
@@ -270,10 +279,9 @@ export class CouponsComponent implements OnInit {
                     payload.discount_percent = this.discountPercent;
                 }
 
-                // Get the advertiser ID for this coupon
-                const advertiserId = this.selectedCouponAdvertisers[code];
+                const advIdNum = parseInt(advertiserId, 10);
 
-                this.couponService.updateCoupon(code, payload, advertiserId).subscribe({
+                this.couponService.updateCoupon(code, payload, advIdNum).subscribe({
                     next: (response) => {
                         successes++;
                         if (successes + failures === total) {
@@ -310,7 +318,8 @@ export class CouponsComponent implements OnInit {
         // Prefill assign form to quickly edit a coupon
         this.showAssignCouponForm = true;
         this.showNewCouponForm = false;
-        this.selectedExistingCoupons = [row.code];
+        // Use compound key: "code|advertiser_id"
+        this.selectedExistingCoupons = [`${row.code}|${row.advertiser_id}`];
         this.selectedPartner = row.partner_id || null;
         this.discountPercent = row.discount || null;
         this.geo = row.geo || '';  // geo will be null or string, convert null to empty string for input
@@ -353,7 +362,9 @@ export class CouponsComponent implements OnInit {
         }
 
         if (this.filterCoupon) {
-            filteredData = filteredData.filter(c => c.code === this.filterCoupon);
+            // filterCoupon might be just a code, extract it if it's a compound key
+            const filterCode = this.filterCoupon.includes('|') ? this.filterCoupon.split('|')[0] : this.filterCoupon;
+            filteredData = filteredData.filter(c => c.code === filterCode);
         }
 
         // Build dropdown options from filtered dataset
@@ -363,8 +374,11 @@ export class CouponsComponent implements OnInit {
         const partnerIds = new Set(filteredData.filter(c => c.partner_id).map(c => c.partner_id));
         this.partners = this.allPartners.filter(p => partnerIds.has(p.value));
 
-        const couponCodes = new Set(filteredData.map(c => c.code));
-        this.couponOptions = this.allCouponOptions.filter(opt => couponCodes.has(opt.value));
+        // Build coupon options from filtered coupons with compound keys
+        this.couponOptions = filteredData.map(c => ({
+            label: `${c.code} (${c.advertiser})`,
+            value: `${c.code}|${c.advertiser_id}`
+        }));
     }
 
     applyFilters(): void {
