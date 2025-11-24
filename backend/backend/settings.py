@@ -67,6 +67,12 @@ else:
         default="http://localhost:4200"
     ).split(",")
 
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:8000,http://127.0.0.1:8000,http://44.210.80.248"
+).split(",")
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
