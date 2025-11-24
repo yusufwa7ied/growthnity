@@ -111,7 +111,7 @@ export class CouponsComponent implements OnInit {
                 this.coupons = data;
                 this.allCoupons = data;
                 this.filteredCoupons = data;
-                
+
                 // Build coupon options with advertiser info for display
                 // Use compound key (code|advertiser_id) to handle duplicate codes
                 this.allCouponOptions = this.allCoupons.map(c => ({
@@ -119,14 +119,14 @@ export class CouponsComponent implements OnInit {
                     value: `${c.code}|${c.advertiser_id}`  // Compound key
                 }));
                 this.couponOptions = [...this.allCouponOptions];
-                
+
                 // Build map of compound key to advertiser ID
                 this.selectedCouponAdvertisers = {};
                 this.allCoupons.forEach(c => {
                     const key = `${c.code}|${c.advertiser_id}`;
                     this.selectedCouponAdvertisers[key] = c.advertiser_id;
                 });
-                
+
                 this.calculateStats();
                 this.applyFilters(); // Apply current filters to refresh the table
                 // Ensure minimum skeleton display duration
@@ -270,7 +270,7 @@ export class CouponsComponent implements OnInit {
             this.selectedExistingCoupons.forEach(couponKey => {
                 // couponKey is in format "code|advertiser_id"
                 const [code, advertiserId] = couponKey.split('|');
-                
+
                 const payload: any = {
                     partner: this.selectedPartner || null,  // Allow null to unassign
                     geo: this.geo || null,  // Always send geo field, use null to clear
