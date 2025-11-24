@@ -20,8 +20,12 @@ export class CouponService {
         return this.http.post(this.apiUrl, data);
     }
 
-    updateCoupon(code: string, data: CouponFormData): Observable<any> {
-        return this.http.patch(`${this.apiUrl}${code}/`, data);
+    updateCoupon(code: string, data: CouponFormData, advertiserId?: number): Observable<any> {
+        let url = `${this.apiUrl}${code}/`;
+        if (advertiserId) {
+            url += `?advertiser_id=${advertiserId}`;
+        }
+        return this.http.patch(url, data);
     }
 
     getAdvertisers(): Observable<any[]> {

@@ -939,18 +939,34 @@ def coupons_view(request):
         return Response({"success": f"Coupon {coupon.code} created successfully."}, status=201)
 
 # PATCH /api/coupons/<code>/ endpoint
+# Supports optional advertiser_id query parameter to disambiguate coupons with same code
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def coupon_detail_view(request, code):
     """
     Update an existing coupon's partner, geo, or discount.
+    
+    Query parameters:
+    - advertiser_id (optional): If provided, only updates coupon for that advertiser.
+                                Required when same coupon code exists for multiple advertisers.
     """
+    data = request.data
+    advertiser_id = request.GET.get("advertiser_id") or data.get("advertiser_id")
+    
     try:
-        coupon = Coupon.objects.get(code=code)
+        # If advertiser_id is provided, use it to find the exact coupon
+        if advertiser_id:
+            try:
+                advertiser_id = int(advertiser_id)
+                coupon = Coupon.objects.get(code=code, advertiser_id=advertiser_id)
+            except (ValueError, TypeError):
+                return Response({"error": "Invalid advertiser_id format."}, status=400)
+        else:
+            # Fallback to code only (for backward compatibility)
+            coupon = Coupon.objects.get(code=code)
     except Coupon.DoesNotExist:
         return Response({"error": f"Coupon {code} not found."}, status=404)
 
-    data = request.data
     partner_id = data.get("partner")
     geo = data.get("geo")
     discount = data.get("discount_percent")

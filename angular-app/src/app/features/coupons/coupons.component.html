@@ -140,6 +140,14 @@
                 </div>
 
                 <div class="form-grid">
+                    <div class="form-field">
+                        <label>Advertiser <span class="required">*</span></label>
+                        <p-select [options]="advertisers" [(ngModel)]="selectedAdvertiserForAssignment"
+                            placeholder="Select advertiser" [style]="{'width':'100%'}" 
+                            (onChange)="onAssignAdvertiserChange()" appendTo="body"></p-select>
+                        <small class="field-hint">Select the advertiser whose coupons you want to assign</small>
+                    </div>
+
                     <div class="form-field full-width">
                         <label>Select Coupons <span class="required">*</span></label>
                         <p-multiSelect [options]="couponOptions" [(ngModel)]="selectedExistingCoupons"
