@@ -45,6 +45,7 @@ export class CouponsComponent implements OnInit {
     discountPercent: number | null = null;
     geo: string = '';
     selectedExistingCoupons: string[] = [];
+    selectedCouponAdvertisers: { [couponCode: string]: number } = {};  // Map coupon code to advertiser_id
 
     // All available options (never filtered)
     allAdvertisers: any[] = [];
@@ -113,6 +114,13 @@ export class CouponsComponent implements OnInit {
                 // Precompute ALL options (never filtered)
                 this.allCouponOptions = this.allCoupons.map(c => ({ label: c.code, value: c.code }));
                 this.couponOptions = [...this.allCouponOptions];
+                
+                // Build map of coupon code to advertiser ID (for multi-advertiser support)
+                this.selectedCouponAdvertisers = {};
+                this.allCoupons.forEach(c => {
+                    this.selectedCouponAdvertisers[c.code] = c.advertiser_id;
+                });
+                
                 this.calculateStats();
                 this.applyFilters(); // Apply current filters to refresh the table
                 // Ensure minimum skeleton display duration
@@ -172,6 +180,7 @@ export class CouponsComponent implements OnInit {
         this.discountPercent = null;
         this.geo = '';
         this.selectedExistingCoupons = [];
+        this.selectedCouponAdvertisers = {};
     }
 
     submitCoupon(): void {
@@ -261,7 +270,10 @@ export class CouponsComponent implements OnInit {
                     payload.discount_percent = this.discountPercent;
                 }
 
-                this.couponService.updateCoupon(code, payload).subscribe({
+                // Get the advertiser ID for this coupon
+                const advertiserId = this.selectedCouponAdvertisers[code];
+
+                this.couponService.updateCoupon(code, payload, advertiserId).subscribe({
                     next: (response) => {
                         successes++;
                         if (successes + failures === total) {

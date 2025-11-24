@@ -950,6 +950,8 @@ def coupon_detail_view(request, code):
     - advertiser_id (optional): If provided, only updates coupon for that advertiser.
                                 Required when same coupon code exists for multiple advertisers.
     """
+    from django.core.exceptions import MultipleObjectsReturned
+    
     data = request.data
     advertiser_id = request.GET.get("advertiser_id") or data.get("advertiser_id")
     
@@ -962,10 +964,88 @@ def coupon_detail_view(request, code):
             except (ValueError, TypeError):
                 return Response({"error": "Invalid advertiser_id format."}, status=400)
         else:
-            # Fallback to code only (for backward compatibility)
-            coupon = Coupon.objects.get(code=code)
+            # Try to get coupon by code only
+            # If multiple exist, we need advertiser_id
+            try:
+                coupon = Coupon.objects.get(code=code)
+            except MultipleObjectsReturned:
+                return Response({
+                    "error": f"Multiple coupons exist with code '{code}'. Please specify advertiser_id parameter."
+                }, status=400)
     except Coupon.DoesNotExist:
         return Response({"error": f"Coupon {code} not found."}, status=404)
+
+    partner_id = data.get("partner")
+    geo = data.get("geo")
+    discount = data.get("discount_percent")
+
+    updated_fields = []
+
+    # Update geo (allow clearing by setting to None or empty string)
+    if "geo" in data:
+        new_geo = geo if geo and geo.strip() else None
+        if coupon.geo != new_geo:
+            coupon.geo = new_geo
+            updated_fields.append("geo")
+
+    # Update discount (allow clearing)
+    if "discount_percent" in data:
+        if discount is None or discount == "":
+            if coupon.discount_percent is not None:
+                coupon.discount_percent = None
+                updated_fields.append("discount_percent")
+        else:
+            try:
+                new_discount = Decimal(str(discount))
+                if coupon.discount_percent != new_discount:
+                    coupon.discount_percent = new_discount
+                    updated_fields.append("discount_percent")
+            except (ValueError, TypeError):
+                return Response({"error": "Invalid discount_percent format."}, status=400)
+
+    # Update partner (and log assignment) - allow clearing partner
+    if "partner" in data:
+        if partner_id is None or partner_id == "":
+            # Clear partner assignment
+            if coupon.partner:
+                old_partner = coupon.partner
+                coupon.partner = None # type: ignore
+                updated_fields.append("partner")
+                print(f"✅ Coupon {code}: partner cleared (was {old_partner.name})")
+        else:
+            try:
+                partner = Partner.objects.get(id=int(partner_id))
+                
+                # Only update if partner is changing
+                if not coupon.partner or coupon.partner.id != partner.id: # type: ignore
+                    old_partner = coupon.partner
+                    coupon.partner = partner # type: ignore
+                    updated_fields.append("partner")
+
+                    # Log the assignment history
+                    CouponAssignmentHistory.objects.create(
+                        coupon=coupon,
+                        partner=partner,
+                        assigned_by=request.user,
+                        discount_percent=coupon.discount_percent,
+                    )
+                    
+                    print(f"✅ Coupon {code}: partner changed from {old_partner} to {partner.name}")
+                
+            except Partner.DoesNotExist:
+                return Response({"error": "Invalid partner ID."}, status=400)
+            except (ValueError, TypeError):
+                return Response({"error": "Invalid partner ID format."}, status=400)
+
+    if updated_fields:
+        coupon.save()
+        return Response({
+            "success": f"Coupon {coupon.code} updated: {', '.join(updated_fields)}."
+        }, status=200)
+    else:
+        return Response({
+            "info": f"No changes made to coupon {coupon.code}."
+        }, status=200)
 
     partner_id = data.get("partner")
     geo = data.get("geo")
