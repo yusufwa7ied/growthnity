@@ -129,25 +129,37 @@ export class DashboardComponent implements OnInit {
     ngOnInit(): void {
         this.user = this.authService.currentUser();
         this.role = this.user?.role || '';
-        this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
         
         // Determine user access level based on role and department
-        if (this.isAdmin) {
-            // OpsManager/Admin: Full system access
-            this.isMediaBuyer = false;
+        // 1. OpsManager (no dept) = Full access (all admin pages + daily spend)
+        // 2. OpsManager (media_buying) = Full dashboard + Coupons only (NO daily spend, NO other admin pages)
+        // 3. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
+        // 4. TeamMember (affiliate/influencer) = Filtered dashboard only
+        
+        if ((this.role === 'OpsManager' || this.role === 'Admin') && !this.user?.department) {
+            // OpsManager/Admin with NO department: Full system access
+            this.isAdmin = true;
+            this.isMediaBuyer = true;  // Can also see daily spend
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;
-        } else if (this.role === 'TeamMember') {
-            // TeamMember: Check department
-            if (this.user?.department === 'media_buying') {
-                this.isMediaBuyer = true;
-                this.isDepartmentRestricted = false;
-                this.canAccessCoupons = false;
-            } else if (this.user?.department === 'affiliate' || this.user?.department === 'influencer') {
-                this.isMediaBuyer = false;
-                this.isDepartmentRestricted = true;
-                this.canAccessCoupons = false;
-            }
+        } else if (this.role === 'OpsManager' && this.user?.department === 'media_buying') {
+            // OpsManager with media_buying: Full dashboard + Coupons only
+            this.isAdmin = false;
+            this.isMediaBuyer = false;  // NO daily spend for OpsManager with media_buying
+            this.isDepartmentRestricted = false;
+            this.canAccessCoupons = true;  // Can access coupons
+        } else if (this.role === 'TeamMember' && this.user?.department === 'media_buying') {
+            // TeamMember with media_buying: Filtered dashboard + Daily Spend only
+            this.isAdmin = false;
+            this.isMediaBuyer = true;  // Can see daily spend
+            this.isDepartmentRestricted = false;
+            this.canAccessCoupons = false;  // NO coupons
+        } else if (this.user?.department === 'affiliate' || this.user?.department === 'influencer') {
+            // TeamMember with affiliate/influencer: Filtered dashboard only
+            this.isAdmin = false;
+            this.isMediaBuyer = false;
+            this.isDepartmentRestricted = true;
+            this.canAccessCoupons = false;
         }
 
         // Load filter options immediately (cached)

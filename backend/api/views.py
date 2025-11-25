@@ -82,10 +82,12 @@ def user_dashboard_context(request):
         return Response({"username": user.username, "role": "Unknown", "error": "No CompanyUser found."})
 
     role = company_user.role.name if company_user.role else "Unknown"
-    print("🌐 SENDING ROLE IN CONTEXT:", role)
+    department = company_user.department if company_user.department else None
+    print("🌐 SENDING ROLE IN CONTEXT:", role, "DEPARTMENT:", department)
     base = {
         "username": user.username,
         "role": role,
+        "department": department,
     }
 
     # CEO or OpsManager → see all
@@ -884,6 +886,12 @@ def coupons_view(request):
         return Response(data)
 
     if request.method == "POST":
+        # Only OpsManager and Admin can create coupons
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        if not company_user or not company_user.role or company_user.role.name not in ["Admin", "OpsManager"]:
+            return Response({"error": "Access denied. Only OpsManager and Admin can create coupons."}, status=403)
+        
         data = request.data
         code = data.get("code")
         advertiser_id = data.get("advertiser")
@@ -950,6 +958,12 @@ def coupon_detail_view(request, code):
     - advertiser_id (optional): If provided, only updates coupon for that advertiser.
                                 Required when same coupon code exists for multiple advertisers.
     """
+    # Only OpsManager and Admin can update coupons
+    user = request.user
+    company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+    if not company_user or not company_user.role or company_user.role.name not in ["Admin", "OpsManager"]:
+        return Response({"error": "Access denied. Only OpsManager and Admin can update coupons."}, status=403)
+    
     from django.core.exceptions import MultipleObjectsReturned
     
     data = request.data
@@ -1408,6 +1422,12 @@ def targets_list(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
+        # Only OpsManager and Admin can create targets
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        if not company_user or not company_user.role or company_user.role.name not in ["Admin", "OpsManager"]:
+            return Response({"error": "Access denied. Only OpsManager and Admin can create targets."}, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = DepartmentTargetSerializer(data=request.data)
         if serializer.is_valid():
             instance = serializer.save()
@@ -1438,6 +1458,12 @@ def target_detail(request, pk):
         return Response(serializer.data)
     
     elif request.method == 'PUT':
+        # Only OpsManager and Admin can update targets
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        if not company_user or not company_user.role or company_user.role.name not in ["Admin", "OpsManager"]:
+            return Response({"error": "Access denied. Only OpsManager and Admin can update targets."}, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = DepartmentTargetSerializer(target, data=request.data, partial=True)
         if serializer.is_valid():
             instance = serializer.save()
@@ -1448,6 +1474,12 @@ def target_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
+        # Only OpsManager and Admin can delete targets
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+        if not company_user or not company_user.role or company_user.role.name not in ["Admin", "OpsManager"]:
+            return Response({"error": "Access denied. Only OpsManager and Admin can delete targets."}, status=status.HTTP_403_FORBIDDEN)
+        
         target.delete()
         return Response({"success": "Target deleted"}, status=status.HTTP_204_NO_CONTENT)
     
