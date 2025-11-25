@@ -768,7 +768,7 @@ def compute_final_metrics(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFr
     if ftu_mask.any():
         base = revenue_base(df.loc[ftu_mask])
         print(f"🔍 FTU Payout Calculation:")
-        print(f"  - Base (our_rev): {base.iloc[0] if len(base) > 0 else 'EMPTY'}")
+        print(f"  - Base (our_rev): {base[0] if len(base) > 0 else 'EMPTY'}")
         print(f"  - FTU Rate: {df.loc[ftu_mask, 'ftu_rate'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
         print(f"  - Orders: {df.loc[ftu_mask, 'orders'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
         print(f"  - Fixed Bonus: {df.loc[ftu_mask, 'ftu_fixed_bonus'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
@@ -780,7 +780,7 @@ def compute_final_metrics(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFr
     if rtu_mask.any():
         base = revenue_base(df.loc[rtu_mask])
         print(f"🔍 RTU Payout Calculation:")
-        print(f"  - Base (our_rev): {base.iloc[0] if len(base) > 0 else 'EMPTY'}")
+        print(f"  - Base (our_rev): {base[0] if len(base) > 0 else 'EMPTY'}")
         print(f"  - RTU Rate: {df.loc[rtu_mask, 'rtu_rate'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
         print(f"  - Orders: {df.loc[rtu_mask, 'orders'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
         print(f"  - Fixed Bonus: {df.loc[rtu_mask, 'rtu_fixed_bonus'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
