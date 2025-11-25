@@ -147,19 +147,6 @@ def kpis_view(request):
     qs = CampaignPerformance.objects.all()
 
     # -------------------------------
-    # Department scoping (only for OpsManager with department)
-    # TeamMembers will be filtered by AccountAssignment later
-    # -------------------------------
-    if company_user and company_user.department and company_user.role.name == "OpsManager":
-        dept = company_user.department
-        if dept == "media_buying":
-            qs = qs.filter(partner__partner_type="MB")
-        elif dept == "affiliate":
-            qs = qs.filter(partner__partner_type="AFF")
-        elif dept == "influencer":
-            qs = qs.filter(partner__partner_type="INF")
-
-    # -------------------------------
     # Filters (NOW INCLUDES COUPON) - SUPPORT MULTIPLE VALUES
     # -------------------------------
     advertiser_ids = request.GET.getlist("advertiser_id")
@@ -168,6 +155,20 @@ def kpis_view(request):
     partner_type = request.GET.get("partner_type")
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
+
+    # -------------------------------
+    # Department scoping (only for OpsManager with department)
+    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # TeamMembers will be filtered by AccountAssignment later
+    # -------------------------------
+    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
+        dept = company_user.department
+        if dept == "media_buying":
+            qs = qs.filter(partner__partner_type="MB")
+        elif dept == "affiliate":
+            qs = qs.filter(partner__partner_type="AFF")
+        elif dept == "influencer":
+            qs = qs.filter(partner__partner_type="INF")
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
@@ -284,9 +285,18 @@ def graph_data_view(request):
     # base queryset
     qs = CampaignPerformance.objects.all()
 
+    # Optional filters - SUPPORT MULTIPLE VALUES
+    date_from = request.GET.get("date_from")
+    date_to = request.GET.get("date_to")
+    coupon_codes = request.GET.getlist("coupon_code")
+    partner_ids = request.GET.getlist("partner_id")
+    advertiser_ids = request.GET.getlist("advertiser_id")
+    partner_type = request.GET.get("partner_type")
+
     # Department scope: MB, AFF, INF (only for OpsManager with department)
+    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and company_user.role.name == "OpsManager":
+    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -294,13 +304,6 @@ def graph_data_view(request):
             qs = qs.filter(partner__partner_type="AFF")
         elif dept == "influencer":
             qs = qs.filter(partner__partner_type="INF")
-
-    # Optional filters - SUPPORT MULTIPLE VALUES
-    date_from = request.GET.get("date_from")
-    date_to = request.GET.get("date_to")
-    coupon_codes = request.GET.getlist("coupon_code")
-    partner_ids = request.GET.getlist("partner_id")
-    advertiser_ids = request.GET.getlist("advertiser_id")
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
@@ -391,10 +394,21 @@ def performance_table_view(request):
     qs = CampaignPerformance.objects.all()
 
     # -------------------------------
+    # Filters - SUPPORT MULTIPLE VALUES
+    # -------------------------------
+    advertiser_ids = request.GET.getlist("advertiser_id")
+    partner_ids = request.GET.getlist("partner_id")
+    coupon_codes = request.GET.getlist("coupon_code")
+    partner_type = request.GET.get("partner_type")
+    date_from = request.GET.get("date_from")
+    date_to = request.GET.get("date_to")
+
+    # -------------------------------
     # Department scoping (only for OpsManager with department)
+    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
     # -------------------------------
-    if company_user and company_user.department and role == "OpsManager":
+    if company_user and company_user.department and role == "OpsManager" and not partner_type:
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -402,19 +416,6 @@ def performance_table_view(request):
             qs = qs.filter(partner__partner_type="AFF")
         elif dept == "influencer":
             qs = qs.filter(partner__partner_type="INF")
-
-    # -------------------------------
-    # Filters
-    # -------------------------------
-# -------------------------------
-# Filters - SUPPORT MULTIPLE VALUES
-# -------------------------------
-    advertiser_ids = request.GET.getlist("advertiser_id")
-    partner_ids = request.GET.getlist("partner_id")
-    coupon_codes = request.GET.getlist("coupon_code")
-    partner_type = request.GET.get("partner_type")
-    date_from = request.GET.get("date_from")
-    date_to = request.GET.get("date_to")
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
@@ -555,6 +556,7 @@ def performance_table_view(request):
                 "sales": float(r["total_sales"] or 0),
                 "revenue": revenue,
                 "payout": payout,
+                "spend": payout if r["partner_type_value"] == "MB" else 0,  # For MB, spend = payout
                 "profit": profit,
             })
         
@@ -675,9 +677,13 @@ def dashboard_filter_options_view(request):
     # Get base queryset with same logic as performance_table_view
     qs = CampaignPerformance.objects.all()
 
+    # Check if explicit partner_type filter is provided
+    partner_type = request.GET.get("partner_type")
+
     # Department scoping (only for OpsManager with department)
+    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and role == "OpsManager":
+    if company_user and company_user.department and role == "OpsManager" and not partner_type:
         dept = company_user.department
         if dept == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
@@ -763,12 +769,14 @@ def dashboard_pie_chart_data_view(request):
     advertiser_ids = request.GET.getlist("advertiser_id")  # Support multiple
     partner_ids = request.GET.getlist("partner_id")        # Support multiple
     coupon = request.GET.get("coupon")
+    partner_type = request.GET.get("partner_type")
 
     qs = CampaignPerformance.objects.all()
 
     # Department scoping (only for OpsManager with department)
+    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and role == "OpsManager":
+    if company_user and company_user.department and role == "OpsManager" and not partner_type:
         dept = company_user.department
         if dept == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
@@ -1684,29 +1692,27 @@ def performance_analytics_view(request):
         date__lte=month_end
     )
     
-    # Apply department scoping
-    if company_user and company_user.department:
-        dept = company_user.department
-        if dept == "media_buying":
-            perf_qs = perf_qs.filter(partner__partner_type="MB")
-            if not partner_type:
-                partner_type = "MB"
-        elif dept == "affiliate":
-            perf_qs = perf_qs.filter(partner__partner_type="AFF")
-            if not partner_type:
-                partner_type = "AFF"
-        elif dept == "influencer":
-            perf_qs = perf_qs.filter(partner__partner_type="INF")
-            if not partner_type:
-                partner_type = "INF"
-    
-    # Apply filters
+    # Apply filters first
     if advertiser_ids:
         perf_qs = perf_qs.filter(advertiser_id__in=advertiser_ids)
     if partner_ids:
         perf_qs = perf_qs.filter(partner_id__in=partner_ids)
     if partner_type:
         perf_qs = perf_qs.filter(partner__partner_type=partner_type)
+    
+    # Apply department scoping (only if no explicit partner_type filter)
+    # User's explicit filter choice takes precedence over automatic scoping
+    if company_user and company_user.department and not partner_type:
+        dept = company_user.department
+        if dept == "media_buying":
+            perf_qs = perf_qs.filter(partner__partner_type="MB")
+            partner_type = "MB"
+        elif dept == "affiliate":
+            perf_qs = perf_qs.filter(partner__partner_type="AFF")
+            partner_type = "AFF"
+        elif dept == "influencer":
+            perf_qs = perf_qs.filter(partner__partner_type="INF")
+            partner_type = "INF"
     
     # Role-based access control
     if company_user and company_user.role:
