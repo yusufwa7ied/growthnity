@@ -129,10 +129,10 @@ export class DashboardComponent implements OnInit {
     ngOnInit(): void {
         this.user = this.authService.currentUser();
         this.role = this.user?.role || '';
-        
+
         // Determine user access level based on role and department
         // 1. OpsManager (no dept) = Full access (all admin pages + daily spend)
-        // 2. OpsManager (media_buying) = Full dashboard + Coupons only (NO daily spend, NO other admin pages)
+        // 2. OpsManager (any dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
         // 3. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
         // 4. TeamMember (affiliate/influencer) = Filtered dashboard only
         
@@ -142,10 +142,10 @@ export class DashboardComponent implements OnInit {
             this.isMediaBuyer = true;  // Can also see daily spend
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;
-        } else if (this.role === 'OpsManager' && this.user?.department === 'media_buying') {
-            // OpsManager with media_buying: Full dashboard + Coupons only
+        } else if (this.role === 'OpsManager' && this.user?.department) {
+            // OpsManager with ANY department: Full department data + Coupons only
             this.isAdmin = false;
-            this.isMediaBuyer = false;  // NO daily spend for OpsManager with media_buying
+            this.isMediaBuyer = false;  // NO daily spend for OpsManager with department
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;  // Can access coupons
         } else if (this.role === 'TeamMember' && this.user?.department === 'media_buying') {
@@ -160,9 +160,7 @@ export class DashboardComponent implements OnInit {
             this.isMediaBuyer = false;
             this.isDepartmentRestricted = true;
             this.canAccessCoupons = false;
-        }
-
-        // Load filter options immediately (cached)
+        }        // Load filter options immediately (cached)
         this.loadFilterOptions();
 
         // Defer heavy data loading using requestAnimationFrame
