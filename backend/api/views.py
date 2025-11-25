@@ -574,12 +574,14 @@ def performance_table_view(request):
     data = qs.annotate(
         campaign=F("advertiser__name"),
         coupon_code=F("coupon__code"),
+        partner_type_value=F("partner__partner_type"),
     ).values(
         "date",
         "advertiser_id",
         "partner_id",
         "campaign",
         "coupon_code",
+        "partner_type_value",
         "total_orders",
         "total_sales",
         "total_revenue",
@@ -653,7 +655,7 @@ def performance_table_view(request):
                 "advertiser_id": r["advertiser_id"],
                 "campaign": r["campaign"],
                 "coupon": r["coupon_code"],
-                "partner_type": r.get("partner_type", "AFF"),  # AFF or INF
+                "partner_type": r.get("partner_type_value", "AFF"),  # AFF or INF
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "payout": partner_payout,
