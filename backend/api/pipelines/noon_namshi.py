@@ -274,6 +274,10 @@ def run(date_from: date, date_to: date):
     merged = pd.concat(final_rows, ignore_index=True)
     # Skip compute_final_metrics since we already calculated everything
     final_df = merged
+    
+    # Calculate total payout from ftu_payout + rtu_payout for saving
+    if "ftu_payout" in final_df.columns and "rtu_payout" in final_df.columns:
+        final_df["payout"] = final_df["ftu_payout"].fillna(0) + final_df["rtu_payout"].fillna(0)
 
     count = save_final_rows(final_df, date_from, date_to)
     push_to_performance(date_from, date_to)
