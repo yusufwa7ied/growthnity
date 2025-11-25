@@ -135,7 +135,7 @@ export class DashboardComponent implements OnInit {
         // 2. OpsManager (any dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
         // 3. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
         // 4. TeamMember (affiliate/influencer) = Filtered dashboard only
-        
+
         if ((this.role === 'OpsManager' || this.role === 'Admin') && !this.user?.department) {
             // OpsManager/Admin with NO department: Full system access
             this.isAdmin = true;

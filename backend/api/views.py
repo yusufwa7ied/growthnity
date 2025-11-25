@@ -657,7 +657,7 @@ def performance_table_view(request):
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "payout": partner_payout,
-                "spend": 0,  # Affiliates/influencers don't have spend
+                "spend": partner_payout,  # Show their commission as spend (cost to company)
             }
         
         result.append(row)
