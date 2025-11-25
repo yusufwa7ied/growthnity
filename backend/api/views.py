@@ -207,10 +207,15 @@ def kpis_view(request):
                 advertiser_ids.update(a.advertisers.values_list("id", flat=True))
                 partner_ids.update(a.partners.values_list("id", flat=True))
 
-            if advertiser_ids:
-                qs = qs.filter(advertiser_id__in=list(advertiser_ids))
-            if partner_ids:
-                qs = qs.filter(partner_id__in=list(partner_ids))
+            # If TeamMember has NO assignments, return empty queryset
+            if not advertiser_ids and not partner_ids:
+                qs = qs.none()
+            else:
+                # Filter by assignments
+                if advertiser_ids:
+                    qs = qs.filter(advertiser_id__in=list(advertiser_ids))
+                if partner_ids:
+                    qs = qs.filter(partner_id__in=list(partner_ids))
 
     # -------------------------------
     # Aggregation
@@ -330,12 +335,18 @@ def graph_data_view(request):
                 advertiser_ids.update(a.advertisers.values_list("id", flat=True))
                 partner_ids.update(a.partners.values_list("id", flat=True))
 
+            # If TeamMember has NO assignments, return empty queryset
+            if not advertiser_ids and not partner_ids:
+                qs = qs.none()
+            else:
+                if advertiser_ids:
+                    qs = qs.filter(advertiser_id__in=list(advertiser_ids))
+                if partner_ids:
+                    qs = qs.filter(partner_id__in=list(partner_ids))
             if advertiser_ids:
                 qs = qs.filter(advertiser_id__in=list(advertiser_ids))
             if partner_ids:
-                qs = qs.filter(partner_id__in=list(partner_ids))
-
-    # Detect if user is full access (Admin / OpsManager)
+                qs = qs.filter(partner_id__in=list(partner_ids))    # Detect if user is full access (Admin / OpsManager)
     user_is_admin = company_user and company_user.role and company_user.role.name in {"Admin", "OpsManager"}
 
     # Aggregate KPIs per day - ALL ROLES now get revenue
@@ -439,10 +450,14 @@ def performance_table_view(request):
             advertiser_ids.update(a.advertisers.values_list("id", flat=True))
             partner_ids.update(a.partners.values_list("id", flat=True))
 
-        if advertiser_ids:
-            qs = qs.filter(advertiser_id__in=list(advertiser_ids))
-        if partner_ids:
-            qs = qs.filter(partner_id__in=list(partner_ids))
+        # If TeamMember has NO assignments, return empty queryset
+        if not advertiser_ids and not partner_ids:
+            qs = qs.none()
+        else:
+            if advertiser_ids:
+                qs = qs.filter(advertiser_id__in=list(advertiser_ids))
+            if partner_ids:
+                qs = qs.filter(partner_id__in=list(partner_ids))
 
     # ======================================================
     # ADMIN & OPS MANAGER RESPONSE
@@ -684,10 +699,14 @@ def dashboard_filter_options_view(request):
             advertiser_ids.update(a.advertisers.values_list("id", flat=True))
             partner_ids.update(a.partners.values_list("id", flat=True))
 
-        if advertiser_ids:
-            qs = qs.filter(advertiser__id__in=advertiser_ids)
-        if partner_ids:
-            qs = qs.filter(partner__id__in=partner_ids)
+        # If TeamMember has NO assignments, return empty queryset
+        if not advertiser_ids and not partner_ids:
+            qs = qs.none()
+        else:
+            if advertiser_ids:
+                qs = qs.filter(advertiser__id__in=advertiser_ids)
+            if partner_ids:
+                qs = qs.filter(partner__id__in=partner_ids)
 
     # Extract unique filter options
     advertisers_map = {}
@@ -771,10 +790,14 @@ def dashboard_pie_chart_data_view(request):
             assigned_advertiser_ids.update(a.advertisers.values_list("id", flat=True))
             assigned_partner_ids.update(a.partners.values_list("id", flat=True))
 
-        if assigned_advertiser_ids:
-            qs = qs.filter(advertiser__id__in=assigned_advertiser_ids)
-        if assigned_partner_ids:
-            qs = qs.filter(partner__id__in=assigned_partner_ids)
+        # If TeamMember has NO assignments, return empty queryset
+        if not assigned_advertiser_ids and not assigned_partner_ids:
+            qs = qs.none()
+        else:
+            if assigned_advertiser_ids:
+                qs = qs.filter(advertiser__id__in=assigned_advertiser_ids)
+            if assigned_partner_ids:
+                qs = qs.filter(partner__id__in=assigned_partner_ids)
 
     # Apply user filters - SUPPORT MULTIPLE VALUES
     if start_date_str:
@@ -1699,10 +1722,14 @@ def performance_analytics_view(request):
                 adv_ids.update(a.advertisers.values_list("id", flat=True))
                 part_ids.update(a.partners.values_list("id", flat=True))
             
-            if adv_ids:
-                perf_qs = perf_qs.filter(advertiser_id__in=list(adv_ids))
-            if part_ids:
-                perf_qs = perf_qs.filter(partner_id__in=list(part_ids))
+            # If TeamMember has NO assignments, return empty queryset
+            if not adv_ids and not part_ids:
+                perf_qs = perf_qs.none()
+            else:
+                if adv_ids:
+                    perf_qs = perf_qs.filter(advertiser_id__in=list(adv_ids))
+                if part_ids:
+                    perf_qs = perf_qs.filter(partner_id__in=list(part_ids))
     
     # Calculate MTD actuals
     mtd_agg = perf_qs.aggregate(
