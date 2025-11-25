@@ -275,12 +275,22 @@ def run(date_from: date, date_to: date):
     
     # For Namshi, compute_final_metrics calculates payout from rates
     # For Noon, brackets already calculated payout in calculate_noon_payouts
-    if advertiser.name == "Namshi":
-        from api.pipelines.helpers import compute_final_metrics
-        final_df = compute_final_metrics(merged, advertiser)
-    else:
+    # Process each advertiser separately since they use different logic
+    final_dfs = []
+    for adv_name in merged["advertiser_name"].unique():
+        adv_mask = merged["advertiser_name"] == adv_name
+        adv_df = merged[adv_mask].copy()
+        
+        if adv_name == "Namshi":
+            from api.pipelines.helpers import compute_final_metrics
+            advertiser = Advertiser.objects.get(name="Namshi")
+            adv_df = compute_final_metrics(adv_df, advertiser)
+            print(f"✅ Computed Namshi payouts for {len(adv_df)} rows")
         # Noon already has payout calculated in brackets
-        final_df = merged
+        
+        final_dfs.append(adv_df)
+    
+    final_df = pd.concat(final_dfs, ignore_index=True)
 
     count = save_final_rows(final_df, date_from, date_to)
     push_to_performance(date_from, date_to)
