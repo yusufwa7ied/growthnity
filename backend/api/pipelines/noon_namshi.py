@@ -272,12 +272,15 @@ def run(date_from: date, date_to: date):
         return 0
 
     merged = pd.concat(final_rows, ignore_index=True)
-    # Skip compute_final_metrics since we already calculated everything
-    final_df = merged
     
-    # Calculate total payout from ftu_payout + rtu_payout for saving
-    if "ftu_payout" in final_df.columns and "rtu_payout" in final_df.columns:
-        final_df["payout"] = final_df["ftu_payout"].fillna(0) + final_df["rtu_payout"].fillna(0)
+    # For Namshi, compute_final_metrics calculates payout from rates
+    # For Noon, brackets already calculated payout in calculate_noon_payouts
+    if advertiser.name == "Namshi":
+        from api.pipelines.helpers import compute_final_metrics
+        final_df = compute_final_metrics(merged, advertiser)
+    else:
+        # Noon already has payout calculated in brackets
+        final_df = merged
 
     count = save_final_rows(final_df, date_from, date_to)
     push_to_performance(date_from, date_to)
