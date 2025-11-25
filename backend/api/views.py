@@ -147,9 +147,10 @@ def kpis_view(request):
     qs = CampaignPerformance.objects.all()
 
     # -------------------------------
-    # Department scoping
+    # Department scoping (only for OpsManager with department)
+    # TeamMembers will be filtered by AccountAssignment later
     # -------------------------------
-    if company_user and company_user.department:
+    if company_user and company_user.department and company_user.role.name == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -278,8 +279,9 @@ def graph_data_view(request):
     # base queryset
     qs = CampaignPerformance.objects.all()
 
-    # Department scope: MB, AFF, INF
-    if company_user and company_user.department:
+    # Department scope: MB, AFF, INF (only for OpsManager with department)
+    # TeamMembers will be filtered by AccountAssignment later
+    if company_user and company_user.department and company_user.role.name == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -378,9 +380,10 @@ def performance_table_view(request):
     qs = CampaignPerformance.objects.all()
 
     # -------------------------------
-    # Department scoping
+    # Department scoping (only for OpsManager with department)
+    # TeamMembers will be filtered by AccountAssignment later
     # -------------------------------
-    if company_user and company_user.department:
+    if company_user and company_user.department and role == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -657,8 +660,9 @@ def dashboard_filter_options_view(request):
     # Get base queryset with same logic as performance_table_view
     qs = CampaignPerformance.objects.all()
 
-    # Department scoping
-    if company_user and company_user.department:
+    # Department scoping (only for OpsManager with department)
+    # TeamMembers will be filtered by AccountAssignment later
+    if company_user and company_user.department and role == "OpsManager":
         dept = company_user.department
         if dept == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
@@ -743,8 +747,9 @@ def dashboard_pie_chart_data_view(request):
 
     qs = CampaignPerformance.objects.all()
 
-    # Department scoping
-    if company_user and company_user.department:
+    # Department scoping (only for OpsManager with department)
+    # TeamMembers will be filtered by AccountAssignment later
+    if company_user and company_user.department and role == "OpsManager":
         dept = company_user.department
         if dept == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
