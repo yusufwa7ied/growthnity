@@ -285,7 +285,6 @@ def run(date_from: date, date_to: date):
             from api.pipelines.helpers import compute_final_metrics
             advertiser = Advertiser.objects.get(name="Namshi")
             adv_df = compute_final_metrics(adv_df, advertiser)
-            print(f"✅ Computed Namshi payouts for {len(adv_df)} rows")
         # Noon already has payout calculated in brackets
         
         final_dfs.append(adv_df)
