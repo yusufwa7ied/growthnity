@@ -7,7 +7,7 @@
             <img src="Brandmark.png" class="logo" (click)="refreshDashboard()">
             <nav class="nav-links">
                 <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="goToDashboard()">Dashboard</a>
-                <a class="nav-link" [class.active]="activeTab === 'coupons'" *ngIf="isAdmin"
+                <a class="nav-link" [class.active]="activeTab === 'coupons'" *ngIf="canAccessCoupons"
                     (click)="goToCoupons()">Coupons</a>
                 <a class="nav-link" [class.active]="activeTab === 'advertisers'" *ngIf="isAdmin"
                     (click)="goToAdvertisers()">Advertisers</a>

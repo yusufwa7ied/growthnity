@@ -19,8 +19,10 @@ export class MainHeaderComponent implements OnInit {
     activeTab: 'dashboard' | 'daily-spend' | 'coupons' | 'advertisers' | 'partners' | 'targets' = 'dashboard';
     user: User | null = null;
     role: string = '';
-    isAdmin: boolean = false;
-    isMediaBuyer: boolean = false;
+    isAdmin: boolean = false;              // OpsManager or Admin (full access)
+    isMediaBuyer: boolean = false;         // TeamMember with media_buying department
+    isDepartmentRestricted: boolean = false; // TeamMember with affiliate/influencer department
+    canAccessCoupons: boolean = false;     // Only OpsManager/Admin
     displayRole: string = '';
 
     constructor(
@@ -30,7 +32,26 @@ export class MainHeaderComponent implements OnInit {
         this.user = this.authService.currentUser();
         this.role = this.user?.role || '';
         this.isAdmin = ['Admin', 'OpsManager'].includes(this.role);
-        this.isMediaBuyer = this.role === 'TeamMember' && this.user?.department === 'media_buying';
+        
+        // Determine user access level based on role and department
+        if (this.isAdmin) {
+            // OpsManager/Admin: Full system access
+            this.isMediaBuyer = false;
+            this.isDepartmentRestricted = false;
+            this.canAccessCoupons = true;
+        } else if (this.role === 'TeamMember') {
+            // TeamMember: Check department
+            if (this.user?.department === 'media_buying') {
+                this.isMediaBuyer = true;
+                this.isDepartmentRestricted = false;
+                this.canAccessCoupons = false;
+            } else if (this.user?.department === 'affiliate' || this.user?.department === 'influencer') {
+                this.isMediaBuyer = false;
+                this.isDepartmentRestricted = true;
+                this.canAccessCoupons = false;
+            }
+        }
+        
         this.displayRole = this.getDisplayRole();
     }
 
