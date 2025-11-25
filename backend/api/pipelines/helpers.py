@@ -767,16 +767,28 @@ def compute_final_metrics(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFr
     # Only apply to percent rows, and only for FTU/RTU (DrNutrition, Styli logic unaffected elsewhere)
     if ftu_mask.any():
         base = revenue_base(df.loc[ftu_mask])
+        print(f"🔍 FTU Payout Calculation:")
+        print(f"  - Base (our_rev): {base.iloc[0] if len(base) > 0 else 'EMPTY'}")
+        print(f"  - FTU Rate: {df.loc[ftu_mask, 'ftu_rate'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
+        print(f"  - Orders: {df.loc[ftu_mask, 'orders'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
+        print(f"  - Fixed Bonus: {df.loc[ftu_mask, 'ftu_fixed_bonus'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
         df.loc[ftu_mask, "payout"] = (
             base * (df.loc[ftu_mask, "ftu_rate"].astype(float) / 100.0)
             + df.loc[ftu_mask, "orders"].astype(float) * df.loc[ftu_mask, "ftu_fixed_bonus"].astype(float)
         )
+        print(f"  - Calculated Payout: {df.loc[ftu_mask, 'payout'].iloc[0] if ftu_mask.sum() > 0 else 'EMPTY'}")
     if rtu_mask.any():
         base = revenue_base(df.loc[rtu_mask])
+        print(f"🔍 RTU Payout Calculation:")
+        print(f"  - Base (our_rev): {base.iloc[0] if len(base) > 0 else 'EMPTY'}")
+        print(f"  - RTU Rate: {df.loc[rtu_mask, 'rtu_rate'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
+        print(f"  - Orders: {df.loc[rtu_mask, 'orders'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
+        print(f"  - Fixed Bonus: {df.loc[rtu_mask, 'rtu_fixed_bonus'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
         df.loc[rtu_mask, "payout"] = (
             base * (df.loc[rtu_mask, "rtu_rate"].astype(float) / 100.0)
             + df.loc[rtu_mask, "orders"].astype(float) * df.loc[rtu_mask, "rtu_fixed_bonus"].astype(float)
         )
+        print(f"  - Calculated Payout: {df.loc[rtu_mask, 'payout'].iloc[0] if rtu_mask.sum() > 0 else 'EMPTY'}")
 
     # Fixed rates (per-order)
     fixed_mask = non_mb_mask & df["rate_type"].astype(str).str.lower().eq("fixed")
