@@ -545,6 +545,8 @@ def performance_table_view(request):
             # Now profit = revenue - payout works for all types
             profit = revenue - payout
             
+            # For all partner types: spend column shows their cost
+            # MB: spend = media buying cost, AFF/INF: spend = payout (what we pay them)
             result.append({
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
@@ -552,11 +554,12 @@ def performance_table_view(request):
                 "campaign": r["campaign"],
                 "coupon": r["coupon_code"],
                 "partner": r["partner_name"],
+                "partner_type": r["partner_type_value"],
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "revenue": revenue,
                 "payout": payout,
-                "spend": payout if r["partner_type_value"] == "MB" else 0,  # For MB, spend = payout
+                "spend": payout,  # Spend = cost for all types (MB spend or AFF/INF payout)
                 "profit": profit,
             })
         
@@ -635,11 +638,12 @@ def performance_table_view(request):
                 "advertiser_id": r["advertiser_id"],
                 "campaign": r["campaign"],
                 "coupon": r["coupon_code"],
+                "partner_type": "MB",
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "revenue": company_revenue,
                 "payout": allocated_spend,
-                "spend": allocated_spend,  # Add spend field explicitly for MB
+                "spend": allocated_spend,
                 "profit": company_revenue - allocated_spend,
             }
         else:
@@ -649,9 +653,11 @@ def performance_table_view(request):
                 "advertiser_id": r["advertiser_id"],
                 "campaign": r["campaign"],
                 "coupon": r["coupon_code"],
+                "partner_type": r.get("partner_type", "AFF"),  # AFF or INF
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
-                "payout": partner_payout,  # This is what they earn
+                "payout": partner_payout,
+                "spend": 0,  # Affiliates/influencers don't have spend
             }
         
         result.append(row)
