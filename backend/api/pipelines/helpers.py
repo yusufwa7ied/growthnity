@@ -524,78 +524,80 @@ def resolve_payouts(advertiser: Advertiser, df: pd.DataFrame) -> pd.DataFrame:
         df["rate_type"] = adv_default_rate_type
         df["ftu_fixed_bonus"] = float(adv_default_ftu_bonus) if adv_default_ftu_bonus else 0.0
         df["rtu_fixed_bonus"] = float(adv_default_rtu_bonus) if adv_default_rtu_bonus else 0.0
-        # Continue to revenue calculation
         df = df.copy()
         df["partner_id"] = pd.to_numeric(df.get("partner_id", pd.NA), errors="coerce").astype("Int64")
+        # Skip partner payout logic, jump to revenue calculation below
+    
+    # ✅ Process partner payouts (only if not empty)
+    if not payouts.empty:
+        payouts.rename(columns={"partner__id": "payout_partner_id"}, inplace=True)
+        # ✅ Ensure integer alignment
+        payouts["payout_partner_id"] = pd.to_numeric(payouts["payout_partner_id"], errors="coerce").astype("Int64")
+        payouts["start_date"] = pd.to_datetime(payouts["start_date"], errors="coerce").dt.date
+        payouts["end_date"] = pd.to_datetime(payouts["end_date"], errors="coerce").dt.date
+        payouts["start_date"] = payouts["start_date"].fillna(date.min)
+        payouts["end_date"] = payouts["end_date"].fillna(date.max)
 
-    payouts.rename(columns={"partner__id": "payout_partner_id"}, inplace=True)
-    # ✅ Ensure integer alignment
-    payouts["payout_partner_id"] = pd.to_numeric(payouts["payout_partner_id"], errors="coerce").astype("Int64")
-    payouts["start_date"] = pd.to_datetime(payouts["start_date"], errors="coerce").dt.date
-    payouts["end_date"] = pd.to_datetime(payouts["end_date"], errors="coerce").dt.date
-    payouts["start_date"] = payouts["start_date"].fillna(date.min)
-    payouts["end_date"] = payouts["end_date"].fillna(date.max)
+        # ✅ Filter payouts by date range if provided
+        if "date" in df.columns:
+            df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
 
-    # ✅ Filter payouts by date range if provided
-    if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+            payouts = payouts[
+                payouts.apply(lambda p: any(
+                    (df["date"] >= p["start_date"]) & (df["date"] <= p["end_date"])
+                ), axis=1)
+            ]
 
-        payouts = payouts[
-            payouts.apply(lambda p: any(
-                (df["date"] >= p["start_date"]) & (df["date"] <= p["end_date"])
-            ), axis=1)
-        ]
+        df = df.copy()
+        df["partner_id"] = pd.to_numeric(df["partner_id"], errors="coerce").astype("Int64")
 
-    df = df.copy()
-    df["partner_id"] = pd.to_numeric(df["partner_id"], errors="coerce").astype("Int64")
+        # ✅ Split default vs partner-specific
+        default_rules = payouts[payouts["payout_partner_id"].isna()]
+        partner_rules = payouts[payouts["payout_partner_id"].notna()]
 
-    # ✅ Split default vs partner-specific
-    default_rules = payouts[payouts["payout_partner_id"].isna()]
-    partner_rules = payouts[payouts["payout_partner_id"].notna()]
+        # ✅ Merge partner-specific rules first
+        df = df.merge(
+            partner_rules,
+            left_on="partner_id",
+            right_on="payout_partner_id",
+            how="left",
+            suffixes=("", "_ps")
+        )
 
-    # ✅ Merge partner-specific rules first
-    df = df.merge(
-        partner_rules,
-        left_on="partner_id",
-        right_on="payout_partner_id",
-        how="left",
-        suffixes=("", "_ps")
-    )
-
-    # ✅ Apply default PartnerPayout rule where partner rule is missing
-    if not default_rules.empty:
-        d = default_rules.iloc[0]
-        df["ftu_payout"] = df["ftu_payout"].fillna(d["ftu_payout"])
-        df["rtu_payout"] = df["rtu_payout"].fillna(d["rtu_payout"])
-        df["rate_type"] = df["rate_type"].fillna(d["rate_type"])
-        # Ensure fixed bonus columns exist before filling
-        for col in ["ftu_fixed_bonus", "rtu_fixed_bonus"]:
-            if col not in df.columns:
-                df[col] = 0.0
-        # Safely extract bonus values (handle NaN or missing)
-        ftu_bonus_val = 0
-        rtu_bonus_val = 0
+        # ✅ Apply default PartnerPayout rule where partner rule is missing
         if not default_rules.empty:
-            ftu_bonus_val = pd.to_numeric(d.get("ftu_fixed_bonus", 0), errors="coerce")
-            rtu_bonus_val = pd.to_numeric(d.get("rtu_fixed_bonus", 0), errors="coerce")
-            if pd.isna(ftu_bonus_val):
-                ftu_bonus_val = 0
-            if pd.isna(rtu_bonus_val):
-                rtu_bonus_val = 0
-        # Fill with safe numeric values
-        df["ftu_fixed_bonus"] = df["ftu_fixed_bonus"].fillna(ftu_bonus_val)
-        df["rtu_fixed_bonus"] = df["rtu_fixed_bonus"].fillna(rtu_bonus_val)
-    
-    # ✅ LEVEL 3: Apply Advertiser default payouts where no PartnerPayout exists
-    for col in ["ftu_payout", "rtu_payout", "ftu_fixed_bonus", "rtu_fixed_bonus"]:
-        if col not in df.columns:
-            df[col] = pd.NA
-    
-    # Convert to numeric and handle NaN
-    df["ftu_payout"] = pd.to_numeric(df["ftu_payout"], errors="coerce")
-    df["rtu_payout"] = pd.to_numeric(df["rtu_payout"], errors="coerce")
-    df["ftu_fixed_bonus"] = pd.to_numeric(df["ftu_fixed_bonus"], errors="coerce")
-    df["rtu_fixed_bonus"] = pd.to_numeric(df["rtu_fixed_bonus"], errors="coerce")
+            d = default_rules.iloc[0]
+            df["ftu_payout"] = df["ftu_payout"].fillna(d["ftu_payout"])
+            df["rtu_payout"] = df["rtu_payout"].fillna(d["rtu_payout"])
+            df["rate_type"] = df["rate_type"].fillna(d["rate_type"])
+            # Ensure fixed bonus columns exist before filling
+            for col in ["ftu_fixed_bonus", "rtu_fixed_bonus"]:
+                if col not in df.columns:
+                    df[col] = 0.0
+            # Safely extract bonus values (handle NaN or missing)
+            ftu_bonus_val = 0
+            rtu_bonus_val = 0
+            if not default_rules.empty:
+                ftu_bonus_val = pd.to_numeric(d.get("ftu_fixed_bonus", 0), errors="coerce")
+                rtu_bonus_val = pd.to_numeric(d.get("rtu_fixed_bonus", 0), errors="coerce")
+                if pd.isna(ftu_bonus_val):
+                    ftu_bonus_val = 0
+                if pd.isna(rtu_bonus_val):
+                    rtu_bonus_val = 0
+            # Fill with safe numeric values
+            df["ftu_fixed_bonus"] = df["ftu_fixed_bonus"].fillna(ftu_bonus_val)
+            df["rtu_fixed_bonus"] = df["rtu_fixed_bonus"].fillna(rtu_bonus_val)
+        
+        # ✅ LEVEL 3: Apply Advertiser default payouts where no PartnerPayout exists
+        for col in ["ftu_payout", "rtu_payout", "ftu_fixed_bonus", "rtu_fixed_bonus"]:
+            if col not in df.columns:
+                df[col] = pd.NA
+        
+        # Convert to numeric and handle NaN
+        df["ftu_payout"] = pd.to_numeric(df["ftu_payout"], errors="coerce")
+        df["rtu_payout"] = pd.to_numeric(df["rtu_payout"], errors="coerce")
+        df["ftu_fixed_bonus"] = pd.to_numeric(df["ftu_fixed_bonus"], errors="coerce")
+        df["rtu_fixed_bonus"] = pd.to_numeric(df["rtu_fixed_bonus"], errors="coerce")
     
     # Fill missing ftu/rtu payouts with advertiser defaults (if they exist)
     if adv_default_ftu is not None:
