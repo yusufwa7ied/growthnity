@@ -80,18 +80,18 @@ def fetch_raw_data() -> pd.DataFrame:
 
     # ✅ Filter by affiliate coupon codes
     coupon_codes = [
-        "SS1","SS2","SS3","SS4","SS5","SS6","SS7","SS8","SS9","SS10",
-        "SS11","SS12","SS13","SS14","SS15","SS16","SS17","SS18","SS19","SS20",
-        "SS21","SS22","SS23","SS24","SS25","SS26","SS27","SS28","SS29","SS30",
-        "SS31","SS32","SS33","SS34","SS35","SS36","SS37","SS38","SS39","SS40",
-        "SS41","SS42","SS43","SS44","SS45","SS46","SS47","SS48","SS49","SS50",
+        "5SM","ACC","ALCOUPON","ALM","CAE","FAZA","GURU","JOOJ","KT","ND888",
+        "REZEEM","SA7SA7","TOULIN","WADI","WADY","WAFII","WAFY","ZEEM",
         "SR1","SR2","SR3","SR4","SR5","SR6","SR7","SR8","SR9","SR10",
         "SR11","SR12","SR13","SR14","SR15","SR16","SR17","SR18","SR19","SR20",
         "SR21","SR22","SR23","SR24","SR25","SR26","SR27","SR28","SR29","SR30",
         "SR31","SR32","SR33","SR34","SR35","SR36","SR37","SR38","SR39","SR40",
         "SR41","SR42","SR43","SR44","SR45","SR46","SR47","SR48","SR49","SR50",
-        "ALM","5SM","SA7SA7","ACC","JOOJ","ALCOUPON","CAE","GURU",
-        "KT","ZEEM","REZEEM","TOULIN","WAFY","WADI","WAFII","WADY","FAZA","ND888"
+        "SS1","SS2","SS3","SS4","SS5","SS6","SS7","SS8","SS9","SS10",
+        "SS11","SS12","SS13","SS14","SS15","SS16","SS17","SS18","SS19","SS20",
+        "SS21","SS22","SS23","SS24","SS25","SS26","SS27","SS28","SS29","SS30",
+        "SS31","SS32","SS33","SS34","SS35","SS36","SS37","SS38","SS39","SS40",
+        "SS41","SS42","SS43","SS44","SS45","SS46","SS47","SS48","SS49","SS50"
     ]
     df = df[df["Coupon Code"].isin(coupon_codes)]
     df = df.reset_index(drop=True)

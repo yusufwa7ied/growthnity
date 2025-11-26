@@ -35,7 +35,13 @@ class AdvertiserSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 class AdvertiserDetailSerializer(serializers.ModelSerializer):
-    partner_payouts = PartnerPayoutSerializer(source='payouts', many=True, read_only=True)
+    partner_payouts = serializers.SerializerMethodField()
+    
+    def get_partner_payouts(self, obj):
+        """Only return legacy payouts (without date ranges) for app UI management.
+        Date-based special payouts should only be managed via Django admin."""
+        legacy_payouts = obj.payouts.filter(start_date__isnull=True, end_date__isnull=True)
+        return PartnerPayoutSerializer(legacy_payouts, many=True).data
     
     class Meta:
         model = Advertiser

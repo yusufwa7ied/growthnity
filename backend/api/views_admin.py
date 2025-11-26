@@ -175,6 +175,8 @@ def create_advertiser_view(request):
         for payout_data in partner_payouts:
             partner_id = payout_data.get('partner_id')
             if partner_id:
+                # App-created payouts should not have date ranges (legacy system)
+                # Only Django admin should create date-based special payouts
                 PartnerPayout.objects.create(
                     advertiser=advertiser,
                     partner_id=partner_id,
@@ -186,8 +188,9 @@ def create_advertiser_view(request):
                     currency=payout_data.get('currency'),
                     rate_type=payout_data.get('rate_type', 'percent'),
                     condition=payout_data.get('condition'),
-                    start_date=payout_data.get('start_date'),
-                    end_date=payout_data.get('end_date'),
+                    # Explicitly set to None - app doesn't manage date-based payouts
+                    start_date=None,
+                    end_date=None,
                 )
         
         # Refresh to get payouts
@@ -226,11 +229,14 @@ def update_advertiser_view(request, pk):
         # Update partner payouts if provided
         partner_payouts = request.data.get('partner_payouts', [])
         if partner_payouts is not None:
-            # Delete existing payouts and create new ones
-            advertiser.payouts.all().delete()
+            # Only delete legacy payouts (without date ranges) that are managed by app
+            # Preserve all date-based special payouts created via Django admin
+            advertiser.payouts.filter(start_date__isnull=True, end_date__isnull=True).delete()
             for payout_data in partner_payouts:
                 partner_id = payout_data.get('partner_id')
                 if partner_id:
+                    # App-created payouts should not have date ranges (legacy system)
+                    # Only Django admin should create date-based special payouts
                     PartnerPayout.objects.create(
                         advertiser=advertiser,
                         partner_id=partner_id,
@@ -242,8 +248,9 @@ def update_advertiser_view(request, pk):
                         currency=payout_data.get('currency'),
                         rate_type=payout_data.get('rate_type', 'percent'),
                         condition=payout_data.get('condition'),
-                        start_date=payout_data.get('start_date'),
-                        end_date=payout_data.get('end_date'),
+                        # Explicitly set to None - app doesn't manage date-based payouts
+                        start_date=None,
+                        end_date=None,
                     )
         
         advertiser.refresh_from_db()
