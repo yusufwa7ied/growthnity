@@ -35,7 +35,7 @@ def run(date_from: date, date_to: date):
     print(clean_df.head(10))
 
     # 4. ENRICH
-    enriched_df = enrich_df(clean_df)
+    enriched_df = enrich_df(clean_df, advertiser=advertiser)
     print("🔍 ENRICHED DF HEAD:")
     print(enriched_df.head(10))
 

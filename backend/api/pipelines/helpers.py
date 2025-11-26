@@ -274,7 +274,7 @@ def store_raw_snapshot(advertiser, df, date_from, date_to, source: str):
 # PARTNER & COUPON ENRICHMENT
 # --------------------------------------------
 
-def enrich_df(df: pd.DataFrame) -> pd.DataFrame:
+def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
     df = df.copy()
 
     # Ensure columns exist (defensive)
@@ -294,10 +294,14 @@ def enrich_df(df: pd.DataFrame) -> pd.DataFrame:
             transaction_date = row.get("created_at")
             
             if pd.notna(coupon_code) and pd.notna(transaction_date):
-                # Get advertiser first
+                # Get coupon filtered by advertiser to handle duplicate codes
                 try:
-                    coupon = Coupon.objects.get(code__iexact=coupon_code)
-                    advertiser = coupon.advertiser
+                    if advertiser:
+                        coupon = Coupon.objects.get(code__iexact=coupon_code, advertiser=advertiser)
+                    else:
+                        # Fallback for old pipelines that don't pass advertiser
+                        coupon = Coupon.objects.get(code__iexact=coupon_code)
+                        advertiser = coupon.advertiser
                     
                     # Resolve partner at this date (use original coupon code from DB)
                     partner_id = get_coupon_owner_at_date(coupon.code, transaction_date, advertiser)
