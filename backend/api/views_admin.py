@@ -271,8 +271,23 @@ def update_advertiser_view(request, pk):
                         )
                         payout_ids_to_keep.append(new_payout.id)
             
-            # Delete payouts that were not in the request (user removed them)
-            advertiser.payouts.exclude(id__in=payout_ids_to_keep).delete()
+            # Get all existing payout IDs for this advertiser
+            all_existing_ids = set(advertiser.payouts.values_list('id', flat=True))
+            sent_ids = set(payout_data.get('id') for payout_data in partner_payouts if payout_data.get('id'))
+            
+            # IDs that exist but weren't sent = user removed them from the form
+            ids_to_delete = all_existing_ids - sent_ids - set(payout_ids_to_keep)
+            
+            # Only delete payouts that:
+            # 1. Were not in the request (user removed them)
+            # 2. AND don't have date ranges (app-managed only)
+            # This prevents accidentally deleting admin-created date-based payouts
+            if ids_to_delete:
+                advertiser.payouts.filter(
+                    id__in=ids_to_delete,
+                    start_date__isnull=True,
+                    end_date__isnull=True
+                ).delete()
         
         advertiser.refresh_from_db()
         return Response(AdvertiserDetailSerializer(advertiser).data)
