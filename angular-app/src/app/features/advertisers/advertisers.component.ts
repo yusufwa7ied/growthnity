@@ -346,17 +346,10 @@ export class AdvertisersComponent implements OnInit {
     }
 
     onAdvertiserForPayoutsChange(): void {
-        if (this.selectedAdvertiserForPayouts) {
-            // Load existing partner payouts for the selected advertiser
-            const advertiser = this.advertisers.find(a => a.id === this.selectedAdvertiserForPayouts);
-            if (advertiser && advertiser.partner_payouts) {
-                this.partnerPayouts = [...advertiser.partner_payouts];
-            } else {
-                this.partnerPayouts = [];
-            }
-        } else {
-            this.partnerPayouts = [];
-        }
+        // Don't load existing payouts - user only adds new special payouts
+        // Existing payouts are managed separately via Django admin
+        // This prevents accidentally modifying or deleting existing special payouts
+        this.partnerPayouts = [];
     }
 
     goToDashboard(): void {

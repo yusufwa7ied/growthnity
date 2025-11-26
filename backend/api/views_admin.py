@@ -223,71 +223,38 @@ def update_advertiser_view(request, pk):
         
         serializer.save()
         
-        # Update partner payouts if provided
+        # Add new partner payouts if provided
+        # This endpoint ONLY adds new special payouts, never updates or deletes existing ones
+        # Existing payouts are managed via Django admin (where dates can be set)
         partner_payouts = request.data.get('partner_payouts', [])
-        if partner_payouts is not None:
-            # Track which payout IDs are in the request to know which to keep
-            payout_ids_to_keep = []
-            
+        if partner_payouts:
             for payout_data in partner_payouts:
                 partner_id = payout_data.get('partner_id')
-                if partner_id:
-                    payout_id = payout_data.get('id')
-                    
-                    if payout_id:
-                        # Update existing payout
-                        try:
-                            payout = PartnerPayout.objects.get(id=payout_id, advertiser=advertiser)
-                            payout.partner_id = partner_id
-                            payout.ftu_payout = payout_data.get('ftu_payout')
-                            payout.rtu_payout = payout_data.get('rtu_payout')
-                            payout.ftu_fixed_bonus = payout_data.get('ftu_fixed_bonus')
-                            payout.rtu_fixed_bonus = payout_data.get('rtu_fixed_bonus')
-                            payout.exchange_rate = payout_data.get('exchange_rate')
-                            payout.currency = payout_data.get('currency')
-                            payout.rate_type = payout_data.get('rate_type', 'percent')
-                            payout.condition = payout_data.get('condition')
-                            payout.start_date = payout_data.get('start_date')
-                            payout.end_date = payout_data.get('end_date')
-                            payout.save()
-                            payout_ids_to_keep.append(payout_id)
-                        except PartnerPayout.DoesNotExist:
-                            pass
-                    else:
-                        # Create new payout
-                        new_payout = PartnerPayout.objects.create(
-                            advertiser=advertiser,
-                            partner_id=partner_id,
-                            ftu_payout=payout_data.get('ftu_payout'),
-                            rtu_payout=payout_data.get('rtu_payout'),
-                            ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
-                            rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
-                            exchange_rate=payout_data.get('exchange_rate'),
-                            currency=payout_data.get('currency'),
-                            rate_type=payout_data.get('rate_type', 'percent'),
-                            condition=payout_data.get('condition'),
-                            start_date=payout_data.get('start_date'),
-                            end_date=payout_data.get('end_date'),
-                        )
-                        payout_ids_to_keep.append(new_payout.id)
-            
-            # Get all existing payout IDs for this advertiser
-            all_existing_ids = set(advertiser.payouts.values_list('id', flat=True))
-            sent_ids = set(payout_data.get('id') for payout_data in partner_payouts if payout_data.get('id'))
-            
-            # IDs that exist but weren't sent = user removed them from the form
-            ids_to_delete = all_existing_ids - sent_ids - set(payout_ids_to_keep)
-            
-            # Only delete payouts that:
-            # 1. Were not in the request (user removed them)
-            # 2. AND don't have date ranges (app-managed only)
-            # This prevents accidentally deleting admin-created date-based payouts
-            if ids_to_delete:
-                advertiser.payouts.filter(
-                    id__in=ids_to_delete,
-                    start_date__isnull=True,
-                    end_date__isnull=True
-                ).delete()
+                if not partner_id:
+                    continue
+                
+                # Always create new records - don't update existing ones
+                # Use create() which will raise IntegrityError if duplicate exists
+                try:
+                    PartnerPayout.objects.create(
+                        advertiser=advertiser,
+                        partner_id=partner_id,
+                        ftu_payout=payout_data.get('ftu_payout'),
+                        rtu_payout=payout_data.get('rtu_payout'),
+                        ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
+                        rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
+                        exchange_rate=payout_data.get('exchange_rate'),
+                        currency=payout_data.get('currency'),
+                        rate_type=payout_data.get('rate_type', 'percent'),
+                        condition=payout_data.get('condition'),
+                        # App doesn't set dates - admin sets them later if needed
+                        start_date=None,
+                        end_date=None,
+                    )
+                except Exception as e:
+                    # If duplicate (same advertiser+partner+start_date), skip it
+                    # This prevents errors if user tries to add same partner twice
+                    continue
         
         advertiser.refresh_from_db()
         return Response(AdvertiserDetailSerializer(advertiser).data)
