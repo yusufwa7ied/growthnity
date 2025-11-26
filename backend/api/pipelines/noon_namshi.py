@@ -251,20 +251,26 @@ def run(date_from: date, date_to: date):
         store_raw_snapshot(advertiser, sub_df, date_from, date_to, source="noon_namshi_csv")
 
     clean_df = clean_noon_namshi(raw_df)
-    enriched = enrich_df(clean_df)
 
     # resolve payouts per-advertiser (rows can mix Noon/Namshi)
+    # enrich each advertiser separately to handle duplicate coupon codes
     final_rows = []
-    for adv_name, chunk in enriched.groupby("advertiser_name", dropna=False):
-        if adv_name not in ADVERTISER_NAMES:
-            # keep future-proof: if coupon mapping sets a different adv name, skip silently
+    for adv_name in ADVERTISER_NAMES:
+        # Get rows for this advertiser
+        adv_rows = clean_df[clean_df["advertiser_name"] == adv_name]
+        if adv_rows.empty:
             continue
+            
         advertiser = Advertiser.objects.filter(name=adv_name).first()
         if advertiser is None:
             # if advertiser record doesn't exist yet, skip safely
             continue
+            
+        # Enrich with advertiser-specific coupon lookup
+        enriched = enrich_df(adv_rows, advertiser=advertiser)
+        
         # Use bracket-based calculation for Noon, percentage for Namshi
-        payout_df = calculate_noon_payouts(chunk, advertiser)
+        payout_df = calculate_noon_payouts(enriched, advertiser)
         final_rows.append(payout_df)
 
     if not final_rows:
