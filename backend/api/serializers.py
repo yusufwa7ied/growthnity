@@ -26,7 +26,9 @@ class PartnerPayoutSerializer(serializers.ModelSerializer):
         fields = [
             "id", "partner_id", "partner_name", "ftu_payout", "rtu_payout",
             "ftu_fixed_bonus", "rtu_fixed_bonus", "exchange_rate", 
-            "currency", "rate_type", "condition", "start_date", "end_date"
+            "currency", "rate_type", "condition"
+            # Intentionally EXCLUDE start_date and end_date from app API
+            # These should only be visible/editable via Django admin
         ]
 
 class AdvertiserSerializer(serializers.ModelSerializer):

@@ -175,8 +175,14 @@ def create_advertiser_view(request):
         for payout_data in partner_payouts:
             partner_id = payout_data.get('partner_id')
             if partner_id:
-                # App-created payouts should not have date ranges (legacy system)
-                # Only Django admin should create date-based special payouts
+                # App-created payouts MUST NOT have date ranges (legacy system only)
+                # Reject any attempts to set dates via app API
+                if payout_data.get('start_date') is not None or payout_data.get('end_date') is not None:
+                    return Response(
+                        {"error": "Date-based payouts can only be created via Django Admin. Please use the admin interface for special date-based payout rules."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
                 PartnerPayout.objects.create(
                     advertiser=advertiser,
                     partner_id=partner_id,
@@ -188,7 +194,7 @@ def create_advertiser_view(request):
                     currency=payout_data.get('currency'),
                     rate_type=payout_data.get('rate_type', 'percent'),
                     condition=payout_data.get('condition'),
-                    # Explicitly set to None - app doesn't manage date-based payouts
+                    # Force NULL - app cannot create date-based payouts
                     start_date=None,
                     end_date=None,
                 )
@@ -235,8 +241,14 @@ def update_advertiser_view(request, pk):
             for payout_data in partner_payouts:
                 partner_id = payout_data.get('partner_id')
                 if partner_id:
-                    # App-created payouts should not have date ranges (legacy system)
-                    # Only Django admin should create date-based special payouts
+                    # App-created payouts MUST NOT have date ranges (legacy system only)
+                    # Reject any attempts to set dates via app API
+                    if payout_data.get('start_date') is not None or payout_data.get('end_date') is not None:
+                        return Response(
+                            {"error": "Date-based payouts can only be managed via Django Admin. Please use the admin interface for special date-based payout rules."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
                     PartnerPayout.objects.create(
                         advertiser=advertiser,
                         partner_id=partner_id,
@@ -248,7 +260,7 @@ def update_advertiser_view(request, pk):
                         currency=payout_data.get('currency'),
                         rate_type=payout_data.get('rate_type', 'percent'),
                         condition=payout_data.get('condition'),
-                        # Explicitly set to None - app doesn't manage date-based payouts
+                        # Force NULL - app cannot create date-based payouts
                         start_date=None,
                         end_date=None,
                     )
