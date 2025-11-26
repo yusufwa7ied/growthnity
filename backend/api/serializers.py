@@ -26,9 +26,7 @@ class PartnerPayoutSerializer(serializers.ModelSerializer):
         fields = [
             "id", "partner_id", "partner_name", "ftu_payout", "rtu_payout",
             "ftu_fixed_bonus", "rtu_fixed_bonus", "exchange_rate", 
-            "currency", "rate_type", "condition"
-            # Intentionally EXCLUDE start_date and end_date from app API
-            # These should only be visible/editable via Django admin
+            "currency", "rate_type", "condition", "start_date", "end_date"
         ]
 
 class AdvertiserSerializer(serializers.ModelSerializer):
@@ -37,13 +35,7 @@ class AdvertiserSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 class AdvertiserDetailSerializer(serializers.ModelSerializer):
-    partner_payouts = serializers.SerializerMethodField()
-    
-    def get_partner_payouts(self, obj):
-        """Only return legacy payouts (without date ranges) for app UI management.
-        Date-based special payouts should only be managed via Django admin."""
-        legacy_payouts = obj.payouts.filter(start_date__isnull=True, end_date__isnull=True)
-        return PartnerPayoutSerializer(legacy_payouts, many=True).data
+    partner_payouts = PartnerPayoutSerializer(source='payouts', many=True, read_only=True)
     
     class Meta:
         model = Advertiser
