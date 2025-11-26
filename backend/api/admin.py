@@ -249,6 +249,8 @@ class PartnerPayoutAdmin(ImportExportModelAdmin):
         "exchange_rate",
         "currency",
         "rate_type",
+        "start_date",
+        "end_date",
         "condition",
     )
     list_filter = (
@@ -275,6 +277,10 @@ class PartnerPayoutAdmin(ImportExportModelAdmin):
         }),
         ("Currency Info", {
             "fields": ("currency", "exchange_rate", "rate_type")
+        }),
+        ("Date Range (Optional - leave blank for permanent)", {
+            "fields": ("start_date", "end_date"),
+            "classes": ("collapse",)
         }),
     )
     
