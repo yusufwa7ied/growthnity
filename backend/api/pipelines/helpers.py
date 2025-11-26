@@ -524,6 +524,9 @@ def resolve_payouts(advertiser: Advertiser, df: pd.DataFrame) -> pd.DataFrame:
         df["rate_type"] = adv_default_rate_type
         df["ftu_fixed_bonus"] = float(adv_default_ftu_bonus) if adv_default_ftu_bonus else 0.0
         df["rtu_fixed_bonus"] = float(adv_default_rtu_bonus) if adv_default_rtu_bonus else 0.0
+        # Initialize payout columns for downstream code
+        df["ftu_payout"] = float(adv_default_ftu) if adv_default_ftu else 0.0
+        df["rtu_payout"] = float(adv_default_rtu) if adv_default_rtu else 0.0
         df = df.copy()
         df["partner_id"] = pd.to_numeric(df.get("partner_id", pd.NA), errors="coerce").astype("Int64")
         # Skip partner payout logic, jump to revenue calculation below
