@@ -39,15 +39,15 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
         "date": "created_at",
         "coupon": "coupon_code",
         "orders": "order_count",
-        "sales": "sales_amount",
+        "sales": "sales",  # Keep as 'sales' for compatibility with helpers
     }, inplace=True)
     
     # Parse date (M/D/YYYY format)
     df["created_at"] = pd.to_datetime(df["created_at"], format="%m/%d/%Y")
     
     # Clean sales amount - remove commas and handle formatting
-    df["sales_amount"] = (
-        df["sales_amount"]
+    df["sales"] = (
+        df["sales"]
         .astype(str)
         .str.replace(",", "")
         .str.replace("%", "")  # Handle edge cases like "241.45%"
@@ -164,7 +164,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
                 order_id=str(row["order_id"]),
                 created_date=row["created_at"],
                 user_type=row["user_type"],
-                sales=row.get("sales_amount", 0),
+                sales=row.get("sales", 0),
                 commission=row.get("commission", 0),
                 country=row.get("country", ""),
                 order_count=row.get("order_count", 1),
@@ -197,7 +197,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         )
         .agg({
             "order_count": "sum",
-            "sales_amount": "sum",
+            "sales": "sum",
             "commission": "sum",
             "our_rev": "sum",
             "payout": "sum",
@@ -224,7 +224,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
                 partner_id=row["partner_id"] if pd.notna(row["partner_id"]) else None,
                 date=row["created_at"].date(),
                 orders=int(row["order_count"]),
-                sales=row["sales_amount"],
+                sales=row["sales"],
                 commission=row["commission"],
                 our_revenue=row["our_rev"],
                 payout=row["payout"],
