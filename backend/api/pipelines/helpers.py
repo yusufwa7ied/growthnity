@@ -83,7 +83,12 @@ def get_coupon_owner_at_date(coupon_code, transaction_date, advertiser):
         return history.partner.id
     
     # No history found - use current assignment
-    return coupon.partner.id if coupon.partner else None
+    if coupon.partner:
+        print(f"  📌 No history for {coupon_code} @ {transaction_datetime}, using current partner: {coupon.partner.name} (ID: {coupon.partner.id})")
+        return coupon.partner.id
+    else:
+        print(f"  ⚠️  No history and no current partner for {coupon_code}")
+        return None
 
 
 def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
