@@ -248,69 +248,43 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
 def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean Egypt CSV data.
-    Expected columns: order_date, platform, country, coupon_code, 
-                     bracket columns (Bracket X_$Y.YY), order_value_gmv_usd,
-                     FTU/RTU order counts and values
+    Expected columns: Date, BU, Country, Coupon, Tag, order_nr, GMV, Payout
     """
     print("🧹 Cleaning Noon Egypt data...")
     
-    # Identify bracket columns
-    bracket_cols = [col for col in df.columns if col.startswith("Bracket") and "_$" in col]
-    
-    # For now, use the first bracket column found (we'll enhance this if needed)
-    if not bracket_cols:
-        print("⚠️  No bracket columns found in Egypt data")
-        return pd.DataFrame()
-    
     # Rename standard columns
     df = df.rename(columns={
-        "order_date": "order_date",
-        "platform": "platform",
-        "country": "country",
-        "coupon_code": "coupon_code",
-        "order_value_gmv_usd": "total_value",
-        "FTU ORDERS": "ftu_orders",
-        "FTU ORDER VALUE": "ftu_value",
-        "RTU ORDERS": "rtu_orders",
-        "RTU ORDER VALUE": "rtu_value",
+        "Date": "order_date",
+        "BU": "platform",
+        "Country": "country",
+        "Coupon": "coupon_code",
+        "Tag": "tier",  # This is the bracket/tier info
+        "order_nr": "total_orders",
+        "GMV": "total_value",
+        "Payout": "payout_from_csv",  # We'll use this as revenue
     })
     
     # Parse date
     df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce").dt.date
     
-    # Find which bracket has data (sum all bracket columns)
-    df["total_orders"] = df[bracket_cols].sum(axis=1)
+    # Egypt data has total_orders already from order_nr column
+    df["total_orders"] = pd.to_numeric(df["total_orders"], errors="coerce").fillna(0).astype(int)
     df["non_payable_orders"] = 0  # Egypt data doesn't have this field
     df["payable_orders"] = df["total_orders"]
-    
-    # Determine active bracket per row (take first non-zero bracket)
-    df["tier"] = ""
-    for col in bracket_cols:
-        mask = (df["tier"] == "") & (df[col] > 0)
-        df.loc[mask, "tier"] = col
     
     # Numeric conversions
     df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
     
-    if "ftu_orders" in df.columns:
-        df["ftu_orders"] = pd.to_numeric(df["ftu_orders"], errors="coerce").fillna(0).astype(int)
+    if "payout_from_csv" in df.columns:
+        df["payout_from_csv"] = pd.to_numeric(df["payout_from_csv"], errors="coerce").fillna(0)
     else:
-        df["ftu_orders"] = 0
-        
-    if "ftu_value" in df.columns:
-        df["ftu_value"] = pd.to_numeric(df["ftu_value"], errors="coerce").fillna(0)
-    else:
-        df["ftu_value"] = 0
-        
-    if "rtu_orders" in df.columns:
-        df["rtu_orders"] = pd.to_numeric(df["rtu_orders"], errors="coerce").fillna(0).astype(int)
-    else:
-        df["rtu_orders"] = 0
-        
-    if "rtu_value" in df.columns:
-        df["rtu_value"] = pd.to_numeric(df["rtu_value"], errors="coerce").fillna(0)
-    else:
-        df["rtu_value"] = 0
+        df["payout_from_csv"] = 0
+    
+    # Egypt doesn't have FTU/RTU breakdown
+    df["ftu_orders"] = 0
+    df["ftu_value"] = 0
+    df["rtu_orders"] = 0
+    df["rtu_value"] = 0
     
     # String fields
     df["coupon_code"] = df["coupon_code"].astype(str).str.strip()
@@ -379,12 +353,10 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
                 else:
                     payout_usd = GCC_DEFAULT_PAYOUTS.get(tier, 0)
             else:
-                # Egypt: Extract revenue from bracket
-                revenue_usd = extract_bracket_revenue(tier)
-                
-                # Get default payout based on bracket number
-                bracket_num = extract_bracket_number(tier)
-                payout_usd = EGYPT_DEFAULT_PAYOUTS.get(bracket_num, 0) if bracket_num else 0
+                # Egypt: Use Payout column from CSV as revenue
+                # The CSV already has the payout value we should use
+                payout_usd = float(row.get("payout_from_csv", 0))
+                revenue_usd = payout_usd  # For Egypt, revenue = payout (no margin)
         
         # Calculate our revenue (profit)
         our_rev_usd = round(revenue_usd - payout_usd, 2)
