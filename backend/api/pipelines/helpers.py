@@ -84,10 +84,8 @@ def get_coupon_owner_at_date(coupon_code, transaction_date, advertiser):
     
     # No history found - use current assignment
     if coupon.partner:
-        print(f"  📌 No history for {coupon_code} @ {transaction_datetime}, using current partner: {coupon.partner.name} (ID: {coupon.partner.id})")
         return coupon.partner.id
     else:
-        print(f"  ⚠️  No history and no current partner for {coupon_code}")
         return None
 
 
@@ -303,7 +301,6 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                 try:
                     if advertiser:
                         coupon = Coupon.objects.get(code__iexact=coupon_code, advertiser=advertiser)
-                        print(f"  ✓ Found coupon {coupon_code} for {advertiser.name}, partner={coupon.partner.name if coupon.partner else 'None'}")
                     else:
                         # Fallback for old pipelines that don't pass advertiser
                         coupon = Coupon.objects.get(code__iexact=coupon_code)
@@ -314,11 +311,7 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                     
                     # If no historical assignment found, use current coupon.partner
                     if not partner_id and coupon.partner:
-                        print(f"  🔄 Fallback: Using current partner for {coupon.code}: {coupon.partner.name} (ID: {coupon.partner.id})")
                         partner_id = coupon.partner.id
-                    
-                    if not partner_id:
-                        print(f"  ❌ No partner found for {coupon.code} at {transaction_date}")
                     
                     if partner_id:
                         partner = Partner.objects.get(id=partner_id)
@@ -327,11 +320,11 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                         df.at[idx, "partner_type"] = partner.partner_type
                         df.at[idx, "advertiser_id"] = advertiser.id
                         df.at[idx, "advertiser_name"] = advertiser.name
-                except Coupon.DoesNotExist as e:
-                    print(f"  ⚠️  Coupon not found: {coupon_code} for {advertiser.name if advertiser else 'unknown'}")
+                except Coupon.DoesNotExist:
+                    # Coupon not found in database, skip this row
                     continue
-                except Exception as e:
-                    print(f"  ❌ Error processing {coupon_code}: {e}")
+                except Exception:
+                    # Unexpected error during enrichment, skip this row
                     continue
     else:
         # ⚠️ FALLBACK: If no date column, use current coupon assignment (old behavior)
