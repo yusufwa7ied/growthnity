@@ -256,19 +256,19 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     df = df.rename(columns={
         "Date": "order_date",
         "Coupon Code": "coupon_code",
-        "#order": "total_orders",
+        "#order": "order_hash",  # This is order ID, not count
         "Bracket": "tier",
         "order_value_gmv_usd": "total_value",
         "Tag": "platform",
     })
     
-    # Parse date
-    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce").dt.date
+    # Parse date (format: "Nov 24, 2025")
+    df["order_date"] = pd.to_datetime(df["order_date"], format="%b %d, %Y", errors="coerce").dt.date
     
-    # Numeric conversions
-    df["total_orders"] = pd.to_numeric(df["total_orders"], errors="coerce").fillna(0).astype(int)
-    df["non_payable_orders"] = 0  # Egypt data doesn't have this field
-    df["payable_orders"] = df["total_orders"]
+    # Egypt data has 1 row per order, so total_orders = 1 for each row
+    df["total_orders"] = 1
+    df["non_payable_orders"] = 0
+    df["payable_orders"] = 1
     
     # Numeric conversions
     df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
