@@ -411,18 +411,20 @@ def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date,
     for idx, row in df.iterrows():
         # Get coupon object
         coupon = None
-        if row.get("coupon_id"):
+        coupon_id = row.get("coupon_id")
+        if pd.notna(coupon_id) and coupon_id:
             try:
-                coupon = Coupon.objects.get(id=row["coupon_id"])
-            except Coupon.DoesNotExist:
+                coupon = Coupon.objects.get(id=int(coupon_id))
+            except (Coupon.DoesNotExist, ValueError, TypeError):
                 pass
         
         # Get partner object
         partner = None
-        if row.get("partner_id"):
+        partner_id = row.get("partner_id")
+        if pd.notna(partner_id) and partner_id:
             try:
-                partner = Partner.objects.get(id=row["partner_id"])
-            except Partner.DoesNotExist:
+                partner = Partner.objects.get(id=int(partner_id))
+            except (Partner.DoesNotExist, ValueError, TypeError):
                 pass
         
         # Determine user type
