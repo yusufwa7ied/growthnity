@@ -306,6 +306,11 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                         coupon = Coupon.objects.get(code__iexact=coupon_code)
                         advertiser = coupon.advertiser
                     
+                    # Always set coupon_id if coupon found
+                    df.at[idx, "coupon_id"] = coupon.id
+                    df.at[idx, "advertiser_id"] = advertiser.id
+                    df.at[idx, "advertiser_name"] = advertiser.name
+                    
                     # Resolve partner at this date (use original coupon code from DB)
                     partner_id = get_coupon_owner_at_date(coupon.code, transaction_date, advertiser)
                     
@@ -318,8 +323,6 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                         df.at[idx, "partner_id"] = partner_id
                         df.at[idx, "partner_name"] = partner.name
                         df.at[idx, "partner_type"] = partner.partner_type
-                        df.at[idx, "advertiser_id"] = advertiser.id
-                        df.at[idx, "advertiser_name"] = advertiser.name
                 except Coupon.DoesNotExist:
                     # Coupon not found in database, skip this row
                     continue
