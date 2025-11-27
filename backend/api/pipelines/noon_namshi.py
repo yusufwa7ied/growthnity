@@ -23,7 +23,7 @@ from api.pipelines.helpers import (
 from api.models import PartnerPayout
 from api.services.s3_service import s3_service
 
-ADVERTISER_NAMES = {"Noon", "Namshi"}  # we'll respect whichever appears per row
+ADVERTISER_NAMES = {"Namshi"}  # Only Namshi - Noon orders excluded per user request
 S3_CSV_KEY = settings.S3_PIPELINE_FILES["noon_namshi"]  # From settings.S3_PIPELINE_FILES
 
 COUNTRY_MAP = {
@@ -238,7 +238,13 @@ def calculate_noon_payouts(df, advertiser):
 
 def run(date_from: date, date_to: date):
     print(f"🚀 Running Noon/Namshi pipeline {date_from} → {date_to}")
+    print("⚠️  NOTE: Noon orders are EXCLUDED from this pipeline")
     raw_df = fetch_raw_data()
+    
+    # Filter out Noon orders completely
+    raw_df = raw_df[raw_df["Advertiser"].astype(str).str.strip() != "Noon"]
+    print(f"📊 Filtered to {len(raw_df)} rows (Noon excluded)")
+    
     # Store raw snapshot per advertiser
     for adv_name in ADVERTISER_NAMES:
         sub_df = raw_df[raw_df["Advertiser"].astype(str).str.strip() == adv_name]
