@@ -130,6 +130,11 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         
         print(f"🔍 Resolving coupon ownership by transaction date for {adv_name}...")
         enriched = enrich_df(adv_rows, advertiser=advertiser)
+        
+        # Ensure advertiser_id is set (enrich_df might not set it for all rows)
+        enriched["advertiser_id"] = advertiser.id
+        enriched["advertiser_name"] = advertiser.name
+        
         print(f"✅ Enriched {len(enriched)} rows for {adv_name}")
         
         # Apply payout rules
