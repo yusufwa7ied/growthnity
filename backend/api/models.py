@@ -773,3 +773,75 @@ class RevenueRuleHistory(models.Model):
         return f"{self.advertiser.name} | FTU: {self.rev_ftu_rate}% / RTU: {self.rev_rtu_rate}% (from {self.effective_date.date()})"
 
 
+class NoonTransaction(models.Model):
+    """
+    Stores Noon transaction data from GCC and Egypt regions.
+    Handles both pre-Nov 18 (percentage-based) and post-Nov 18 (bracket-based) logic.
+    """
+    
+    # Unique identifier
+    order_id = models.CharField(max_length=255, db_index=True)
+    
+    # Date and basic info
+    order_date = models.DateField(db_index=True)
+    advertiser_name = models.CharField(max_length=100, default="Noon")
+    
+    # Region identification
+    is_gcc = models.BooleanField(default=True, help_text="True for GCC (AED), False for Egypt (USD)")
+    region = models.CharField(max_length=10, help_text="gcc or egypt")
+    
+    # Platform and location
+    platform = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=10, blank=True)
+    
+    # Coupon tracking
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    
+    # Tier/Bracket info
+    tier_bracket = models.CharField(max_length=50, blank=True, help_text="Original tier/bracket string from CSV")
+    
+    # Order counts
+    total_orders = models.IntegerField(default=0)
+    non_payable_orders = models.IntegerField(default=0)
+    payable_orders = models.IntegerField(default=0, help_text="total_orders - non_payable_orders")
+    
+    # Order values (original currency)
+    total_value = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Total order value in original currency")
+    ftu_orders = models.IntegerField(default=0)
+    ftu_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    rtu_orders = models.IntegerField(default=0)
+    rtu_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Partner assignment
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    
+    # Financial calculations (USD)
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    our_rev_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="revenue - payout")
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Same as our_rev_usd")
+    
+    # User type tracking
+    user_type = models.CharField(max_length=10, blank=True, help_text="FTU, RTU, or MIXED")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date", "region"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+            models.Index(fields=["partner", "order_date"]),
+        ]
+        verbose_name = "Noon Transaction"
+        verbose_name_plural = "Noon Transactions"
+    
+    def __str__(self):
+        return f"Noon {self.region.upper()} | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
+
+
+
