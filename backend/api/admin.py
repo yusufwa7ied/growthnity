@@ -10,6 +10,7 @@ from .models import (
     RawAdvertiserRecord,
     SpringRoseTransaction,
     NoonNamshiTransaction,
+    NoonTransaction,
     PayoutRuleHistory,
     RevenueRuleHistory,
 )
@@ -393,3 +394,28 @@ class NoonNamshiTransactionAdmin(ImportExportModelAdmin):
     )
     search_fields = ("coupon", "partner_name", "advertiser_name", "country")
     list_filter = ("advertiser_name", "country", "user_type", "partner_type", "currency", "rate_type")
+
+@admin.register(NoonTransaction)
+class NoonTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "region",
+        "country",
+        "coupon_code",
+        "partner_name",
+        "tier_bracket",
+        "payable_orders",
+        "ftu_orders",
+        "rtu_orders",
+        "revenue_usd",
+        "payout_usd",
+        "our_rev_usd",
+        "user_type",
+    )
+    search_fields = ("coupon_code", "partner_name", "country", "tier_bracket")
+    list_filter = ("region", "is_gcc", "country", "order_date", "user_type")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("order_id", "created_at", "updated_at")
+
