@@ -684,11 +684,20 @@ def push_noon_to_performance(date_from: date, date_to: date):
             date=g["date"],
             geo=g["geo"],
             total_orders=total_orders,
-            total_sales_usd=round(total_sales, 2),
-            total_revenue=round(total_revenue, 2),
-            total_payout=round(total_payout, 2),
             ftu_orders=g["ftu_orders"],
             rtu_orders=g["rtu_orders"],
+            ftu_sales=round(g["ftu_sales"], 2),
+            rtu_sales=round(g["rtu_sales"], 2),
+            total_sales=round(total_sales, 2),
+            ftu_revenue=round(g["ftu_revenue"], 2),
+            rtu_revenue=round(g["rtu_revenue"], 2),
+            total_revenue=round(total_revenue, 2),
+            ftu_payout=round(g["ftu_payout"], 2),
+            rtu_payout=round(g["rtu_payout"], 2),
+            total_payout=round(total_payout, 2),
+            ftu_our_rev=round(g["ftu_revenue"] - g["ftu_payout"], 2),
+            rtu_our_rev=round(g["rtu_revenue"] - g["rtu_payout"], 2),
+            total_our_rev=round(total_revenue - total_payout, 2),
         )
         records.append(record)
     
