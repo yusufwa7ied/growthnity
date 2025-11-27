@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.conf import settings
 from api.models import (
     Advertiser,
+    Partner,
     RDELTransaction,
     CampaignPerformance,
 )
@@ -256,19 +257,38 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         if pd.isna(advertiser_id):
             advertiser_id = None
         
+        # Get advertiser for exchange rate
+        advertiser = Advertiser.objects.filter(id=int(advertiser_id)).first() if advertiser_id else None
+        partner = Partner.objects.filter(id=int(partner_id)).first() if partner_id else None
+        
+        # RDEL data is all RTU (no FTU distinction)
+        orders = int(row["order_count"])
+        sales = float(row["sales"])
+        revenue = float(row["our_rev"])
+        payout = float(row["payout"])
+        
         perf_rows.append(
             CampaignPerformance(
-                advertiser_id=int(advertiser_id) if advertiser_id else None,
-                partner_id=int(partner_id) if partner_id else None,
+                advertiser=advertiser,
+                partner=partner,
                 date=row["date"],
-                orders=int(row["order_count"]),
-                sales=row["sales"],
-                commission=row["commission"],
-                our_revenue=row["our_rev"],
-                payout=row["payout"],
-                our_revenue_usd=row["our_rev_usd"],
-                payout_usd=row["payout_usd"],
-                profit_usd=row["profit_usd"],
+                geo=None,  # RDEL doesn't have geo in aggregated format
+                
+                ftu_orders=0,
+                rtu_orders=orders,
+                total_orders=orders,
+                
+                ftu_sales=0,
+                rtu_sales=sales,
+                total_sales=sales,
+                
+                ftu_revenue=0,
+                rtu_revenue=revenue,
+                total_revenue=revenue,
+                
+                ftu_payout=0,
+                rtu_payout=payout,
+                total_payout=payout,
             )
         )
     
