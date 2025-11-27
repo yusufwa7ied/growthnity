@@ -515,6 +515,9 @@ def run(date_from: date, date_to: date):
         print(f"📊 Filtered to {len(gcc_clean)} GCC rows in date range")
         
         if len(gcc_clean) > 0:
+            # Add coupon column for enrichment (enrich_df expects "coupon")
+            gcc_clean["coupon"] = gcc_clean["coupon_code"]
+            
             # Enrich with partners
             gcc_enriched = enrich_df(gcc_clean, advertiser=advertiser)
             
@@ -557,6 +560,9 @@ def run(date_from: date, date_to: date):
         print(f"📊 Filtered to {len(egypt_clean)} Egypt rows in date range")
         
         if len(egypt_clean) > 0:
+            # Add coupon column for enrichment (enrich_df expects "coupon")
+            egypt_clean["coupon"] = egypt_clean["coupon_code"]
+            
             # Enrich with partners
             egypt_enriched = enrich_df(egypt_clean, advertiser=advertiser)
             
