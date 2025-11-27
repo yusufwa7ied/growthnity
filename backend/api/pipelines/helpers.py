@@ -313,7 +313,11 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                     
                     # If no historical assignment found, use current coupon.partner
                     if not partner_id and coupon.partner:
+                        print(f"  🔄 Fallback: Using current partner for {coupon.code}: {coupon.partner.name} (ID: {coupon.partner.id})")
                         partner_id = coupon.partner.id
+                    
+                    if not partner_id:
+                        print(f"  ❌ No partner found for {coupon.code} at {transaction_date}")
                     
                     if partner_id:
                         partner = Partner.objects.get(id=partner_id)
