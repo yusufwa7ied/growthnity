@@ -303,6 +303,7 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                 try:
                     if advertiser:
                         coupon = Coupon.objects.get(code__iexact=coupon_code, advertiser=advertiser)
+                        print(f"  ✓ Found coupon {coupon_code} for {advertiser.name}, partner={coupon.partner.name if coupon.partner else 'None'}")
                     else:
                         # Fallback for old pipelines that don't pass advertiser
                         coupon = Coupon.objects.get(code__iexact=coupon_code)
