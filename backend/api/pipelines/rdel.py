@@ -209,9 +209,12 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     print(f"✅ RDEL pipeline inserted {len(transactions)} rows.")
     
     # Aggregate to CampaignPerformance
+    # Create date column for grouping
+    final_df["date"] = final_df["created_at"].dt.date
+    
     perf_data = (
         final_df.groupby(
-            ["advertiser_id", "advertiser_name", "partner_id", "partner_name", "created_at"]
+            ["advertiser_id", "advertiser_name", "partner_id", "partner_name", "date"]
         )
         .agg({
             "order_count": "sum",
@@ -236,11 +239,15 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     # Insert performance rows
     perf_rows = []
     for _, row in perf_data.iterrows():
+        # Handle pandas NA values
+        partner_id = row["partner_id"] if pd.notna(row["partner_id"]) else None
+        advertiser_id = row["advertiser_id"] if pd.notna(row["advertiser_id"]) else None
+        
         perf_rows.append(
             CampaignPerformance(
-                advertiser_id=row["advertiser_id"],
-                partner_id=row["partner_id"] if pd.notna(row["partner_id"]) else None,
-                date=row["created_at"].date(),
+                advertiser_id=advertiser_id,
+                partner_id=partner_id,
+                date=row["date"],
                 orders=int(row["order_count"]),
                 sales=row["sales"],
                 commission=row["commission"],
