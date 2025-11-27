@@ -327,7 +327,11 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                         df.at[idx, "partner_type"] = partner.partner_type
                         df.at[idx, "advertiser_id"] = advertiser.id
                         df.at[idx, "advertiser_name"] = advertiser.name
-                except Coupon.DoesNotExist:
+                except Coupon.DoesNotExist as e:
+                    print(f"  ⚠️  Coupon not found: {coupon_code} for {advertiser.name if advertiser else 'unknown'}")
+                    continue
+                except Exception as e:
+                    print(f"  ❌ Error processing {coupon_code}: {e}")
                     continue
     else:
         # ⚠️ FALLBACK: If no date column, use current coupon assignment (old behavior)

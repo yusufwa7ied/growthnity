@@ -61,8 +61,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     # Uppercase coupon codes for consistency
     df["coupon_code"] = df["coupon_code"].str.upper()
     
-    # Add standard fields
-    df["currency"] = "SAR"
+    # Add standard fields (currency will be set from advertiser later)
     df["rate_type"] = "percent"
     df["commission"] = 0.0  # Not provided in CSV
     
@@ -132,9 +131,10 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         print(f"🔍 Resolving coupon ownership by transaction date for {adv_name}...")
         enriched = enrich_df(adv_rows, advertiser=advertiser)
         
-        # Ensure advertiser_id is set (enrich_df might not set it for all rows)
+        # Ensure advertiser_id and currency are set from advertiser
         enriched["advertiser_id"] = advertiser.id
         enriched["advertiser_name"] = advertiser.name
+        enriched["currency"] = advertiser.currency
         
         print(f"✅ Enriched {len(enriched)} rows for {adv_name}")
         
@@ -202,7 +202,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
                 our_rev_usd=row.get("our_rev_usd", 0),
                 payout_usd=row.get("payout_usd", 0),
                 profit_usd=row.get("profit_usd", 0),
-                currency=row.get("currency", "SAR"),
+                currency=row.get("currency", "AED"),  # Fallback to AED if not set
             )
         )
     
