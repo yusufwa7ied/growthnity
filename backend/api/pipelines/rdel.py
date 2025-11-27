@@ -208,90 +208,110 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     RDELTransaction.objects.bulk_create(transactions, batch_size=500)
     print(f"✅ RDEL pipeline inserted {len(transactions)} rows.")
     
-    # Aggregate to CampaignPerformance
-    # Create date column for grouping
-    final_df["date"] = final_df["created_at"].dt.date
-    
-    # Fill NA values in partner columns to allow grouping
-    final_df["partner_id"] = final_df["partner_id"].fillna(-1).astype(int)
-    final_df["partner_name"] = final_df["partner_name"].fillna("(No Partner)")
-    
-    perf_data = (
-        final_df.groupby(
-            ["advertiser_id", "advertiser_name", "partner_id", "partner_name", "date"],
-            dropna=False
-        )
-        .agg({
-            "order_count": "sum",
-            "sales": "sum",
-            "commission": "sum",
-            "our_rev": "sum",
-            "payout": "sum",
-            "our_rev_usd": "sum",
-            "payout_usd": "sum",
-            "profit_usd": "sum",
-        })
-        .reset_index()
+    # Now aggregate to CampaignPerformance using same pattern as Styli
+    push_rdel_to_performance(start_dt.date(), end_dt.date())
+
+
+def push_rdel_to_performance(date_from, date_to):
+    """
+    Aggregate RDEL transactions into CampaignPerformance.
+    Follows the same pattern as Styli pipeline.
+    """
+    qs = RDELTransaction.objects.filter(
+        created_date__date__gte=date_from,
+        created_date__date__lte=date_to
     )
-    
-    print(f"📊 Performance aggregation: {len(perf_data)} rows")
-    print(perf_data.head(10))
-    
-    # Clear existing performance data
-    CampaignPerformance.objects.filter(
-        advertiser__name__in=list(ADVERTISER_NAMES),
-        date__gte=start_dt.date(),
-        date__lte=end_dt.date(),
-    ).delete()
-    
-    # Insert performance rows
-    perf_rows = []
-    for _, row in perf_data.iterrows():
-        # Handle partner_id: -1 means no partner
-        partner_id = row["partner_id"]
-        if partner_id == -1:
-            partner_id = None
-        
-        advertiser_id = row["advertiser_id"]
-        if pd.isna(advertiser_id):
-            advertiser_id = None
-        
-        # Get advertiser for exchange rate
-        advertiser = Advertiser.objects.filter(id=int(advertiser_id)).first() if advertiser_id else None
-        partner = Partner.objects.filter(id=int(partner_id)).first() if partner_id else None
-        
-        # RDEL data is all RTU (no FTU distinction)
-        orders = int(row["order_count"])
-        sales = float(row["sales"])
-        revenue = float(row["our_rev"])
-        payout = float(row["payout"])
-        
-        perf_rows.append(
-            CampaignPerformance(
-                advertiser=advertiser,
-                partner=partner,
-                date=row["date"],
-                geo=None,  # RDEL doesn't have geo in aggregated format
-                
-                ftu_orders=0,
-                rtu_orders=orders,
-                total_orders=orders,
-                
-                ftu_sales=0,
-                rtu_sales=sales,
-                total_sales=sales,
-                
-                ftu_revenue=0,
-                rtu_revenue=revenue,
-                total_revenue=revenue,
-                
-                ftu_payout=0,
-                rtu_payout=payout,
-                total_payout=payout,
-            )
+
+    if not qs.exists():
+        print("⚠️ No RDELTransaction rows found")
+        return 0
+
+    groups = {}
+
+    for r in qs:
+        key = (
+            r.created_date.date(),
+            r.advertiser_name,
+            r.partner_name,
+            r.coupon,
+            r.country
         )
+
+        if key not in groups:
+            groups[key] = {
+                "date": r.created_date.date(),
+                "advertiser_name": r.advertiser_name,
+                "partner_name": r.partner_name,
+                "coupon": r.coupon,
+                "geo": r.country,
+
+                "ftu_orders": 0,
+                "rtu_orders": 0,
+                "ftu_sales": 0,
+                "rtu_sales": 0,
+                "ftu_revenue": 0,
+                "rtu_revenue": 0,
+                "ftu_payout": 0,
+                "rtu_payout": 0,
+            }
+
+        g = groups[key]
+        # Get advertiser for exchange rate
+        advertiser = Advertiser.objects.filter(name=r.advertiser_name).first()
+        exchange_rate = float(advertiser.exchange_rate or 1.0) if advertiser else 1.0
+
+        # RDEL data is all RTU
+        if r.user_type == "RTU":
+            g["rtu_orders"] += r.order_count
+            g["rtu_sales"] += float(r.sales) * exchange_rate
+            g["rtu_revenue"] += float(r.our_rev) * exchange_rate
+            g["rtu_payout"] += float(r.payout) * exchange_rate
+
+    # SAVE to CampaignPerformance
+    from django.db import transaction as db_transaction
+    from api.models import Coupon
     
-    CampaignPerformance.objects.bulk_create(perf_rows, batch_size=500)
-    print(f"✅ Aggregated {len(perf_rows)} performance rows.")
-    
-    print(f"✅ Done. Inserted {len(transactions)} final rows.")
+    with db_transaction.atomic():
+        # Delete existing data for these advertisers in date range
+        CampaignPerformance.objects.filter(
+            advertiser__name__in=list(ADVERTISER_NAMES),
+            date__gte=date_from,
+            date__lte=date_to
+        ).delete()
+
+        objs = []
+        for key, g in groups.items():
+            advertiser = Advertiser.objects.filter(name=g["advertiser_name"]).first()
+            partner = Partner.objects.filter(name=g["partner_name"]).first() if g["partner_name"] and g["partner_name"] != "(No Partner)" else None
+            coupon_obj = Coupon.objects.filter(code=g["coupon"], advertiser=advertiser).first() if g["coupon"] else None
+
+            objs.append(
+                CampaignPerformance(
+                    date=g["date"],
+                    advertiser=advertiser,
+                    partner=partner,
+                    coupon=coupon_obj,
+                    geo=g["geo"],
+
+                    ftu_orders=g["ftu_orders"],
+                    rtu_orders=g["rtu_orders"],
+                    total_orders=g["ftu_orders"] + g["rtu_orders"],
+
+                    ftu_sales=g["ftu_sales"],
+                    rtu_sales=g["rtu_sales"],
+                    total_sales=g["ftu_sales"] + g["rtu_sales"],
+
+                    ftu_revenue=g["ftu_revenue"],
+                    rtu_revenue=g["rtu_revenue"],
+                    total_revenue=g["ftu_revenue"] + g["rtu_revenue"],
+
+                    ftu_payout=g["ftu_payout"],
+                    rtu_payout=g["rtu_payout"],
+                    total_payout=g["ftu_payout"] + g["rtu_payout"],
+                )
+            )
+
+        CampaignPerformance.objects.bulk_create(objs, batch_size=2000)
+
+    print(f"✅ Aggregated {len(objs)} performance rows.")
+    return len(objs)
