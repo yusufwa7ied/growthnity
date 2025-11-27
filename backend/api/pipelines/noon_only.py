@@ -183,3 +183,220 @@ def calculate_pre_nov18_payout(ftu_value, rtu_value, currency="AED"):
     
     total_payout = payout_ftu + payout_rtu
     return round(total_payout, 2)
+
+
+# ---------------------------------------------------
+# CLEANING / NORMALIZATION
+# ---------------------------------------------------
+
+def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean GCC CSV data.
+    Expected columns: ORDER DATE, ADVERTISER, PLATFORM, COUNTRY, COUPON CODE, 
+                     TIER, TOTAL ORDERS, NON-PAYABLE ORDERS, TOTAL VALUE,
+                     FTU ORDERS, FTU ORDER VALUE, RTU ORDERS, RTU ORDER VALUE
+    """
+    print("🧹 Cleaning Noon GCC data...")
+    
+    df = df.rename(columns={
+        "ORDER DATE": "order_date",
+        "ADVERTISER": "advertiser",
+        "PLATFORM": "platform",
+        "COUNTRY": "country",
+        "COUPON CODE": "coupon_code",
+        "TIER": "tier",
+        "TOTAL ORDERS": "total_orders",
+        "NON-PAYABLE ORDERS": "non_payable_orders",
+        "TOTAL VALUE": "total_value",
+        "FTU ORDERS": "ftu_orders",
+        "FTU ORDER VALUE": "ftu_value",
+        "RTU ORDERS": "rtu_orders",
+        "RTU ORDER VALUE": "rtu_value",
+    })
+    
+    # Parse date
+    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce").dt.date
+    
+    # Numeric conversions
+    df["total_orders"] = pd.to_numeric(df["total_orders"], errors="coerce").fillna(0).astype(int)
+    df["non_payable_orders"] = pd.to_numeric(df["non_payable_orders"], errors="coerce").fillna(0).astype(int)
+    df["payable_orders"] = df["total_orders"] - df["non_payable_orders"]
+    
+    df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
+    df["ftu_orders"] = pd.to_numeric(df["ftu_orders"], errors="coerce").fillna(0).astype(int)
+    df["ftu_value"] = pd.to_numeric(df["ftu_value"], errors="coerce").fillna(0)
+    df["rtu_orders"] = pd.to_numeric(df["rtu_orders"], errors="coerce").fillna(0).astype(int)
+    df["rtu_value"] = pd.to_numeric(df["rtu_value"], errors="coerce").fillna(0)
+    
+    # String fields
+    df["coupon_code"] = df["coupon_code"].astype(str).str.strip()
+    df["tier"] = df["tier"].astype(str).str.strip()
+    df["platform"] = df["platform"].astype(str).str.strip()
+    df["country"] = df["country"].astype(str).str.strip()
+    
+    # Add region flags
+    df["is_gcc"] = True
+    df["region"] = "gcc"
+    
+    # Filter out zero orders
+    df = df[df["payable_orders"] > 0].copy()
+    
+    print(f"✅ Cleaned {len(df)} GCC rows")
+    return df
+
+
+def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean Egypt CSV data.
+    Expected columns: order_date, platform, country, coupon_code, 
+                     bracket columns (Bracket X_$Y.YY), order_value_gmv_usd,
+                     FTU/RTU order counts and values
+    """
+    print("🧹 Cleaning Noon Egypt data...")
+    
+    # Identify bracket columns
+    bracket_cols = [col for col in df.columns if col.startswith("Bracket") and "_$" in col]
+    
+    # For now, use the first bracket column found (we'll enhance this if needed)
+    if not bracket_cols:
+        print("⚠️  No bracket columns found in Egypt data")
+        return pd.DataFrame()
+    
+    # Rename standard columns
+    df = df.rename(columns={
+        "order_date": "order_date",
+        "platform": "platform",
+        "country": "country",
+        "coupon_code": "coupon_code",
+        "order_value_gmv_usd": "total_value",
+        "FTU ORDERS": "ftu_orders",
+        "FTU ORDER VALUE": "ftu_value",
+        "RTU ORDERS": "rtu_orders",
+        "RTU ORDER VALUE": "rtu_value",
+    })
+    
+    # Parse date
+    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce").dt.date
+    
+    # Find which bracket has data (sum all bracket columns)
+    df["total_orders"] = df[bracket_cols].sum(axis=1)
+    df["non_payable_orders"] = 0  # Egypt data doesn't have this field
+    df["payable_orders"] = df["total_orders"]
+    
+    # Determine active bracket per row (take first non-zero bracket)
+    df["tier"] = ""
+    for col in bracket_cols:
+        mask = (df["tier"] == "") & (df[col] > 0)
+        df.loc[mask, "tier"] = col
+    
+    # Numeric conversions
+    df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
+    
+    if "ftu_orders" in df.columns:
+        df["ftu_orders"] = pd.to_numeric(df["ftu_orders"], errors="coerce").fillna(0).astype(int)
+    else:
+        df["ftu_orders"] = 0
+        
+    if "ftu_value" in df.columns:
+        df["ftu_value"] = pd.to_numeric(df["ftu_value"], errors="coerce").fillna(0)
+    else:
+        df["ftu_value"] = 0
+        
+    if "rtu_orders" in df.columns:
+        df["rtu_orders"] = pd.to_numeric(df["rtu_orders"], errors="coerce").fillna(0).astype(int)
+    else:
+        df["rtu_orders"] = 0
+        
+    if "rtu_value" in df.columns:
+        df["rtu_value"] = pd.to_numeric(df["rtu_value"], errors="coerce").fillna(0)
+    else:
+        df["rtu_value"] = 0
+    
+    # String fields
+    df["coupon_code"] = df["coupon_code"].astype(str).str.strip()
+    
+    if "platform" in df.columns:
+        df["platform"] = df["platform"].astype(str).str.strip()
+    else:
+        df["platform"] = ""
+        
+    if "country" in df.columns:
+        df["country"] = df["country"].astype(str).str.strip()
+    else:
+        df["country"] = "eg"
+    
+    # Add region flags
+    df["is_gcc"] = False
+    df["region"] = "egypt"
+    
+    # Filter out zero orders
+    df = df[df["payable_orders"] > 0].copy()
+    
+    print(f"✅ Cleaned {len(df)} Egypt rows")
+    return df
+
+
+# ---------------------------------------------------
+# CALCULATE REVENUE & PAYOUT
+# ---------------------------------------------------
+
+def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
+    """
+    Calculate revenue and payout for each row based on date and region.
+    """
+    print("💰 Calculating revenue and payout...")
+    
+    results = []
+    
+    for idx, row in df.iterrows():
+        order_date = row["order_date"]
+        is_gcc = row["is_gcc"]
+        tier = row["tier"]
+        partner_name = row.get("partner_name", "")
+        
+        # Pre-Nov 18: Percentage-based
+        if order_date < BRACKET_START_DATE:
+            revenue_usd = calculate_pre_nov18_revenue(
+                row["ftu_value"], 
+                row["rtu_value"],
+                currency="AED" if is_gcc else "USD"
+            )
+            payout_usd = calculate_pre_nov18_payout(
+                row["ftu_value"],
+                row["rtu_value"],
+                currency="AED" if is_gcc else "USD"
+            )
+        else:
+            # Post-Nov 18: Bracket-based
+            if is_gcc:
+                # Extract revenue from tier
+                revenue_usd = extract_tier_revenue(tier)
+                
+                # Check for special payout
+                special_payout = get_special_payout(partner_name, tier, is_gcc, order_date)
+                if special_payout:
+                    payout_usd = special_payout
+                else:
+                    payout_usd = GCC_DEFAULT_PAYOUTS.get(tier, 0)
+            else:
+                # Egypt: Extract revenue from bracket
+                revenue_usd = extract_bracket_revenue(tier)
+                
+                # Get default payout based on bracket number
+                bracket_num = extract_bracket_number(tier)
+                payout_usd = EGYPT_DEFAULT_PAYOUTS.get(bracket_num, 0) if bracket_num else 0
+        
+        # Calculate our revenue (profit)
+        our_rev_usd = round(revenue_usd - payout_usd, 2)
+        
+        results.append({
+            **row.to_dict(),
+            "revenue_usd": revenue_usd,
+            "payout_usd": payout_usd,
+            "our_rev_usd": our_rev_usd,
+            "profit_usd": our_rev_usd,
+        })
+    
+    result_df = pd.DataFrame(results)
+    print(f"✅ Calculated financials for {len(result_df)} rows")
+    return result_df
