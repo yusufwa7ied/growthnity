@@ -238,6 +238,9 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
     df["is_gcc"] = True
     df["region"] = "gcc"
     
+    # Add created_at for enrichment (use order_date as datetime)
+    df["created_at"] = pd.to_datetime(df["order_date"])
+    
     # Filter out zero orders
     df = df[df["payable_orders"] > 0].copy()
     
@@ -296,6 +299,9 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     df["is_gcc"] = False
     df["region"] = "egypt"
     
+    # Add created_at for enrichment (use order_date as datetime)
+    df["created_at"] = pd.to_datetime(df["order_date"])
+    
     # Filter out zero orders
     df = df[df["payable_orders"] > 0].copy()
     
@@ -320,8 +326,9 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
         is_gcc = row["is_gcc"]
         tier = row["tier"]
         partner_name = row.get("partner_name", "")
+        payable_orders = int(row["payable_orders"])
         
-        # Pre-Nov 18: Percentage-based
+        # Pre-Nov 18: Percentage-based (already calculated for total, not per order)
         if order_date < BRACKET_START_DATE:
             revenue_usd = calculate_pre_nov18_revenue(
                 row["ftu_value"], 
@@ -334,29 +341,34 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
                 currency="AED" if is_gcc else "USD"
             )
         else:
-            # Post-Nov 18: Bracket-based
+            # Post-Nov 18: Bracket-based (PER ORDER, need to multiply by payable_orders)
             if is_gcc:
-                # Extract revenue from tier
-                revenue_usd = extract_tier_revenue(tier)
+                # Extract revenue per order from tier
+                revenue_per_order = extract_tier_revenue(tier)
                 
-                # Check for special payout
+                # Check for special payout per order
                 special_payout = get_special_payout(partner_name, tier, is_gcc, order_date)
                 if special_payout:
-                    payout_usd = special_payout
+                    payout_per_order = special_payout
                 else:
-                    payout_usd = GCC_DEFAULT_PAYOUTS.get(tier, 0)
+                    payout_per_order = GCC_DEFAULT_PAYOUTS.get(tier, 0)
+                
+                # Multiply by number of payable orders
+                revenue_usd = revenue_per_order * payable_orders
+                payout_usd = payout_per_order * payable_orders
             else:
-                # Egypt: Use tier/bracket to get payout
-                # Extract bracket value from tier string (e.g., "Bracket 2_$0.68" or just "$0.68")
+                # Egypt: Use tier/bracket to get payout per order
                 tier_str = str(tier)
                 if "_$" in tier_str:
-                    revenue_usd = extract_bracket_revenue(tier_str)
+                    revenue_per_order = extract_bracket_revenue(tier_str)
                 elif "$" in tier_str:
-                    revenue_usd = float(tier_str.replace("$", "").strip())
+                    revenue_per_order = float(tier_str.replace("$", "").strip())
                 else:
-                    revenue_usd = 0
+                    revenue_per_order = 0
                 
-                payout_usd = revenue_usd  # For Egypt, payout = revenue
+                # Egypt: payout = revenue, multiply by payable orders
+                revenue_usd = revenue_per_order * payable_orders
+                payout_usd = revenue_usd
         
         # Calculate our revenue (profit)
         our_rev_usd = round(revenue_usd - payout_usd, 2)
