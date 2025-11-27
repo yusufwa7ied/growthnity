@@ -306,6 +306,10 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                     # Resolve partner at this date (use original coupon code from DB)
                     partner_id = get_coupon_owner_at_date(coupon.code, transaction_date, advertiser)
                     
+                    # If no historical assignment found, use current coupon.partner
+                    if not partner_id and coupon.partner:
+                        partner_id = coupon.partner.id
+                    
                     if partner_id:
                         partner = Partner.objects.get(id=partner_id)
                         df.at[idx, "partner_id"] = partner_id
