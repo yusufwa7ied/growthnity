@@ -162,6 +162,16 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     # Insert transactions
     transactions = []
     for _, row in final_df.iterrows():
+        # Handle partner_id - convert pandas NA to None
+        partner_id = row.get("partner_id")
+        if pd.isna(partner_id):
+            partner_id = None
+        
+        # Handle advertiser_id - convert pandas NA to None
+        advertiser_id = row.get("advertiser_id")
+        if pd.isna(advertiser_id):
+            advertiser_id = None
+            
         transactions.append(
             RDELTransaction(
                 order_id=str(row["order_id"]),
@@ -172,9 +182,9 @@ def run_rdel_pipeline(start_date: str, end_date: str):
                 country=row.get("country", ""),
                 order_count=row.get("order_count", 1),
                 coupon=row.get("coupon_code", ""),
-                partner_id=row.get("partner_id"),
+                partner_id=partner_id,
                 partner_name=row.get("partner_name", "(No Partner)"),
-                advertiser_id=row.get("advertiser_id"),
+                advertiser_id=advertiser_id,
                 advertiser_name=row.get("advertiser_name", ""),
                 ftu_rate=row.get("ftu_rate", 0),
                 rtu_rate=row.get("rtu_rate", 0),
