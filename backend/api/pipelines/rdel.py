@@ -212,9 +212,14 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     # Create date column for grouping
     final_df["date"] = final_df["created_at"].dt.date
     
+    # Fill NA values in partner columns to allow grouping
+    final_df["partner_id"] = final_df["partner_id"].fillna(-1).astype(int)
+    final_df["partner_name"] = final_df["partner_name"].fillna("(No Partner)")
+    
     perf_data = (
         final_df.groupby(
-            ["advertiser_id", "advertiser_name", "partner_id", "partner_name", "date"]
+            ["advertiser_id", "advertiser_name", "partner_id", "partner_name", "date"],
+            dropna=False
         )
         .agg({
             "order_count": "sum",
@@ -229,6 +234,9 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         .reset_index()
     )
     
+    print(f"📊 Performance aggregation: {len(perf_data)} rows")
+    print(perf_data.head(10))
+    
     # Clear existing performance data
     CampaignPerformance.objects.filter(
         advertiser__name__in=list(ADVERTISER_NAMES),
@@ -239,14 +247,19 @@ def run_rdel_pipeline(start_date: str, end_date: str):
     # Insert performance rows
     perf_rows = []
     for _, row in perf_data.iterrows():
-        # Handle pandas NA values
-        partner_id = row["partner_id"] if pd.notna(row["partner_id"]) else None
-        advertiser_id = row["advertiser_id"] if pd.notna(row["advertiser_id"]) else None
+        # Handle partner_id: -1 means no partner
+        partner_id = row["partner_id"]
+        if partner_id == -1:
+            partner_id = None
+        
+        advertiser_id = row["advertiser_id"]
+        if pd.isna(advertiser_id):
+            advertiser_id = None
         
         perf_rows.append(
             CampaignPerformance(
-                advertiser_id=advertiser_id,
-                partner_id=partner_id,
+                advertiser_id=int(advertiser_id) if advertiser_id else None,
+                partner_id=int(partner_id) if partner_id else None,
                 date=row["date"],
                 orders=int(row["order_count"]),
                 sales=row["sales"],
