@@ -400,3 +400,199 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
     result_df = pd.DataFrame(results)
     print(f"✅ Calculated financials for {len(result_df)} rows")
     return result_df
+
+
+# ---------------------------------------------------
+# SAVE TO DATABASE
+# ---------------------------------------------------
+
+def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
+    """
+    Save processed transactions to NoonTransaction table.
+    """
+    print(f"💾 Saving Noon transactions...")
+    
+    # Delete existing records in date range
+    deleted_count, _ = NoonTransaction.objects.filter(
+        order_date__gte=date_from,
+        order_date__lte=date_to,
+    ).delete()
+    
+    if deleted_count > 0:
+        print(f"🗑️  Deleted {deleted_count} existing records")
+    
+    # Prepare records for bulk insert
+    records = []
+    for idx, row in df.iterrows():
+        # Get coupon object
+        coupon = None
+        if row.get("coupon_id"):
+            try:
+                coupon = Coupon.objects.get(id=row["coupon_id"])
+            except Coupon.DoesNotExist:
+                pass
+        
+        # Get partner object
+        partner = None
+        if row.get("partner_id"):
+            try:
+                partner = Partner.objects.get(id=row["partner_id"])
+            except Partner.DoesNotExist:
+                pass
+        
+        # Determine user type
+        ftu_orders = int(row.get("ftu_orders", 0))
+        rtu_orders = int(row.get("rtu_orders", 0))
+        if ftu_orders > 0 and rtu_orders > 0:
+            user_type = "MIXED"
+        elif ftu_orders > 0:
+            user_type = "FTU"
+        elif rtu_orders > 0:
+            user_type = "RTU"
+        else:
+            user_type = ""
+        
+        record = NoonTransaction(
+            order_id=f"noon_{row['region']}_{row['order_date']}_{row['coupon_code']}_{idx}",
+            order_date=row["order_date"],
+            advertiser_name="Noon",
+            is_gcc=row["is_gcc"],
+            region=row["region"],
+            platform=row.get("platform", ""),
+            country=row.get("country", ""),
+            coupon=coupon,
+            coupon_code=row["coupon_code"],
+            tier_bracket=row.get("tier", ""),
+            total_orders=int(row.get("total_orders", 0)),
+            non_payable_orders=int(row.get("non_payable_orders", 0)),
+            payable_orders=int(row.get("payable_orders", 0)),
+            total_value=Decimal(str(row.get("total_value", 0))),
+            ftu_orders=ftu_orders,
+            ftu_value=Decimal(str(row.get("ftu_value", 0))),
+            rtu_orders=rtu_orders,
+            rtu_value=Decimal(str(row.get("rtu_value", 0))),
+            partner=partner,
+            partner_name=row.get("partner_name", ""),
+            revenue_usd=Decimal(str(row.get("revenue_usd", 0))),
+            payout_usd=Decimal(str(row.get("payout_usd", 0))),
+            our_rev_usd=Decimal(str(row.get("our_rev_usd", 0))),
+            profit_usd=Decimal(str(row.get("profit_usd", 0))),
+            user_type=user_type,
+        )
+        records.append(record)
+    
+    # Bulk insert
+    NoonTransaction.objects.bulk_create(records, batch_size=500)
+    print(f"✅ Saved {len(records)} Noon transactions")
+    
+    return len(records)
+
+
+# ---------------------------------------------------
+# MAIN RUN FUNCTION
+# ---------------------------------------------------
+
+def run(date_from: date, date_to: date):
+    """
+    Main pipeline execution function.
+    Processes both GCC and Egypt data.
+    """
+    advertiser = Advertiser.objects.get(name=ADVERTISER_NAME)
+    
+    print(f"🚀 Running Noon pipeline {date_from} → {date_to}")
+    print(f"📅 Bracket logic applies from: {BRACKET_START_DATE}")
+    
+    total_count = 0
+    
+    # ---------------------------------------------------
+    # PROCESS GCC DATA
+    # ---------------------------------------------------
+    try:
+        print("\n" + "="*60)
+        print("📍 PROCESSING NOON GCC DATA")
+        print("="*60)
+        
+        # Load from S3
+        print(f"📄 Loading GCC CSV from S3: {S3_GCC_KEY}")
+        gcc_df = s3_service.read_csv_to_df(S3_GCC_KEY)
+        print(f"✅ Loaded {len(gcc_df)} GCC rows")
+        
+        # Clean
+        gcc_clean = clean_noon_gcc(gcc_df)
+        
+        # Filter date range
+        gcc_clean = gcc_clean[
+            (gcc_clean["order_date"] >= date_from) & 
+            (gcc_clean["order_date"] <= date_to)
+        ].copy()
+        print(f"📊 Filtered to {len(gcc_clean)} GCC rows in date range")
+        
+        if len(gcc_clean) > 0:
+            # Enrich with partners
+            gcc_enriched = enrich_df(gcc_clean, advertiser=advertiser)
+            
+            # Calculate financials
+            gcc_final = calculate_financials(gcc_enriched, advertiser)
+            
+            # Save
+            gcc_count = save_transactions(advertiser, gcc_final, date_from, date_to)
+            total_count += gcc_count
+            print(f"✅ GCC: {gcc_count} transactions saved")
+        else:
+            print("⚠️  No GCC data in date range")
+    
+    except Exception as e:
+        print(f"⚠️  GCC processing failed: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # ---------------------------------------------------
+    # PROCESS EGYPT DATA
+    # ---------------------------------------------------
+    try:
+        print("\n" + "="*60)
+        print("📍 PROCESSING NOON EGYPT DATA")
+        print("="*60)
+        
+        # Load from S3
+        print(f"📄 Loading Egypt CSV from S3: {S3_EGYPT_KEY}")
+        egypt_df = s3_service.read_csv_to_df(S3_EGYPT_KEY)
+        print(f"✅ Loaded {len(egypt_df)} Egypt rows")
+        
+        # Clean
+        egypt_clean = clean_noon_egypt(egypt_df)
+        
+        # Filter date range
+        egypt_clean = egypt_clean[
+            (egypt_clean["order_date"] >= date_from) & 
+            (egypt_clean["order_date"] <= date_to)
+        ].copy()
+        print(f"📊 Filtered to {len(egypt_clean)} Egypt rows in date range")
+        
+        if len(egypt_clean) > 0:
+            # Enrich with partners
+            egypt_enriched = enrich_df(egypt_clean, advertiser=advertiser)
+            
+            # Calculate financials
+            egypt_final = calculate_financials(egypt_enriched, advertiser)
+            
+            # Save
+            egypt_count = save_transactions(advertiser, egypt_final, date_from, date_to)
+            total_count += egypt_count
+            print(f"✅ Egypt: {egypt_count} transactions saved")
+        else:
+            print("⚠️  No Egypt data in date range")
+    
+    except Exception as e:
+        print(f"⚠️  Egypt processing failed: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # ---------------------------------------------------
+    # SUMMARY
+    # ---------------------------------------------------
+    print("\n" + "="*60)
+    print(f"✅ Noon pipeline completed: {total_count} total transactions")
+    print("="*60)
+    
+    return total_count
