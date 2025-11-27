@@ -562,6 +562,11 @@ def run(date_from: date, date_to: date):
         traceback.print_exc()
     
     # ---------------------------------------------------
+    # PUSH TO PERFORMANCE
+    # ---------------------------------------------------
+    push_noon_to_performance(date_from, date_to)
+    
+    # ---------------------------------------------------
     # SUMMARY
     # ---------------------------------------------------
     print("\n" + "="*60)
@@ -569,3 +574,125 @@ def run(date_from: date, date_to: date):
     print("="*60)
     
     return total_count
+
+
+# ---------------------------------------------------
+# PUSH TO CAMPAIGN PERFORMANCE
+# ---------------------------------------------------
+
+def push_noon_to_performance(date_from: date, date_to: date):
+    """
+    Aggregate NoonTransaction data and push to CampaignPerformance table.
+    """
+    print("\n📊 Aggregating Noon data to CampaignPerformance...")
+    
+    advertiser = Advertiser.objects.filter(name=ADVERTISER_NAME).first()
+    if not advertiser:
+        print("⚠️  Noon advertiser not found")
+        return 0
+    
+    qs = NoonTransaction.objects.filter(
+        order_date__gte=date_from,
+        order_date__lte=date_to
+    )
+    
+    if not qs.exists():
+        print("⚠️ No NoonTransaction rows found")
+        return 0
+    
+    # Group by date, partner, coupon, region
+    groups = {}
+    
+    for r in qs:
+        # Get coupon object
+        coupon_obj = r.coupon
+        
+        key = (
+            r.order_date,
+            r.partner_name,
+            coupon_obj.code if coupon_obj else r.coupon_code,
+            r.region,
+        )
+        
+        if key not in groups:
+            groups[key] = {
+                "date": r.order_date,
+                "partner": r.partner,
+                "partner_name": r.partner_name,
+                "coupon": coupon_obj,
+                "coupon_code": r.coupon_code,
+                "geo": r.region,
+                "ftu_orders": 0,
+                "rtu_orders": 0,
+                "ftu_sales": 0,
+                "rtu_sales": 0,
+                "ftu_revenue": 0,
+                "rtu_revenue": 0,
+                "ftu_payout": 0,
+                "rtu_payout": 0,
+            }
+        
+        g = groups[key]
+        
+        # Calculate sales in USD (total_value already in USD or converted)
+        sales_usd = float(r.total_value) if r.is_gcc else float(r.total_value)
+        if r.is_gcc:
+            # Convert AED to USD
+            sales_usd = sales_usd * AED_TO_USD
+        
+        # Aggregate by user type
+        if r.ftu_orders > 0:
+            g["ftu_orders"] += r.ftu_orders
+            g["ftu_sales"] += sales_usd
+            g["ftu_revenue"] += float(r.revenue_usd)
+            g["ftu_payout"] += float(r.payout_usd)
+        
+        if r.rtu_orders > 0:
+            g["rtu_orders"] += r.rtu_orders
+            g["rtu_sales"] += sales_usd
+            g["rtu_revenue"] += float(r.revenue_usd)
+            g["rtu_payout"] += float(r.payout_usd)
+        
+        # If no FTU/RTU breakdown, count as total
+        if r.ftu_orders == 0 and r.rtu_orders == 0:
+            # Egypt data has no FTU/RTU breakdown
+            g["rtu_orders"] += r.payable_orders
+            g["rtu_sales"] += sales_usd
+            g["rtu_revenue"] += float(r.revenue_usd)
+            g["rtu_payout"] += float(r.payout_usd)
+    
+    # Delete existing performance records
+    deleted = CampaignPerformance.objects.filter(
+        advertiser=advertiser,
+        date__gte=date_from,
+        date__lte=date_to
+    ).delete()
+    print(f"🗑️  Deleted {deleted[0]} existing CampaignPerformance rows for Noon")
+    
+    # Create new performance records
+    records = []
+    for key, g in groups.items():
+        total_orders = g["ftu_orders"] + g["rtu_orders"]
+        total_sales = g["ftu_sales"] + g["rtu_sales"]
+        total_revenue = g["ftu_revenue"] + g["rtu_revenue"]
+        total_payout = g["ftu_payout"] + g["rtu_payout"]
+        
+        record = CampaignPerformance(
+            advertiser=advertiser,
+            partner=g["partner"],
+            coupon=g["coupon"],
+            date=g["date"],
+            geo=g["geo"],
+            total_orders=total_orders,
+            total_sales_usd=round(total_sales, 2),
+            total_revenue=round(total_revenue, 2),
+            total_payout=round(total_payout, 2),
+            ftu_orders=g["ftu_orders"],
+            rtu_orders=g["rtu_orders"],
+        )
+        records.append(record)
+    
+    CampaignPerformance.objects.bulk_create(records, batch_size=500)
+    print(f"✅ Aggregated {len(records)} performance rows")
+    
+    return len(records)
