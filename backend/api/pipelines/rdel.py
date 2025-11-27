@@ -38,7 +38,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     df.rename(columns={
         "date": "created_at",
         "coupon": "coupon_code",
-        "orders": "order_count",
+        # Keep 'orders' as-is for compatibility with helpers
         "sales": "sales",  # Keep as 'sales' for compatibility with helpers
     }, inplace=True)
     
@@ -55,7 +55,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     )
     
     # Clean order count
-    df["order_count"] = df["order_count"].astype(int)
+    df["orders"] = df["orders"].astype(int)
     
     # Uppercase coupon codes for consistency
     df["coupon_code"] = df["coupon_code"].str.upper()
@@ -74,6 +74,9 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     # We don't have user_type (FTU/RTU) in the data, so we'll default to RTU
     # The payout logic will handle this appropriately
     df["user_type"] = "RTU"
+    
+    # Add order_count as alias for our transaction model (helpers use 'orders')
+    df["order_count"] = df["orders"]
     
     print(f"🔍 CLEAN DF HEAD:")
     print(df.head(10))
