@@ -378,20 +378,21 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
 # SAVE TO DATABASE
 # ---------------------------------------------------
 
-def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
+def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date, region: str) -> int:
     """
-    Save processed transactions to NoonTransaction table.
+    Save processed transactions to NoonTransaction table for specific region.
     """
-    print(f"💾 Saving Noon transactions...")
+    print(f"💾 Saving Noon {region.upper()} transactions...")
     
-    # Delete existing records in date range
+    # Delete existing records in date range for this region only
     deleted_count, _ = NoonTransaction.objects.filter(
         order_date__gte=date_from,
         order_date__lte=date_to,
+        region=region,
     ).delete()
     
     if deleted_count > 0:
-        print(f"🗑️  Deleted {deleted_count} existing records")
+        print(f"🗑️  Deleted {deleted_count} existing {region.upper()} records")
     
     # Prepare records for bulk insert
     records = []
@@ -507,7 +508,7 @@ def run(date_from: date, date_to: date):
             gcc_final = calculate_financials(gcc_enriched, advertiser)
             
             # Save
-            gcc_count = save_transactions(advertiser, gcc_final, date_from, date_to)
+            gcc_count = save_transactions(advertiser, gcc_final, date_from, date_to, "gcc")
             total_count += gcc_count
             print(f"✅ GCC: {gcc_count} transactions saved")
         else:
@@ -549,7 +550,7 @@ def run(date_from: date, date_to: date):
             egypt_final = calculate_financials(egypt_enriched, advertiser)
             
             # Save
-            egypt_count = save_transactions(advertiser, egypt_final, date_from, date_to)
+            egypt_count = save_transactions(advertiser, egypt_final, date_from, date_to, "egypt")
             total_count += egypt_count
             print(f"✅ Egypt: {egypt_count} transactions saved")
         else:
