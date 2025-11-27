@@ -38,8 +38,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     # Rename columns to standard format
     df.rename(columns={
         "date": "created_at",
-        "coupon": "coupon_code",
-        # Keep 'orders' as-is for compatibility with helpers
+        # Keep 'coupon' as-is for compatibility with enrich_df helper
         "sales": "sales",  # Keep as 'sales' for compatibility with helpers
     }, inplace=True)
     
@@ -59,7 +58,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     df["orders"] = df["orders"].astype(int)
     
     # Uppercase coupon codes for consistency
-    df["coupon_code"] = df["coupon_code"].str.upper()
+    df["coupon"] = df["coupon"].str.upper()
     
     # Add standard fields (currency will be set from advertiser later)
     df["rate_type"] = "percent"
@@ -67,7 +66,7 @@ def clean_rdel_data(df: pd.DataFrame) -> pd.DataFrame:
     
     # Create synthetic order_id (since each row is aggregated)
     df["order_id"] = df.apply(
-        lambda row: f"{row['advertiser']}_{row['created_at'].strftime('%Y%m%d')}_{row['coupon_code']}_{row['country']}",
+        lambda row: f"{row['advertiser']}_{row['created_at'].strftime('%Y%m%d')}_{row['coupon']}_{row['country']}",
         axis=1
     )
     
@@ -187,7 +186,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
                 commission=row.get("commission", 0),
                 country=row.get("country", ""),
                 order_count=row.get("order_count", 1),
-                coupon=row.get("coupon_code", ""),
+                coupon=row.get("coupon", ""),
                 partner_id=partner_id,
                 partner_name=row.get("partner_name", "(No Partner)"),
                 advertiser_id=advertiser_id,
