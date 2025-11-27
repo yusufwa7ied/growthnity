@@ -256,16 +256,17 @@ def push_rdel_to_performance(date_from, date_to):
             }
 
         g = groups[key]
-        # Get advertiser for exchange rate
+        # Get advertiser for exchange rate on sales only (our_rev/payout already in USD from compute_final_metrics)
         advertiser = Advertiser.objects.filter(name=r.advertiser_name).first()
         exchange_rate = float(advertiser.exchange_rate or 1.0) if advertiser else 1.0
 
         # RDEL data is all RTU
+        # Note: our_rev_usd and payout_usd are already converted by compute_final_metrics()
         if r.user_type == "RTU":
             g["rtu_orders"] += r.order_count
-            g["rtu_sales"] += float(r.sales) * exchange_rate
-            g["rtu_revenue"] += float(r.our_rev) * exchange_rate
-            g["rtu_payout"] += float(r.payout) * exchange_rate
+            g["rtu_sales"] += float(r.sales) * exchange_rate  # Sales in AED, convert to USD
+            g["rtu_revenue"] += float(r.our_rev_usd)  # Already in USD
+            g["rtu_payout"] += float(r.payout_usd)  # Already in USD
 
     # SAVE to CampaignPerformance
     from django.db import transaction as db_transaction
