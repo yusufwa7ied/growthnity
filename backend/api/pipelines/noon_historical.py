@@ -166,12 +166,13 @@ def calculate_historical_payout(df: pd.DataFrame, advertiser: Advertiser) -> pd.
         orders = int(row.get("orders", 0))
         
         # Calculate REVENUE (what advertiser pays us)
+        # Revenue = (Sales * 3%) + 3 AED bonus (for both FTU and RTU)
         if user_type == "FTU":
-            # FTU: 3% of sales + 3 AED per order
-            revenue_aed = (sales * rev_ftu_rate / 100.0) + (rev_ftu_bonus * orders)
+            # FTU: 3% of sales + 3 AED
+            revenue_aed = (sales * rev_ftu_rate / 100.0) + rev_ftu_bonus
         elif user_type == "RTU":
-            # RTU: 3% of sales
-            revenue_aed = (sales * rev_rtu_rate / 100.0) + (rev_rtu_bonus * orders)
+            # RTU: 3% of sales + 3 AED
+            revenue_aed = (sales * rev_rtu_rate / 100.0) + rev_rtu_bonus
         else:
             revenue_aed = 0.0
         
@@ -179,6 +180,7 @@ def calculate_historical_payout(df: pd.DataFrame, advertiser: Advertiser) -> pd.
         revenue = revenue_aed * exchange_rate
         
         # Calculate PAYOUT (what we pay partner)
+        # Payout is a percentage of REVENUE (not sales!)
         if pd.isna(partner_id) or not partner_id:
             # No partner, no payout
             payout = 0.0
@@ -202,13 +204,13 @@ def calculate_historical_payout(df: pd.DataFrame, advertiser: Advertiser) -> pd.
                     rtu_bonus = default_rtu_bonus
                     rate_type = "percent"
                 
-                # Calculate payout based on user type
+                # Calculate payout as percentage of REVENUE, not sales!
                 if user_type == "FTU":
-                    # FTU: 57.14% of sales + 2 AED per order
-                    payout_aed = (sales * ftu_payout_rate / 100.0) + (ftu_bonus * orders)
+                    # FTU: 57.14% of REVENUE + 2 AED
+                    payout_aed = (revenue_aed * ftu_payout_rate / 100.0) + ftu_bonus
                 elif user_type == "RTU":
-                    # RTU: 60% of sales
-                    payout_aed = (sales * rtu_payout_rate / 100.0) + (rtu_bonus * orders)
+                    # RTU: 60% of REVENUE
+                    payout_aed = (revenue_aed * rtu_payout_rate / 100.0) + rtu_bonus
                 else:
                     payout_aed = 0.0
                 
