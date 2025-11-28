@@ -162,14 +162,16 @@ def clean_springrose(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
 def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
     if df.empty:
         SpringRoseTransaction.objects.filter(
-            created_date__gte=date_from, created_date__lte=date_to
+            created_date__date__gte=date_from, created_date__date__lte=date_to
         ).delete()
         return 0
 
     with transaction.atomic():
-        SpringRoseTransaction.objects.filter(
-            created_date__gte=date_from, created_date__lte=date_to
+        # Use created_date__date to match DATE not DATETIME
+        deleted_count = SpringRoseTransaction.objects.filter(
+            created_date__date__gte=date_from, created_date__date__lte=date_to
         ).delete()
+        print(f"🗑️  Deleted {deleted_count[0]} existing SpringRose transactions")
 
         objs = []
         for r in df.to_dict(orient="records"):
