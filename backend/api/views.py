@@ -90,6 +90,12 @@ def user_dashboard_context(request):
         "department": department,
     }
 
+    # ViewOnly → see all data but dashboard only
+    if role == "ViewOnly":
+        base["can_see_all"] = True
+        base["is_view_only"] = True
+        return Response(base)
+
     # CEO or OpsManager → see all
     if role in ["Admin", "OpsManager"]:
         base["can_see_all"] = True

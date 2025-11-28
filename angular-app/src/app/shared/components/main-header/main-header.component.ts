@@ -23,6 +23,7 @@ export class MainHeaderComponent implements OnInit {
     isMediaBuyer: boolean = false;         // TeamMember with media_buying department
     isDepartmentRestricted: boolean = false; // TeamMember with affiliate/influencer department
     canAccessCoupons: boolean = false;     // Only OpsManager/Admin
+    isViewOnly: boolean = false;           // ViewOnly role - dashboard only, all data
     displayRole: string = '';
 
     constructor(
@@ -33,12 +34,20 @@ export class MainHeaderComponent implements OnInit {
         this.role = this.user?.role || '';
 
         // Determine user access level based on role and department
-        // 1. OpsManager (no dept) = Full access (all admin pages + daily spend)
-        // 2. OpsManager (any dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
-        // 3. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
-        // 4. TeamMember (affiliate/influencer) = Filtered dashboard only
+        // 1. ViewOnly = Dashboard only, see all data (NO other pages)
+        // 2. OpsManager (no dept) = Full access (all admin pages + daily spend)
+        // 3. OpsManager (any dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
+        // 4. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
+        // 5. TeamMember (affiliate/influencer) = Filtered dashboard only
 
-        if ((this.role === 'OpsManager' || this.role === 'Admin') && !this.user?.department) {
+        if (this.role === 'ViewOnly') {
+            // ViewOnly: Dashboard only, see all numbers
+            this.isAdmin = false;
+            this.isMediaBuyer = false;
+            this.isDepartmentRestricted = false;
+            this.canAccessCoupons = false;
+            this.isViewOnly = true;
+        } else if ((this.role === 'OpsManager' || this.role === 'Admin') && !this.user?.department) {
             // OpsManager/Admin with NO department: Full system access
             this.isAdmin = true;
             this.isMediaBuyer = true;  // Can also see daily spend
@@ -95,6 +104,10 @@ export class MainHeaderComponent implements OnInit {
     }
 
     private getDisplayRole(): string {
+        if (this.role === 'ViewOnly') {
+            return 'View Only';
+        }
+        
         if (this.role === 'Admin' || this.role === 'OpsManager') {
             return this.role;
         }
