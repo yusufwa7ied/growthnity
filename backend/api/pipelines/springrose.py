@@ -117,13 +117,23 @@ def clean_springrose(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
     df["sales"] = df["sales"].str.replace("ر.س", "", regex=False)
     df["sales"] = pd.to_numeric(df["sales"].str.replace(",", "").str.strip(), errors="coerce").fillna(0.0)
 
+    # ✅ Parse dates early for deduplication
+    df["created_at"] = pd.to_datetime(df["created_at"].str.replace("\n", " "), errors="coerce")
+
+    # ✅ DEDUPLICATE: Keep only the first occurrence of each order_id
+    # Website returns duplicate rows for orders with multiple items
+    initial_count = len(df)
+    df = df.drop_duplicates(subset=["order_id"], keep="first")
+    df = df.reset_index(drop=True)
+    deduped_count = initial_count - len(df)
+    if deduped_count > 0:
+        print(f"🔄 Removed {deduped_count} duplicate order rows (kept first occurrence)")
+
     # ✅ Standard fields
     df["user_type"] = "RTU"  # SpringRose only has returning users for now
     df["orders"] = 1
     df["ftu_orders"] = 0
     df["rtu_orders"] = 1
-
-    df["created_at"] = pd.to_datetime(df["created_at"].str.replace("\n", " "), errors="coerce")
 
     df["country"] = "SAU"
     df["partner_id"] = pd.NA
