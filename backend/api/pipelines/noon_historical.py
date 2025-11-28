@@ -125,12 +125,20 @@ def clean_noon_historical(df: pd.DataFrame) -> pd.DataFrame:
 
 def calculate_historical_payout(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
     """
-    Calculate payout using percentage-based rates from PartnerPayout.
-    Similar to Namshi logic but for historical Noon.
+    Calculate revenue and payout using percentage-based rates.
+    
+    Revenue (what advertiser pays us):
+    - FTU: 3% + 3 AED per order
+    - RTU: 3%
+    
+    Payout (what we pay partners):
+    - FTU: 57.14% + 2 AED per order (default)
+    - RTU: 60% (default)
+    - Can be overridden per partner in PartnerPayout
     """
     df = df.copy()
     
-    # Initialize payout columns
+    # Initialize columns
     df["revenue"] = 0.0
     df["payout"] = 0.0
     df["profit"] = 0.0
@@ -138,60 +146,89 @@ def calculate_historical_payout(df: pd.DataFrame, advertiser: Advertiser) -> pd.
     df["ftu_rate"] = 0.0
     df["rtu_rate"] = 0.0
     
+    # Get advertiser revenue rates
+    rev_ftu_rate = float(advertiser.rev_ftu_rate or 0)
+    rev_rtu_rate = float(advertiser.rev_rtu_rate or 0)
+    rev_ftu_bonus = float(advertiser.rev_ftu_fixed_bonus or 0)
+    rev_rtu_bonus = float(advertiser.rev_rtu_fixed_bonus or 0)
+    exchange_rate = float(advertiser.exchange_rate or 0.27)
+    
+    # Get default payout rates
+    default_ftu_payout = float(advertiser.default_ftu_payout or 0)
+    default_rtu_payout = float(advertiser.default_rtu_payout or 0)
+    default_ftu_bonus = float(advertiser.default_ftu_fixed_bonus or 0)
+    default_rtu_bonus = float(advertiser.default_rtu_fixed_bonus or 0)
+    
     for idx, row in df.iterrows():
         partner_id = row.get("partner_id")
         user_type = row.get("user_type", "")
         sales = float(row.get("sales", 0))
+        orders = int(row.get("orders", 0))
         
+        # Calculate REVENUE (what advertiser pays us)
+        if user_type == "FTU":
+            # FTU: 3% of sales + 3 AED per order
+            revenue_aed = (sales * rev_ftu_rate / 100.0) + (rev_ftu_bonus * orders)
+        elif user_type == "RTU":
+            # RTU: 3% of sales
+            revenue_aed = (sales * rev_rtu_rate / 100.0) + (rev_rtu_bonus * orders)
+        else:
+            revenue_aed = 0.0
+        
+        # Convert revenue to USD
+        revenue = revenue_aed * exchange_rate
+        
+        # Calculate PAYOUT (what we pay partner)
         if pd.isna(partner_id) or not partner_id:
             # No partner, no payout
-            continue
-        
-        try:
-            partner = Partner.objects.get(id=int(partner_id))
-            
-            # Get payout configuration
+            payout = 0.0
+        else:
             try:
-                config = PartnerPayout.objects.get(advertiser=advertiser, partner=partner)
-                ftu_rate = float(config.ftu_payout)
-                rtu_rate = float(config.rtu_payout)
-                rate_type = config.rate_type or "percent"
-            except PartnerPayout.DoesNotExist:
-                # Use advertiser defaults
-                ftu_rate = float(advertiser.default_ftu_payout)
-                rtu_rate = float(advertiser.default_rtu_payout)
-                rate_type = "percent"
-            
-            # Calculate payout based on user type
-            if user_type == "FTU":
-                rate = ftu_rate
-            elif user_type == "RTU":
-                rate = rtu_rate
-            else:
-                rate = 0.0
-            
-            # Percentage-based calculation
-            if rate_type == "percent":
-                payout = (sales * rate) / 100.0
-            else:
-                # Fixed rate (unlikely for historical data)
-                payout = rate
-            
-            # Revenue is same as sales for percentage model
-            revenue = sales
-            profit = revenue - payout
-            
-            df.at[idx, "revenue"] = revenue
-            df.at[idx, "payout"] = payout
-            df.at[idx, "profit"] = profit
-            df.at[idx, "rate_type"] = rate_type
-            df.at[idx, "ftu_rate"] = ftu_rate
-            df.at[idx, "rtu_rate"] = rtu_rate
-            
-        except (Partner.DoesNotExist, ValueError, TypeError):
-            continue
+                partner = Partner.objects.get(id=int(partner_id))
+                
+                # Get partner-specific payout configuration
+                try:
+                    config = PartnerPayout.objects.get(advertiser=advertiser, partner=partner)
+                    ftu_payout_rate = float(config.ftu_payout)
+                    rtu_payout_rate = float(config.rtu_payout)
+                    ftu_bonus = float(config.ftu_fixed_bonus or 0)
+                    rtu_bonus = float(config.rtu_fixed_bonus or 0)
+                    rate_type = config.rate_type or "percent"
+                except PartnerPayout.DoesNotExist:
+                    # Use advertiser defaults
+                    ftu_payout_rate = default_ftu_payout
+                    rtu_payout_rate = default_rtu_payout
+                    ftu_bonus = default_ftu_bonus
+                    rtu_bonus = default_rtu_bonus
+                    rate_type = "percent"
+                
+                # Calculate payout based on user type
+                if user_type == "FTU":
+                    # FTU: 57.14% of sales + 2 AED per order
+                    payout_aed = (sales * ftu_payout_rate / 100.0) + (ftu_bonus * orders)
+                elif user_type == "RTU":
+                    # RTU: 60% of sales
+                    payout_aed = (sales * rtu_payout_rate / 100.0) + (rtu_bonus * orders)
+                else:
+                    payout_aed = 0.0
+                
+                # Convert payout to USD
+                payout = payout_aed * exchange_rate
+                
+                df.at[idx, "ftu_rate"] = ftu_payout_rate
+                df.at[idx, "rtu_rate"] = rtu_payout_rate
+                df.at[idx, "rate_type"] = rate_type
+                
+            except (Partner.DoesNotExist, ValueError, TypeError):
+                payout = 0.0
+        
+        profit = revenue - payout
+        
+        df.at[idx, "revenue"] = revenue
+        df.at[idx, "payout"] = payout
+        df.at[idx, "profit"] = profit
     
-    print(f"💰 Calculated payouts for {len(df)} rows")
+    print(f"💰 Calculated revenue and payouts for {len(df)} rows")
     return df
 
 
