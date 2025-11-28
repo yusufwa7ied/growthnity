@@ -340,7 +340,11 @@ def push_historical_to_performance(date_from: date, date_to: date):
     if deleted_count > 0:
         print(f"🗑️  Deleted {deleted_count} existing CampaignPerformance rows for historical Noon")
     
+    # Get exchange rate for conversion
+    exchange_rate = float(advertiser.exchange_rate or 0.27)
+    
     # Aggregate transactions
+    # Note: total_value is in AED, need to convert to USD for performance table
     transactions = NoonTransaction.objects.filter(
         advertiser_name="Noon",
         order_date__gte=date_from,
@@ -353,7 +357,7 @@ def push_historical_to_performance(date_from: date, date_to: date):
         "user_type",
     ).annotate(
         orders=Sum("payable_orders"),
-        sales=Sum("total_value"),
+        sales_aed=Sum("total_value"),  # Sales in AED
         revenue=Sum("revenue_usd"),
         payout=Sum("payout_usd"),
         our_rev=Sum("our_rev_usd"),
@@ -365,6 +369,10 @@ def push_historical_to_performance(date_from: date, date_to: date):
         partner_id = trans["partner_id"]
         coupon_id = trans["coupon_id"]
         
+        # Convert sales from AED to USD
+        sales_aed = float(trans["sales_aed"] or 0)
+        sales_usd = sales_aed * exchange_rate
+        
         performance_records.append(CampaignPerformance(
             date=trans["order_date"],
             advertiser=advertiser,
@@ -373,9 +381,9 @@ def push_historical_to_performance(date_from: date, date_to: date):
             total_orders=trans["orders"] or 0,
             ftu_orders=trans["orders"] if trans["user_type"] == "FTU" else 0,
             rtu_orders=trans["orders"] if trans["user_type"] == "RTU" else 0,
-            total_sales=float(trans["sales"] or 0),
-            ftu_sales=float(trans["sales"] or 0) if trans["user_type"] == "FTU" else 0.0,
-            rtu_sales=float(trans["sales"] or 0) if trans["user_type"] == "RTU" else 0.0,
+            total_sales=sales_usd,
+            ftu_sales=sales_usd if trans["user_type"] == "FTU" else 0.0,
+            rtu_sales=sales_usd if trans["user_type"] == "RTU" else 0.0,
             total_revenue=float(trans["revenue"] or 0),
             ftu_revenue=float(trans["revenue"] or 0) if trans["user_type"] == "FTU" else 0.0,
             rtu_revenue=float(trans["revenue"] or 0) if trans["user_type"] == "RTU" else 0.0,
