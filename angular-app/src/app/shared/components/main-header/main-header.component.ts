@@ -107,7 +107,7 @@ export class MainHeaderComponent implements OnInit {
         if (this.role === 'ViewOnly') {
             return 'View Only';
         }
-        
+
         if (this.role === 'Admin' || this.role === 'OpsManager') {
             return this.role;
         }

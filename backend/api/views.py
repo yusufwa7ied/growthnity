@@ -90,18 +90,24 @@ def user_dashboard_context(request):
         "department": department,
     }
 
-    # ViewOnly → see all data but dashboard only
-    if role == "ViewOnly":
+    # ViewOnly without department → C-level, see all data, dashboard only
+    if role == "ViewOnly" and not department:
         base["can_see_all"] = True
         base["is_view_only"] = True
         return Response(base)
 
-    # CEO or OpsManager → see all
-    if role in ["Admin", "OpsManager"]:
+    # Admin or OpsManager without department → see all
+    if role in ["Admin", "OpsManager"] and not department:
         base["can_see_all"] = True
         return Response(base)
 
-    # Account Manager / Department Head
+    # OpsManager with department → see whole department (no assignments needed)
+    if role == "OpsManager" and department:
+        base["can_see_all"] = True  # See all data in their department
+        return Response(base)
+
+    # ViewOnly with department OR TeamMember → use AccountAssignment
+    # These users see only their assigned advertisers/partners
     assignments = AccountAssignment.objects.filter(company_user=company_user)
     advertisers = Advertiser.objects.filter(accountassignment__in=assignments).distinct()
 
@@ -203,9 +209,13 @@ def kpis_view(request):
     # -------------------------------
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
+        department = company_user.department
+        
+        # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+        full_access_roles = {"Admin", "OpsManager"}
+        has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
 
-        if role not in full_access_roles:
+        if not has_full_access:
             assignments = AccountAssignment.objects.filter(company_user=company_user).prefetch_related("advertisers")
             advertiser_ids = set()
             partner_ids = set()
@@ -330,9 +340,13 @@ def graph_data_view(request):
     # Assignment scope for non-admin roles
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
+        department = company_user.department
+        
+        # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+        full_access_roles = {"Admin", "OpsManager"}
+        has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
 
-        if role not in full_access_roles:
+        if not has_full_access:
             assignments = AccountAssignment.objects.filter(
                 company_user=company_user
             ).prefetch_related("advertisers", "partners")
@@ -687,6 +701,7 @@ def dashboard_filter_options_view(request):
     user = request.user
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
     role = company_user.role.name if company_user and company_user.role else None
+    department = company_user.department if company_user else None
 
     # Get base queryset with same logic as performance_table_view
     qs = CampaignPerformance.objects.all()
@@ -696,19 +711,21 @@ def dashboard_filter_options_view(request):
 
     # Department scoping (only for OpsManager with department)
     # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and role == "OpsManager" and not partner_type:
-        dept = company_user.department
-        if dept == "affiliate":
+    # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
+    if company_user and department and role == "OpsManager" and not partner_type:
+        if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
-        elif dept == "influencer":
+        elif department == "influencer":
             qs = qs.filter(partner__partner_type="INF")
-        elif dept == "media_buying":
+        elif department == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
-    full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
-    if role not in full_access_roles:
+    # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+    full_access_roles = {"Admin", "OpsManager"}
+    has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+    
+    if not has_full_access:
         assignments = AccountAssignment.objects.filter(
             company_user=company_user
         ).prefetch_related("advertisers", "partners")
@@ -789,19 +806,22 @@ def dashboard_pie_chart_data_view(request):
 
     # Department scoping (only for OpsManager with department)
     # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and role == "OpsManager" and not partner_type:
-        dept = company_user.department
-        if dept == "affiliate":
+    # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
+    department = company_user.department if company_user else None
+    if company_user and department and role == "OpsManager" and not partner_type:
+        if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
-        elif dept == "influencer":
+        elif department == "influencer":
             qs = qs.filter(partner__partner_type="INF")
-        elif dept == "media_buying":
+        elif department == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
-    full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
-    if role not in full_access_roles:
+    # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+    full_access_roles = {"Admin", "OpsManager"}
+    has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+    
+    if not has_full_access:
         assignments = AccountAssignment.objects.filter(
             company_user=company_user
         ).prefetch_related("advertisers", "partners")
@@ -880,9 +900,13 @@ def coupons_view(request):
         # Filter by user assignments for non-admin roles
         if company_user and company_user.role:
             role = company_user.role.name
-            full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
+            department = company_user.department
             
-            if role not in full_access_roles:
+            # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+            full_access_roles = {"Admin", "OpsManager"}
+            has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+            
+            if not has_full_access:
                 # Get user's assigned advertisers and partners
                 assignments = AccountAssignment.objects.filter(
                     company_user=company_user
@@ -1731,9 +1755,13 @@ def performance_analytics_view(request):
     # Role-based access control
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
+        department = company_user.department
         
-        if role not in full_access_roles:
+        # Full access: Admin (no dept), OpsManager (no dept), ViewOnly (no dept)
+        full_access_roles = {"Admin", "OpsManager"}
+        has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+        
+        if not has_full_access:
             assignments = AccountAssignment.objects.filter(company_user=company_user).prefetch_related("advertisers", "partners")
             adv_ids = set()
             part_ids = set()
