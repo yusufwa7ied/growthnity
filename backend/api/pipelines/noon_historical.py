@@ -311,7 +311,6 @@ def push_historical_to_performance(date_from: date, date_to: date):
         "order_date",
         "partner_id",
         "coupon_id",
-        "region",
         "user_type",
     ).annotate(
         orders=Sum("payable_orders"),
@@ -332,7 +331,6 @@ def push_historical_to_performance(date_from: date, date_to: date):
             advertiser=advertiser,
             partner_id=partner_id,
             coupon_id=coupon_id,
-            region=trans["region"],
             total_orders=trans["orders"] or 0,
             ftu_orders=trans["orders"] if trans["user_type"] == "FTU" else 0,
             rtu_orders=trans["orders"] if trans["user_type"] == "RTU" else 0,
