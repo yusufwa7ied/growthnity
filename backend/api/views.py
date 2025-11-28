@@ -203,7 +203,7 @@ def kpis_view(request):
     # -------------------------------
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager"}
+        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
 
         if role not in full_access_roles:
             assignments = AccountAssignment.objects.filter(company_user=company_user).prefetch_related("advertisers")
@@ -330,7 +330,7 @@ def graph_data_view(request):
     # Assignment scope for non-admin roles
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager"}
+        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
 
         if role not in full_access_roles:
             assignments = AccountAssignment.objects.filter(
@@ -707,7 +707,7 @@ def dashboard_filter_options_view(request):
             qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
-    full_access_roles = {"Admin", "OpsManager"}
+    full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
     if role not in full_access_roles:
         assignments = AccountAssignment.objects.filter(
             company_user=company_user
@@ -800,7 +800,7 @@ def dashboard_pie_chart_data_view(request):
             qs = qs.filter(partner__partner_type="MB")
 
     # Role-based filtering
-    full_access_roles = {"Admin", "OpsManager"}
+    full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
     if role not in full_access_roles:
         assignments = AccountAssignment.objects.filter(
             company_user=company_user
@@ -880,7 +880,7 @@ def coupons_view(request):
         # Filter by user assignments for non-admin roles
         if company_user and company_user.role:
             role = company_user.role.name
-            full_access_roles = {"Admin", "OpsManager"}
+            full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
             
             if role not in full_access_roles:
                 # Get user's assigned advertisers and partners
@@ -1731,7 +1731,7 @@ def performance_analytics_view(request):
     # Role-based access control
     if company_user and company_user.role:
         role = company_user.role.name
-        full_access_roles = {"Admin", "OpsManager"}
+        full_access_roles = {"Admin", "OpsManager", "ViewOnly"}
         
         if role not in full_access_roles:
             assignments = AccountAssignment.objects.filter(company_user=company_user).prefetch_related("advertisers", "partners")
