@@ -109,7 +109,7 @@ def clean_noon_historical(df: pd.DataFrame) -> pd.DataFrame:
         })
 
     # Split each row into FTU and RTU
-    for idx, row in df.iterrows():
+    for _, row in df.iterrows():
         emit_row(row, "FTU", "ftu_orders_src", "ftu_value")
         emit_row(row, "RTU", "rtu_orders_src", "rtu_value")
 
@@ -403,49 +403,79 @@ def push_historical_to_performance(date_from: date, date_to: date):
 def run(date_from: date, date_to: date):
     """
     Main pipeline execution for historical Noon data.
+
+    Args:
+        date_from: Start date for data processing
+        date_to: End date for data processing
+
+    Returns:
+        int: Number of transactions processed
+
+    Raises:
+        Exception: If pipeline execution fails
     """
     print(f"🚀 Running Noon HISTORICAL pipeline {date_from} → {date_to}")
     print(f"📄 Using percentage-based payout logic (pre-Nov 18 data)")
-    
-    # Get Noon advertiser
+
     try:
-        advertiser = Advertiser.objects.get(name="Noon")
-    except Advertiser.DoesNotExist:
-        print("❌ Noon advertiser not found in database")
-        return
-    
-    # Load CSV from S3
-    print(f"📄 Loading historical Noon CSV from S3: {S3_CSV_KEY}")
-    raw_df = s3_service.read_csv_to_df(S3_CSV_KEY)
-    print(f"✅ Loaded {len(raw_df)} rows from S3")
-    
-    # Clean and normalize
-    clean_df = clean_noon_historical(raw_df)
-    
-    # Filter to date range and only Noon advertiser
-    clean_df = clean_df[
-        (clean_df["created_at"].dt.date >= date_from) &
-        (clean_df["created_at"].dt.date <= date_to) &
-        (clean_df["advertiser_name"].str.upper() == "NOON")
-    ].copy()
-    
-    print(f"📊 Filtered to {len(clean_df)} Noon rows in date range")
-    
-    if len(clean_df) == 0:
-        print("⚠️  No historical Noon data in date range")
-        return
-    
-    # Enrich with partner/coupon data
-    enriched_df = enrich_df(clean_df, advertiser=advertiser)
-    
-    # Calculate payouts using percentage logic
-    final_df = calculate_historical_payout(enriched_df, advertiser)
-    
-    # Save to database
-    count = save_historical_transactions(advertiser, final_df, date_from, date_to)
-    
-    # Aggregate to performance table
-    print("\n📊 Aggregating to CampaignPerformance...")
-    push_historical_to_performance(date_from, date_to)
-    
-    print(f"\n✅ Historical Noon pipeline completed: {count} transactions")
+        # Get Noon advertiser
+        try:
+            advertiser = Advertiser.objects.get(name="Noon")
+            print(f"✅ Found Noon advertiser (ID: {advertiser.pk})")
+        except Advertiser.DoesNotExist:
+            print("❌ Noon advertiser not found in database")
+            raise Exception("Noon advertiser must exist before running pipeline")
+
+        # Load CSV from S3
+        print(f"📄 Loading historical Noon CSV from S3: {S3_CSV_KEY}")
+        try:
+            raw_df = s3_service.read_csv_to_df(S3_CSV_KEY)
+            print(f"✅ Loaded {len(raw_df)} rows from S3")
+        except Exception as e:
+            print(f"❌ Failed to load CSV from S3: {str(e)}")
+            raise
+
+        # Clean and normalize
+        print(f"🧹 Cleaning and normalizing data...")
+        clean_df = clean_noon_historical(raw_df)
+
+        # Filter to date range and only Noon advertiser
+        clean_df = clean_df[
+            (clean_df["created_at"].dt.date >= date_from) &
+            (clean_df["created_at"].dt.date <= date_to) &
+            (clean_df["advertiser_name"].str.upper() == "NOON")
+        ].copy()
+
+        print(f"📊 Filtered to {len(clean_df)} Noon rows in date range")
+
+        if len(clean_df) == 0:
+            print("⚠️  No historical Noon data in date range")
+            return 0
+
+        # Store raw snapshot for audit trail
+        print(f"💾 Storing raw data snapshot...")
+        store_raw_snapshot(advertiser, raw_df, date_from, date_to, source="S3_Historical_CSV")
+
+        # Enrich with partner/coupon data
+        print(f"🔗 Enriching with partner and coupon data...")
+        enriched_df = enrich_df(clean_df, advertiser=advertiser)
+
+        # Calculate payouts using percentage logic
+        print(f"💵 Calculating revenue and payouts...")
+        final_df = calculate_historical_payout(enriched_df, advertiser)
+
+        # Save to database
+        print(f"💾 Saving transactions to database...")
+        count = save_historical_transactions(advertiser, final_df, date_from, date_to)
+
+        # Aggregate to performance table
+        print("\n📊 Aggregating to CampaignPerformance...")
+        push_historical_to_performance(date_from, date_to)
+
+        print(f"\n✅ Historical Noon pipeline completed successfully!")
+        print(f"📈 Summary: {count} transactions processed from {date_from} to {date_to}")
+        return count
+
+    except Exception as e:
+        print(f"\n❌ Pipeline failed with error: {str(e)}")
+        raise
