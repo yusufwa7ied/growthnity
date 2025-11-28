@@ -48,6 +48,14 @@ def run(date_from: date, date_to: date):
     final_df = compute_final_metrics(payout_df, advertiser)
     print("🔍 FINAL DF HEAD:")
     print(final_df.head(10))
+    
+    # DEBUG: Check for duplicates before saving
+    dup_check = final_df[final_df.duplicated(subset=["order_id"], keep=False)]
+    if not dup_check.empty:
+        print(f"⚠️  WARNING: Found {len(dup_check)} duplicate order_ids in final_df!")
+        print(dup_check[["order_id", "coupon", "partner_name", "sales"]])
+    else:
+        print(f"✅ No duplicates in final_df ({len(final_df)} unique orders)")
 
     # 7. SAVE RESULTS
     count = save_final_rows(advertiser, final_df, date_from, date_to)
