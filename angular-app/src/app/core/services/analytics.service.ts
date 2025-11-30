@@ -72,6 +72,35 @@ export interface PerformanceAnalytics {
     };
 
     department_breakdown?: DepartmentBreakdown[];
+    is_department_restricted?: boolean;
+    simplified_analytics?: SimplifiedAnalytics;
+}
+
+export interface SimplifiedAnalytics {
+    is_department_restricted: boolean;
+    earnings: {
+        total_payout: number;
+        total_orders: number;
+        avg_commission: number;
+        sales_volume: number;
+    };
+    yesterday: {
+        payout: number;
+        orders: number;
+        sales: number;
+    };
+    growth: {
+        payout_vs_last_month_pct: number;
+        orders_vs_last_month_pct: number;
+        commission_vs_last_month_pct: number;
+    };
+    run_rate: {
+        projected_payout: number;
+        projected_orders: number;
+        vs_last_month_pct: number;
+        status: 'Ahead' | 'On Track' | 'Behind';
+        last_month_payout: number;
+    };
 }
 
 export interface DepartmentBreakdown {
