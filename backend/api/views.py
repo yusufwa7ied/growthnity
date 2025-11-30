@@ -2114,6 +2114,130 @@ def performance_analytics_view(request):
     else:
         response_data["department_breakdown"] = None
     
+    # Check if user is AFF/INF TeamMember - provide simplified analytics
+    is_department_restricted = False
+    if company_user and company_user.role and company_user.role.name == "TeamMember":
+        dept = company_user.department
+        if dept in ["affiliate", "influencer"]:
+            is_department_restricted = True
+            
+            # For AFF/INF, calculate simplified analytics focused on their earnings
+            # Get previous month's data for comparison
+            prev_month_start = (month_start - timedelta(days=1)).replace(day=1)
+            prev_days_in_month = monthrange(prev_month_start.year, prev_month_start.month)[1]
+            prev_month_end = prev_month_start.replace(day=prev_days_in_month)
+            
+            prev_perf_qs = CampaignPerformance.objects.filter(
+                date__gte=prev_month_start,
+                date__lte=prev_month_end
+            )
+            
+            # Apply same filters as current month
+            if advertiser_ids:
+                prev_perf_qs = prev_perf_qs.filter(advertiser_id__in=advertiser_ids)
+            if partner_ids:
+                prev_perf_qs = prev_perf_qs.filter(partner_id__in=partner_ids)
+            if partner_type:
+                prev_perf_qs = prev_perf_qs.filter(partner__partner_type=partner_type)
+            
+            # Apply same access control
+            if company_user:
+                assignments = AccountAssignment.objects.filter(company_user=company_user).prefetch_related("advertisers", "partners")
+                adv_ids = set()
+                part_ids = set()
+                
+                for a in assignments:
+                    adv_ids.update(a.advertisers.values_list("id", flat=True))
+                    part_ids.update(a.partners.values_list("id", flat=True))
+                
+                if adv_ids or part_ids:
+                    if adv_ids:
+                        prev_perf_qs = prev_perf_qs.filter(advertiser_id__in=list(adv_ids))
+                    if part_ids:
+                        prev_perf_qs = prev_perf_qs.filter(partner_id__in=list(part_ids))
+                else:
+                    prev_perf_qs = prev_perf_qs.none()
+            
+            prev_agg = prev_perf_qs.aggregate(
+                total_orders=Sum("total_orders"),
+                total_revenue=Sum("total_revenue"),
+                total_payout=Sum("total_payout")
+            )
+            
+            prev_orders = prev_agg["total_orders"] or 0
+            prev_revenue = float(prev_agg["total_revenue"] or 0)
+            prev_payout = float(prev_agg["total_payout"] or 0)
+            
+            # Calculate growth vs last month
+            payout_growth_pct = ((mtd_payout - prev_payout) / prev_payout * 100) if prev_payout > 0 else 0
+            orders_growth_pct = ((mtd_orders - prev_orders) / prev_orders * 100) if prev_orders > 0 else 0
+            revenue_growth_pct = ((mtd_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+            
+            # Calculate average commission per order
+            avg_commission = (mtd_payout / mtd_orders) if mtd_orders > 0 else 0
+            prev_avg_commission = (prev_payout / prev_orders) if prev_orders > 0 else 0
+            commission_growth_pct = ((avg_commission - prev_avg_commission) / prev_avg_commission * 100) if prev_avg_commission > 0 else 0
+            
+            # Get yesterday's performance
+            yesterday = today - timedelta(days=1)
+            yesterday_agg = perf_qs.filter(date=yesterday).aggregate(
+                total_orders=Sum("total_orders"),
+                total_revenue=Sum("total_revenue"),
+                total_payout=Sum("total_payout")
+            )
+            
+            yesterday_orders = yesterday_agg["total_orders"] or 0
+            yesterday_revenue = float(yesterday_agg["total_revenue"] or 0)
+            yesterday_payout = float(yesterday_agg["total_payout"] or 0)
+            
+            # Calculate run rate projection for end of month
+            if days_elapsed > 0:
+                projected_payout = (mtd_payout / days_elapsed) * days_in_month
+                projected_orders_runrate = int((mtd_orders / days_elapsed) * days_in_month)
+            else:
+                projected_payout = 0
+                projected_orders_runrate = 0
+            
+            # Determine if on track vs last month
+            vs_last_month_pct = ((projected_payout - prev_payout) / prev_payout * 100) if prev_payout > 0 else 0
+            
+            if vs_last_month_pct >= 10:
+                run_rate_status = "Ahead"
+            elif vs_last_month_pct <= -10:
+                run_rate_status = "Behind"
+            else:
+                run_rate_status = "On Track"
+            
+            # Build simplified analytics structure
+            response_data["simplified_analytics"] = {
+                "is_department_restricted": True,
+                "earnings": {
+                    "total_payout": round(mtd_payout, 2),
+                    "total_orders": int(mtd_orders),
+                    "avg_commission": round(avg_commission, 2),
+                    "sales_volume": round(mtd_revenue, 2)
+                },
+                "yesterday": {
+                    "payout": round(yesterday_payout, 2),
+                    "orders": int(yesterday_orders),
+                    "sales": round(yesterday_revenue, 2)
+                },
+                "growth": {
+                    "payout_vs_last_month_pct": round(payout_growth_pct, 2),
+                    "orders_vs_last_month_pct": round(orders_growth_pct, 2),
+                    "commission_vs_last_month_pct": round(commission_growth_pct, 2)
+                },
+                "run_rate": {
+                    "projected_payout": round(projected_payout, 2),
+                    "projected_orders": projected_orders_runrate,
+                    "vs_last_month_pct": round(vs_last_month_pct, 2),
+                    "status": run_rate_status,
+                    "last_month_payout": round(prev_payout, 2)
+                }
+            }
+    
+    response_data["is_department_restricted"] = is_department_restricted
+    
     return Response(response_data)
 
 

@@ -855,7 +855,7 @@ export class DashboardComponent implements OnInit {
 
         // Format selected month as YYYY-MM
         const monthStr = `${this.selectedMonth.getFullYear()}-${String(this.selectedMonth.getMonth() + 1).padStart(2, '0')}`;
-        
+
         this.analyticsService.getPerformanceAnalytics(
             advertiserIds,
             partnerIds,
@@ -916,7 +916,7 @@ export class DashboardComponent implements OnInit {
     isCurrentMonth(): boolean {
         const now = new Date();
         return this.selectedMonth.getFullYear() === now.getFullYear() &&
-               this.selectedMonth.getMonth() === now.getMonth();
+            this.selectedMonth.getMonth() === now.getMonth();
     }
 
     setDatePreset(preset: string): void {

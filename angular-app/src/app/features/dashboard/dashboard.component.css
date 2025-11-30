@@ -3898,3 +3898,47 @@
     background-position: -200% 0;
   }
 }
+
+/* Simplified Analytics for AFF/INF */
+.metric-row.highlight {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid #009292;
+}
+
+.metric-value.large {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #009292;
+}
+
+.analytics-content h4 i {
+  margin-right: 0.5rem;
+  color: #009292;
+  font-size: 1.1rem;
+}
+
+.metric-value.positive {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.metric-value.negative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.metric-value i.pi {
+  font-size: 0.85rem;
+  margin-left: 0.25rem;
+}
+
+.days-info {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-style: italic;
+}
