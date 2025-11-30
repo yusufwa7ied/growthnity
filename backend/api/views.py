@@ -2118,8 +2118,10 @@ def performance_analytics_view(request):
     is_department_restricted = False
     if company_user and company_user.role and company_user.role.name == "TeamMember":
         dept = company_user.department
+        print(f"🔍 TeamMember department check: dept={dept}, role={company_user.role.name}")
         if dept in ["affiliate", "influencer"]:
             is_department_restricted = True
+            print(f"✅ is_department_restricted set to True for {dept}")
             
             # For AFF/INF, calculate simplified analytics focused on their earnings
             # Get previous month's data for comparison
