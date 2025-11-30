@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0030_alter_noon30dayspayout_coupon_and_more'),
+        ('api', '0029_add_database_indexes'),
     ]
 
     operations = [
