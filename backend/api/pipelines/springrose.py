@@ -40,7 +40,7 @@ def run(date_from: date, date_to: date):
     print(enriched_df.head(10))
 
     # 5. RESOLVE PAYOUTS
-    payout_df = resolve_payouts(advertiser, enriched_df)
+    payout_df = resolve_payouts_with_history(advertiser, enriched_df, timestamp_col="created_date")
     print("💰 PAYOUT DF HEAD:")
     print(payout_df.head(10))
 

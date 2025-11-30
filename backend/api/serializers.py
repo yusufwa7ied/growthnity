@@ -47,6 +47,67 @@ class AdvertiserDetailSerializer(serializers.ModelSerializer):
             "default_ftu_fixed_bonus", "default_rtu_fixed_bonus",
             "partner_payouts"
         ]
+    
+    def update(self, instance, validated_data):
+        """Override update to create RevenueRuleHistory and PayoutRuleHistory when rates change"""
+        from django.utils import timezone
+        from .models import RevenueRuleHistory, PayoutRuleHistory
+        
+        # Track if revenue fields changed
+        revenue_changed = any([
+            'rev_rate_type' in validated_data and validated_data['rev_rate_type'] != instance.rev_rate_type,
+            'rev_ftu_rate' in validated_data and validated_data['rev_ftu_rate'] != instance.rev_ftu_rate,
+            'rev_rtu_rate' in validated_data and validated_data['rev_rtu_rate'] != instance.rev_rtu_rate,
+            'rev_ftu_fixed_bonus' in validated_data and validated_data['rev_ftu_fixed_bonus'] != instance.rev_ftu_fixed_bonus,
+            'rev_rtu_fixed_bonus' in validated_data and validated_data['rev_rtu_fixed_bonus'] != instance.rev_rtu_fixed_bonus,
+            'currency' in validated_data and validated_data['currency'] != instance.currency,
+            'exchange_rate' in validated_data and validated_data['exchange_rate'] != instance.exchange_rate,
+        ])
+        
+        # Track if default payout fields changed
+        payout_changed = any([
+            'default_payout_rate_type' in validated_data and validated_data['default_payout_rate_type'] != instance.default_payout_rate_type,
+            'default_ftu_payout' in validated_data and validated_data['default_ftu_payout'] != instance.default_ftu_payout,
+            'default_rtu_payout' in validated_data and validated_data['default_rtu_payout'] != instance.default_rtu_payout,
+            'default_ftu_fixed_bonus' in validated_data and validated_data['default_ftu_fixed_bonus'] != instance.default_ftu_fixed_bonus,
+            'default_rtu_fixed_bonus' in validated_data and validated_data['default_rtu_fixed_bonus'] != instance.default_rtu_fixed_bonus,
+        ])
+        
+        # Update the instance
+        instance = super().update(instance, validated_data)
+        
+        # Create RevenueRuleHistory if revenue fields changed
+        if revenue_changed:
+            RevenueRuleHistory.objects.create(
+                advertiser=instance,
+                effective_date=timezone.now(),
+                rev_rate_type=instance.rev_rate_type,
+                rev_ftu_rate=instance.rev_ftu_rate,
+                rev_rtu_rate=instance.rev_rtu_rate,
+                rev_ftu_fixed_bonus=instance.rev_ftu_fixed_bonus,
+                rev_rtu_fixed_bonus=instance.rev_rtu_fixed_bonus,
+                currency=instance.currency,
+                exchange_rate=instance.exchange_rate,
+                assigned_by=self.context.get('request').user if self.context.get('request') else None,
+                notes=f"Updated via API by {self.context.get('request').user.username if self.context.get('request') else 'system'}"
+            )
+        
+        # Create PayoutRuleHistory if default payout fields changed
+        if payout_changed:
+            PayoutRuleHistory.objects.create(
+                advertiser=instance,
+                partner=None,  # NULL = default payouts for all partners
+                effective_date=timezone.now(),
+                ftu_payout=instance.default_ftu_payout,
+                rtu_payout=instance.default_rtu_payout,
+                ftu_fixed_bonus=instance.default_ftu_fixed_bonus,
+                rtu_fixed_bonus=instance.default_rtu_fixed_bonus,
+                rate_type=instance.default_payout_rate_type,
+                assigned_by=self.context.get('request').user if self.context.get('request') else None,
+                notes=f"Default payout updated via API by {self.context.get('request').user.username if self.context.get('request') else 'system'}"
+            )
+        
+        return instance
 
 class PartnerSerializer(serializers.ModelSerializer):
     class Meta:

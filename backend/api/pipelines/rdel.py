@@ -138,7 +138,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         print(f"✅ Enriched {len(enriched)} rows for {adv_name}")
         
         # Apply payout rules
-        payout_df = resolve_payouts(advertiser, enriched)
+        payout_df = resolve_payouts_with_history(advertiser, enriched, timestamp_col="created_date")
         
         # Calculate final metrics for this advertiser
         final_adv_df = compute_final_metrics(payout_df, advertiser)

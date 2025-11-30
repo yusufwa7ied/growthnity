@@ -161,7 +161,7 @@ def calculate_noon_payouts(df, advertiser):
     
     if advertiser.name == "Namshi":
         # Use existing percentage-based logic for Namshi
-        return resolve_payouts(advertiser, df)
+        return resolve_payouts_with_history(advertiser, df, timestamp_col="created_date")
     
     # For Noon, apply bracket-based logic to ALL orders
     if df.empty:

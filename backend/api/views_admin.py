@@ -228,6 +228,9 @@ def update_advertiser_view(request, pk):
         # Existing payouts are managed via Django admin (where dates can be set)
         partner_payouts = request.data.get('partner_payouts', [])
         if partner_payouts:
+            from django.utils import timezone
+            from .models import PayoutRuleHistory
+            
             for payout_data in partner_payouts:
                 partner_id = payout_data.get('partner_id')
                 if not partner_id:
@@ -236,7 +239,7 @@ def update_advertiser_view(request, pk):
                 # Always create new records - don't update existing ones
                 # Use create() which will raise IntegrityError if duplicate exists
                 try:
-                    PartnerPayout.objects.create(
+                    payout = PartnerPayout.objects.create(
                         advertiser=advertiser,
                         partner_id=partner_id,
                         ftu_payout=payout_data.get('ftu_payout'),
@@ -250,6 +253,20 @@ def update_advertiser_view(request, pk):
                         # App doesn't set dates - admin sets them later if needed
                         start_date=None,
                         end_date=None,
+                    )
+                    
+                    # Create PayoutRuleHistory for this new partner payout
+                    PayoutRuleHistory.objects.create(
+                        advertiser=advertiser,
+                        partner_id=partner_id,
+                        effective_date=timezone.now(),
+                        ftu_payout=payout_data.get('ftu_payout'),
+                        rtu_payout=payout_data.get('rtu_payout'),
+                        ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
+                        rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
+                        rate_type=payout_data.get('rate_type', 'percent'),
+                        assigned_by=request.user,
+                        notes=f"Partner-specific payout created via API by {request.user.username}"
                     )
                 except Exception as e:
                     # If duplicate (same advertiser+partner+start_date), skip it
