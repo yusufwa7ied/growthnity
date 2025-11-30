@@ -197,12 +197,11 @@
     </div>
 
     <!-- Performance Analytics Section -->
-    <div class="analytics-section" *ngIf="analytics || showSkeletons">
+    <div class="analytics-section">
       <div class="analytics-header">
         <div class="analytics-title-group">
-          <h3 *ngIf="showAnalytics && !showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
-          <h3 *ngIf="!showAnalytics || showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
-          
+          <h3><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
+
           <!-- Month Selector -->
           <div class="month-selector" *ngIf="showAnalytics && !showSkeletons">
             <button class="month-nav-btn" (click)="previousMonth()">
@@ -214,7 +213,7 @@
             </button>
           </div>
         </div>
-        
+
         <button class="toggle-btn" (click)="showAnalytics = !showAnalytics"
           [title]="showAnalytics ? 'Hide analytics' : 'Show analytics'" [disabled]="showSkeletons">
           <i class="pi" [ngClass]="showAnalytics ? 'pi-eye-slash' : 'pi-eye'"></i>
@@ -261,17 +260,18 @@
 
         <!-- Real content when loaded -->
         <ng-container *ngIf="!showSkeletons && analytics">
-          
+
           <!-- Simplified Analytics for AFF/INF TeamMembers -->
           <ng-container *ngIf="analytics.is_department_restricted && analytics.simplified_analytics">
-            
+
             <!-- Your Earnings This Month -->
             <p-card styleClass="analytics-card">
               <div class="analytics-content">
                 <h4><i class="pi pi-wallet"></i> Your Earnings This Month</h4>
                 <div class="metric-row highlight">
                   <span class="metric-label">Total Payout:</span>
-                  <span class="metric-value large">${{ analytics.simplified_analytics.earnings.total_payout | number:'1.2-2' }}</span>
+                  <span class="metric-value large">${{ analytics.simplified_analytics.earnings.total_payout |
+                    number:'1.2-2' }}</span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Orders Generated:</span>
@@ -279,11 +279,13 @@
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Avg Commission:</span>
-                  <span class="metric-value">${{ analytics.simplified_analytics.earnings.avg_commission | number:'1.2-2' }}</span>
+                  <span class="metric-value">${{ analytics.simplified_analytics.earnings.avg_commission | number:'1.2-2'
+                    }}</span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Sales Volume:</span>
-                  <span class="metric-value">${{ analytics.simplified_analytics.earnings.sales_volume | number:'1.0-0' }}</span>
+                  <span class="metric-value">${{ analytics.simplified_analytics.earnings.sales_volume | number:'1.0-0'
+                    }}</span>
                 </div>
               </div>
             </p-card>
@@ -294,7 +296,8 @@
                 <h4><i class="pi pi-calendar"></i> Yesterday's Performance</h4>
                 <div class="metric-row">
                   <span class="metric-label">Payout:</span>
-                  <span class="metric-value">${{ analytics.simplified_analytics.yesterday.payout | number:'1.2-2' }}</span>
+                  <span class="metric-value">${{ analytics.simplified_analytics.yesterday.payout | number:'1.2-2'
+                    }}</span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Orders:</span>
@@ -302,7 +305,8 @@
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Sales:</span>
-                  <span class="metric-value">${{ analytics.simplified_analytics.yesterday.sales | number:'1.2-2' }}</span>
+                  <span class="metric-value">${{ analytics.simplified_analytics.yesterday.sales | number:'1.2-2'
+                    }}</span>
                 </div>
               </div>
             </p-card>
@@ -313,29 +317,35 @@
                 <h4><i class="pi pi-chart-line"></i> Growth vs Last Month</h4>
                 <div class="metric-row">
                   <span class="metric-label">Payout Growth:</span>
-                  <span class="metric-value" 
+                  <span class="metric-value"
                     [class.positive]="analytics.simplified_analytics.growth.payout_vs_last_month_pct > 0"
                     [class.negative]="analytics.simplified_analytics.growth.payout_vs_last_month_pct < 0">
-                    {{ analytics.simplified_analytics.growth.payout_vs_last_month_pct > 0 ? '+' : '' }}{{ analytics.simplified_analytics.growth.payout_vs_last_month_pct | number:'1.1-1' }}%
-                    <i class="pi" [ngClass]="analytics.simplified_analytics.growth.payout_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+                    {{ analytics.simplified_analytics.growth.payout_vs_last_month_pct > 0 ? '+' : '' }}{{
+                    analytics.simplified_analytics.growth.payout_vs_last_month_pct | number:'1.1-1' }}%
+                    <i class="pi"
+                      [ngClass]="analytics.simplified_analytics.growth.payout_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
                   </span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Orders Growth:</span>
-                  <span class="metric-value" 
+                  <span class="metric-value"
                     [class.positive]="analytics.simplified_analytics.growth.orders_vs_last_month_pct > 0"
                     [class.negative]="analytics.simplified_analytics.growth.orders_vs_last_month_pct < 0">
-                    {{ analytics.simplified_analytics.growth.orders_vs_last_month_pct > 0 ? '+' : '' }}{{ analytics.simplified_analytics.growth.orders_vs_last_month_pct | number:'1.1-1' }}%
-                    <i class="pi" [ngClass]="analytics.simplified_analytics.growth.orders_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+                    {{ analytics.simplified_analytics.growth.orders_vs_last_month_pct > 0 ? '+' : '' }}{{
+                    analytics.simplified_analytics.growth.orders_vs_last_month_pct | number:'1.1-1' }}%
+                    <i class="pi"
+                      [ngClass]="analytics.simplified_analytics.growth.orders_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
                   </span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Commission Growth:</span>
-                  <span class="metric-value" 
+                  <span class="metric-value"
                     [class.positive]="analytics.simplified_analytics.growth.commission_vs_last_month_pct > 0"
                     [class.negative]="analytics.simplified_analytics.growth.commission_vs_last_month_pct < 0">
-                    {{ analytics.simplified_analytics.growth.commission_vs_last_month_pct > 0 ? '+' : '' }}{{ analytics.simplified_analytics.growth.commission_vs_last_month_pct | number:'1.1-1' }}%
-                    <i class="pi" [ngClass]="analytics.simplified_analytics.growth.commission_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+                    {{ analytics.simplified_analytics.growth.commission_vs_last_month_pct > 0 ? '+' : '' }}{{
+                    analytics.simplified_analytics.growth.commission_vs_last_month_pct | number:'1.1-1' }}%
+                    <i class="pi"
+                      [ngClass]="analytics.simplified_analytics.growth.commission_vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
                   </span>
                 </div>
               </div>
@@ -345,31 +355,37 @@
             <p-card styleClass="analytics-card">
               <div class="analytics-content">
                 <h4><i class="pi pi-forward"></i> Run Rate Projection</h4>
-                <div class="pacing-status" [style.border-color]="getPacingColor(analytics.simplified_analytics.run_rate.status)">
-                  <i class="pi pi-circle-fill" [style.color]="getPacingColor(analytics.simplified_analytics.run_rate.status)"></i>
+                <div class="pacing-status"
+                  [style.border-color]="getPacingColor(analytics.simplified_analytics.run_rate.status)">
+                  <i class="pi pi-circle-fill"
+                    [style.color]="getPacingColor(analytics.simplified_analytics.run_rate.status)"></i>
                   <span class="status-text">{{ analytics.simplified_analytics.run_rate.status }}</span>
                 </div>
                 <div class="metric-row highlight">
                   <span class="metric-label">Projected Payout:</span>
-                  <span class="metric-value large">${{ analytics.simplified_analytics.run_rate.projected_payout | number:'1.2-2' }}</span>
+                  <span class="metric-value large">${{ analytics.simplified_analytics.run_rate.projected_payout |
+                    number:'1.2-2' }}</span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">Projected Orders:</span>
-                  <span class="metric-value">{{ analytics.simplified_analytics.run_rate.projected_orders | number }}</span>
+                  <span class="metric-value">{{ analytics.simplified_analytics.run_rate.projected_orders | number
+                    }}</span>
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">vs Last Month:</span>
-                  <span class="metric-value" 
+                  <span class="metric-value"
                     [class.positive]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0"
                     [class.negative]="analytics.simplified_analytics.run_rate.vs_last_month_pct < 0">
-                    {{ analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? '+' : '' }}{{ analytics.simplified_analytics.run_rate.vs_last_month_pct | number:'1.1-1' }}%
-                    <i class="pi" [ngClass]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+                    {{ analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? '+' : '' }}{{
+                    analytics.simplified_analytics.run_rate.vs_last_month_pct | number:'1.1-1' }}%
+                    <i class="pi"
+                      [ngClass]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
                   </span>
                 </div>
                 <div class="days-info">
                   <small>Based on {{ analytics.days_elapsed }} of {{ analytics.days_in_month }} days</small>
                 </div>
-                <div class="insight-box" 
+                <div class="insight-box"
                   [class.insight-success]="analytics.simplified_analytics.run_rate.status === 'Ahead'"
                   [class.insight-warning]="analytics.simplified_analytics.run_rate.status === 'On Track'"
                   [class.insight-danger]="analytics.simplified_analytics.run_rate.status === 'Behind'">
@@ -379,13 +395,16 @@
                     'pi-exclamation-triangle': analytics.simplified_analytics.run_rate.status === 'Behind'
                   }"></i>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'Ahead'">
-                    Great pace! You're on track to exceed last month's earnings of ${{ analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
+                    Great pace! You're on track to exceed last month's earnings of ${{
+                    analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
                   </span>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'On Track'">
-                    Steady progress. You're on track to match last month's ${{ analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
+                    Steady progress. You're on track to match last month's ${{
+                    analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
                   </span>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'Behind'">
-                    Push harder! Last month you earned ${{ analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
+                    Push harder! Last month you earned ${{ analytics.simplified_analytics.run_rate.last_month_payout |
+                    number:'1.0-0' }}.
                   </span>
                 </div>
               </div>
@@ -395,446 +414,454 @@
 
           <!-- Full Analytics for Admin/OpsManager/MediaBuyer -->
           <ng-container *ngIf="!analytics.is_department_restricted">
-          
-          <!-- MTD Progress -->
-          <p-card styleClass="analytics-card">
-            <div class="analytics-content">
-              <h4>MTD Progress</h4>
-              <div class="progress-item">
-                <div class="progress-label">
-                  <span>Orders</span>
-                  <span class="progress-value">{{ analytics.mtd.orders | number }} / {{ analytics.targets.orders |
-                    number
-                    }}</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="analytics.achievement_pct.orders || 0"
-                    [style.background-color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#e5e7eb'">
-                  </div>
-                </div>
-                <span class="progress-pct">{{ analytics.achievement_pct.orders !== null ?
-                  (analytics.achievement_pct.orders | number:'1.1-1') : '-' }}%</span>
-              </div>
-              <div class="progress-item">
-                <div class="progress-label">
-                  <span>Revenue</span>
-                  <span class="progress-value">${{ analytics.mtd.revenue | number:'1.0-0' }} / ${{
-                    analytics.targets.revenue | number:'1.0-0' }}</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="analytics.achievement_pct.revenue || 0"
-                    [style.background-color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#e5e7eb'">
-                  </div>
-                </div>
-                <span class="progress-pct">{{ analytics.achievement_pct.revenue !== null ?
-                  (analytics.achievement_pct.revenue | number:'1.1-1') : '-' }}%</span>
-              </div>
-              <div class="progress-item" *ngIf="isAdmin">
-                <div class="progress-label">
-                  <span>Profit</span>
-                  <span class="progress-value">${{ analytics.mtd.profit | number:'1.0-0' }} / ${{
-                    analytics.targets.profit
-                    | number:'1.0-0' }}</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="analytics.achievement_pct.profit || 0"
-                    [style.background-color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#e5e7eb'">
-                  </div>
-                </div>
-                <span class="progress-pct">{{ analytics.achievement_pct.profit !== null ?
-                  (analytics.achievement_pct.profit | number:'1.1-1') : '-' }}%</span>
-              </div>
-            </div>
-          </p-card>
 
-          <!-- Run Rate Projection -->
-          <p-card styleClass="analytics-card">
-            <div class="analytics-content">
-              <h4>Run Rate Projection</h4>
-              <div class="metric-row">
-                <span class="metric-label">Projected Orders:</span>
-                <span class="metric-value">{{ analytics.run_rate.projected_orders | number }}</span>
-                <span class="metric-badge"
-                  [style.background-color]="getAchievementColor(analytics.run_rate.orders_pct)">
-                  {{ analytics.run_rate.orders_pct | number:'1.0-0' }}%
-                </span>
+            <!-- MTD Progress -->
+            <p-card styleClass="analytics-card">
+              <div class="analytics-content">
+                <h4>MTD Progress</h4>
+                <div class="progress-item">
+                  <div class="progress-label">
+                    <span>Orders</span>
+                    <span class="progress-value">{{ analytics.mtd.orders | number }} / {{ analytics.targets.orders |
+                      number
+                      }}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="analytics.achievement_pct.orders || 0"
+                      [style.background-color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#e5e7eb'">
+                    </div>
+                  </div>
+                  <span class="progress-pct">{{ analytics.achievement_pct.orders !== null ?
+                    (analytics.achievement_pct.orders | number:'1.1-1') : '-' }}%</span>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-label">
+                    <span>Revenue</span>
+                    <span class="progress-value">${{ analytics.mtd.revenue | number:'1.0-0' }} / ${{
+                      analytics.targets.revenue | number:'1.0-0' }}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="analytics.achievement_pct.revenue || 0"
+                      [style.background-color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#e5e7eb'">
+                    </div>
+                  </div>
+                  <span class="progress-pct">{{ analytics.achievement_pct.revenue !== null ?
+                    (analytics.achievement_pct.revenue | number:'1.1-1') : '-' }}%</span>
+                </div>
+                <div class="progress-item" *ngIf="isAdmin">
+                  <div class="progress-label">
+                    <span>Profit</span>
+                    <span class="progress-value">${{ analytics.mtd.profit | number:'1.0-0' }} / ${{
+                      analytics.targets.profit
+                      | number:'1.0-0' }}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="analytics.achievement_pct.profit || 0"
+                      [style.background-color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#e5e7eb'">
+                    </div>
+                  </div>
+                  <span class="progress-pct">{{ analytics.achievement_pct.profit !== null ?
+                    (analytics.achievement_pct.profit | number:'1.1-1') : '-' }}%</span>
+                </div>
               </div>
-              <div class="metric-row">
-                <span class="metric-label">Projected Revenue:</span>
-                <span class="metric-value">${{ analytics.run_rate.projected_revenue | number:'1.0-0' }}</span>
-                <span class="metric-badge"
-                  [style.background-color]="getAchievementColor(analytics.run_rate.revenue_pct)">
-                  {{ analytics.run_rate.revenue_pct | number:'1.0-0' }}%
-                </span>
-              </div>
-              <div class="metric-row" *ngIf="isAdmin">
-                <span class="metric-label">Projected Profit:</span>
-                <span class="metric-value">${{ analytics.run_rate.projected_profit | number:'1.0-0' }}</span>
-                <span class="metric-badge"
-                  [style.background-color]="getAchievementColor(analytics.run_rate.profit_pct)">
-                  {{ analytics.run_rate.profit_pct | number:'1.0-0' }}%
-                </span>
-              </div>
-              <div class="days-info">
-                <small>{{ analytics.days_elapsed }} of {{ analytics.days_in_month }} days elapsed</small>
-              </div>
-            </div>
-          </p-card>
+            </p-card>
 
-          <!-- Pacing Status -->
-          <p-card styleClass="analytics-card">
-            <div class="analytics-content">
-              <h4>Pacing Status</h4>
-              <div class="pacing-status" [style.border-color]="getPacingColor(analytics.pacing.status)">
-                <i class="pi pi-circle-fill" [style.color]="getPacingColor(analytics.pacing.status)"></i>
-                <span class="status-text">{{ analytics.pacing.status }}</span>
+            <!-- Run Rate Projection -->
+            <p-card styleClass="analytics-card">
+              <div class="analytics-content">
+                <h4>Run Rate Projection</h4>
+                <div class="metric-row">
+                  <span class="metric-label">Projected Orders:</span>
+                  <span class="metric-value">{{ analytics.run_rate.projected_orders | number }}</span>
+                  <span class="metric-badge"
+                    [style.background-color]="getAchievementColor(analytics.run_rate.orders_pct)">
+                    {{ analytics.run_rate.orders_pct | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Projected Revenue:</span>
+                  <span class="metric-value">${{ analytics.run_rate.projected_revenue | number:'1.0-0' }}</span>
+                  <span class="metric-badge"
+                    [style.background-color]="getAchievementColor(analytics.run_rate.revenue_pct)">
+                    {{ analytics.run_rate.revenue_pct | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="metric-row" *ngIf="isAdmin">
+                  <span class="metric-label">Projected Profit:</span>
+                  <span class="metric-value">${{ analytics.run_rate.projected_profit | number:'1.0-0' }}</span>
+                  <span class="metric-badge"
+                    [style.background-color]="getAchievementColor(analytics.run_rate.profit_pct)">
+                    {{ analytics.run_rate.profit_pct | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="days-info">
+                  <small>{{ analytics.days_elapsed }} of {{ analytics.days_in_month }} days elapsed</small>
+                </div>
               </div>
-              <div class="metric-row">
-                <span class="metric-label">Expected Progress:</span>
-                <span class="metric-value">{{ analytics.pacing.expected_progress_pct | number:'1.1-1' }}%</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Revenue Pacing:</span>
-                <span class="metric-value" [class.positive]="analytics.pacing.revenue_pacing > 0"
-                  [class.negative]="analytics.pacing.revenue_pacing < 0">
-                  {{ analytics.pacing.revenue_pacing > 0 ? '+' : '' }}{{ analytics.pacing.revenue_pacing |
-                  number:'1.1-1'
-                  }}%
-                </span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Orders Pacing:</span>
-                <span class="metric-value" [class.positive]="analytics.pacing.orders_pacing > 0"
-                  [class.negative]="analytics.pacing.orders_pacing < 0">
-                  {{ analytics.pacing.orders_pacing > 0 ? '+' : '' }}{{ analytics.pacing.orders_pacing | number:'1.1-1'
-                  }}%
-                </span>
-              </div>
-            </div>
-          </p-card>
+            </p-card>
 
-          <!-- Daily Performance -->
-          <p-card styleClass="analytics-card">
-            <div class="analytics-content">
-              <h4>Today's Performance</h4>
-              <div class="metric-row">
-                <span class="metric-label">Orders Today:</span>
-                <span class="metric-value">{{ analytics.daily.today_orders | number }}</span>
+            <!-- Pacing Status -->
+            <p-card styleClass="analytics-card">
+              <div class="analytics-content">
+                <h4>Pacing Status</h4>
+                <div class="pacing-status" [style.border-color]="getPacingColor(analytics.pacing.status)">
+                  <i class="pi pi-circle-fill" [style.color]="getPacingColor(analytics.pacing.status)"></i>
+                  <span class="status-text">{{ analytics.pacing.status }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Expected Progress:</span>
+                  <span class="metric-value">{{ analytics.pacing.expected_progress_pct | number:'1.1-1' }}%</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Revenue Pacing:</span>
+                  <span class="metric-value" [class.positive]="analytics.pacing.revenue_pacing > 0"
+                    [class.negative]="analytics.pacing.revenue_pacing < 0">
+                    {{ analytics.pacing.revenue_pacing > 0 ? '+' : '' }}{{ analytics.pacing.revenue_pacing |
+                    number:'1.1-1'
+                    }}%
+                  </span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Orders Pacing:</span>
+                  <span class="metric-value" [class.positive]="analytics.pacing.orders_pacing > 0"
+                    [class.negative]="analytics.pacing.orders_pacing < 0">
+                    {{ analytics.pacing.orders_pacing > 0 ? '+' : '' }}{{ analytics.pacing.orders_pacing |
+                    number:'1.1-1'
+                    }}%
+                  </span>
+                </div>
               </div>
-              <div class="metric-row">
-                <span class="metric-label">Revenue Today:</span>
-                <span class="metric-value">${{ analytics.daily.today_revenue | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row" *ngIf="isAdmin">
-                <span class="metric-label">Profit Today:</span>
-                <span class="metric-value">${{ analytics.daily.today_profit | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Avg Order Value:</span>
-                <span class="metric-value">${{ analytics.daily.today_orders > 0 ? (analytics.daily.today_revenue /
-                  analytics.daily.today_orders) : 0 | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Required Daily:</span>
-                <span class="metric-value">{{ analytics.daily.required_daily_orders | number:'1.0-0' }} orders / ${{
-                  analytics.daily.required_daily_revenue | number:'1.0-0' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Daily Achievement:</span>
-                <span class="metric-badge"
-                  [style.background-color]="getAchievementColor(analytics.daily.revenue_achievement_pct)">
-                  {{ analytics.daily.revenue_achievement_pct | number:'1.0-0' }}%
-                </span>
-              </div>
-              <div class="insight-box"
-                [class.insight-success]="analytics.daily.today_orders >= analytics.daily.required_daily_orders"
-                [class.insight-warning]="analytics.daily.today_orders < analytics.daily.required_daily_orders && analytics.daily.today_orders >= analytics.daily.required_daily_orders * 0.7"
-                [class.insight-danger]="analytics.daily.today_orders < analytics.daily.required_daily_orders * 0.7">
-                <i class="pi" [ngClass]="{
+            </p-card>
+
+            <!-- Daily Performance -->
+            <p-card styleClass="analytics-card">
+              <div class="analytics-content">
+                <h4>Today's Performance</h4>
+                <div class="metric-row">
+                  <span class="metric-label">Orders Today:</span>
+                  <span class="metric-value">{{ analytics.daily.today_orders | number }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Revenue Today:</span>
+                  <span class="metric-value">${{ analytics.daily.today_revenue | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row" *ngIf="isAdmin">
+                  <span class="metric-label">Profit Today:</span>
+                  <span class="metric-value">${{ analytics.daily.today_profit | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Avg Order Value:</span>
+                  <span class="metric-value">${{ analytics.daily.today_orders > 0 ? (analytics.daily.today_revenue /
+                    analytics.daily.today_orders) : 0 | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Required Daily:</span>
+                  <span class="metric-value">{{ analytics.daily.required_daily_orders | number:'1.0-0' }} orders / ${{
+                    analytics.daily.required_daily_revenue | number:'1.0-0' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Daily Achievement:</span>
+                  <span class="metric-badge"
+                    [style.background-color]="getAchievementColor(analytics.daily.revenue_achievement_pct)">
+                    {{ analytics.daily.revenue_achievement_pct | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="insight-box"
+                  [class.insight-success]="analytics.daily.today_orders >= analytics.daily.required_daily_orders"
+                  [class.insight-warning]="analytics.daily.today_orders < analytics.daily.required_daily_orders && analytics.daily.today_orders >= analytics.daily.required_daily_orders * 0.7"
+                  [class.insight-danger]="analytics.daily.today_orders < analytics.daily.required_daily_orders * 0.7">
+                  <i class="pi" [ngClass]="{
                 'pi-check-circle': analytics.daily.today_orders >= analytics.daily.required_daily_orders,
                 'pi-exclamation-triangle': analytics.daily.today_orders < analytics.daily.required_daily_orders && analytics.daily.today_orders >= analytics.daily.required_daily_orders * 0.7,
                 'pi-times-circle': analytics.daily.today_orders < analytics.daily.required_daily_orders * 0.7
               }"></i>
-                <span *ngIf="analytics.daily.today_orders >= analytics.daily.required_daily_orders">
-                  Great job! You're ahead of today's target. Keep it up!
-                </span>
-                <span
-                  *ngIf="analytics.daily.today_orders < analytics.daily.required_daily_orders && analytics.daily.today_orders >= analytics.daily.required_daily_orders * 0.7">
-                  Almost there! Need {{ (analytics.daily.required_daily_orders - analytics.daily.today_orders) |
-                  number:'1.0-0' }} more orders to hit target.
-                </span>
-                <span *ngIf="analytics.daily.today_orders < analytics.daily.required_daily_orders * 0.7">
-                  Push harder! {{ (analytics.daily.required_daily_orders - analytics.daily.today_orders) |
-                  number:'1.0-0'
-                  }} more orders needed today.
-                </span>
+                  <span *ngIf="analytics.daily.today_orders >= analytics.daily.required_daily_orders">
+                    Great job! You're ahead of today's target. Keep it up!
+                  </span>
+                  <span
+                    *ngIf="analytics.daily.today_orders < analytics.daily.required_daily_orders && analytics.daily.today_orders >= analytics.daily.required_daily_orders * 0.7">
+                    Almost there! Need {{ (analytics.daily.required_daily_orders - analytics.daily.today_orders) |
+                    number:'1.0-0' }} more orders to hit target.
+                  </span>
+                  <span *ngIf="analytics.daily.today_orders < analytics.daily.required_daily_orders * 0.7">
+                    Push harder! {{ (analytics.daily.required_daily_orders - analytics.daily.today_orders) |
+                    number:'1.0-0'
+                    }} more orders needed today.
+                  </span>
+                </div>
               </div>
-            </div>
-          </p-card>
+            </p-card>
 
-          <!-- ROI Metrics (MB only) -->
-          <p-card styleClass="analytics-card" *ngIf="isMediaBuyer || (isAdmin && analytics.mtd.spend > 0)">
-            <div class="analytics-content">
-              <h4>ROI & Efficiency</h4>
-              <div class="metric-row">
-                <span class="metric-label">ROAS:</span>
-                <span class="metric-value">{{ analytics.roi.roas | number:'1.2-2' }}x</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">ROI:</span>
-                <span class="metric-value">{{ analytics.roi.roi_pct | number:'1.1-1' }}%</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">CPA:</span>
-                <span class="metric-value">${{ analytics.roi.cpa | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">MTD Spend:</span>
-                <span class="metric-value">${{ analytics.mtd.spend | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Revenue Generated:</span>
-                <span class="metric-value">${{ analytics.mtd.revenue | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row" *ngIf="analytics.targets.spend !== null">
-                <span class="metric-label">Remaining Budget:</span>
-                <span class="metric-value" [class.positive]="(analytics.targets.spend! - analytics.mtd.spend) > 0"
-                  [class.negative]="(analytics.targets.spend! - analytics.mtd.spend) < 0">
-                  ${{ (analytics.targets.spend! - analytics.mtd.spend) | number:'1.2-2' }}
-                </span>
-              </div>
-              <div class="insight-box" [class.insight-success]="analytics.roi.roas >= 2"
-                [class.insight-warning]="analytics.roi.roas >= 1.5 && analytics.roi.roas < 2"
-                [class.insight-danger]="analytics.roi.roas < 1.5">
-                <i class="pi" [ngClass]="{
+            <!-- ROI Metrics (MB only) -->
+            <p-card styleClass="analytics-card" *ngIf="isMediaBuyer || (isAdmin && analytics.mtd.spend > 0)">
+              <div class="analytics-content">
+                <h4>ROI & Efficiency</h4>
+                <div class="metric-row">
+                  <span class="metric-label">ROAS:</span>
+                  <span class="metric-value">{{ analytics.roi.roas | number:'1.2-2' }}x</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">ROI:</span>
+                  <span class="metric-value">{{ analytics.roi.roi_pct | number:'1.1-1' }}%</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">CPA:</span>
+                  <span class="metric-value">${{ analytics.roi.cpa | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">MTD Spend:</span>
+                  <span class="metric-value">${{ analytics.mtd.spend | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Revenue Generated:</span>
+                  <span class="metric-value">${{ analytics.mtd.revenue | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row" *ngIf="analytics.targets.spend !== null">
+                  <span class="metric-label">Remaining Budget:</span>
+                  <span class="metric-value" [class.positive]="(analytics.targets.spend! - analytics.mtd.spend) > 0"
+                    [class.negative]="(analytics.targets.spend! - analytics.mtd.spend) < 0">
+                    ${{ (analytics.targets.spend! - analytics.mtd.spend) | number:'1.2-2' }}
+                  </span>
+                </div>
+                <div class="insight-box" [class.insight-success]="analytics.roi.roas >= 2"
+                  [class.insight-warning]="analytics.roi.roas >= 1.5 && analytics.roi.roas < 2"
+                  [class.insight-danger]="analytics.roi.roas < 1.5">
+                  <i class="pi" [ngClass]="{
                 'pi-thumbs-up': analytics.roi.roas >= 2,
                 'pi-info-circle': analytics.roi.roas >= 1.5 && analytics.roi.roas < 2,
                 'pi-exclamation-triangle': analytics.roi.roas < 1.5
               }"></i>
-                <span *ngIf="analytics.roi.roas >= 2">
-                  Excellent ROAS! Your ads are highly profitable.
-                </span>
-                <span *ngIf="analytics.roi.roas >= 1.5 && analytics.roi.roas < 2">
-                  Good performance. Optimize to reach 2x ROAS target.
-                </span>
-                <span *ngIf="analytics.roi.roas < 1.5">
-                  ROAS below target. Review ad performance and optimize campaigns.
-                </span>
+                  <span *ngIf="analytics.roi.roas >= 2">
+                    Excellent ROAS! Your ads are highly profitable.
+                  </span>
+                  <span *ngIf="analytics.roi.roas >= 1.5 && analytics.roi.roas < 2">
+                    Good performance. Optimize to reach 2x ROAS target.
+                  </span>
+                  <span *ngIf="analytics.roi.roas < 1.5">
+                    ROAS below target. Review ad performance and optimize campaigns.
+                  </span>
+                </div>
               </div>
-            </div>
-          </p-card>
+            </p-card>
 
-          <!-- Efficiency Metrics -->
-          <p-card styleClass="analytics-card" *ngIf="isAdmin">
-            <div class="analytics-content">
-              <h4>Efficiency Metrics</h4>
-              <div class="metric-row">
-                <span class="metric-label">Avg Order Value:</span>
-                <span class="metric-value">${{ analytics.efficiency.avg_order_value | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Profit Margin:</span>
-                <span class="metric-value">{{ analytics.efficiency.profit_margin_pct | number:'1.1-1' }}%</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Total Revenue:</span>
-                <span class="metric-value">${{ analytics.mtd.revenue | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Total Profit:</span>
-                <span class="metric-value">${{ analytics.mtd.profit | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Total Payout:</span>
-                <span class="metric-value">${{ analytics.mtd.payout | number:'1.2-2' }}</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Days Remaining:</span>
-                <span class="metric-value">{{ analytics.days_remaining }} days</span>
-              </div>
-              <div class="insight-box" [class.insight-success]="analytics.efficiency.profit_margin_pct >= 25"
-                [class.insight-warning]="analytics.efficiency.profit_margin_pct >= 15 && analytics.efficiency.profit_margin_pct < 25"
-                [class.insight-danger]="analytics.efficiency.profit_margin_pct < 15">
-                <i class="pi" [ngClass]="{
+            <!-- Efficiency Metrics -->
+            <p-card styleClass="analytics-card" *ngIf="isAdmin">
+              <div class="analytics-content">
+                <h4>Efficiency Metrics</h4>
+                <div class="metric-row">
+                  <span class="metric-label">Avg Order Value:</span>
+                  <span class="metric-value">${{ analytics.efficiency.avg_order_value | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Profit Margin:</span>
+                  <span class="metric-value">{{ analytics.efficiency.profit_margin_pct | number:'1.1-1' }}%</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Total Revenue:</span>
+                  <span class="metric-value">${{ analytics.mtd.revenue | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Total Profit:</span>
+                  <span class="metric-value">${{ analytics.mtd.profit | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Total Payout:</span>
+                  <span class="metric-value">${{ analytics.mtd.payout | number:'1.2-2' }}</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Days Remaining:</span>
+                  <span class="metric-value">{{ analytics.days_remaining }} days</span>
+                </div>
+                <div class="insight-box" [class.insight-success]="analytics.efficiency.profit_margin_pct >= 25"
+                  [class.insight-warning]="analytics.efficiency.profit_margin_pct >= 15 && analytics.efficiency.profit_margin_pct < 25"
+                  [class.insight-danger]="analytics.efficiency.profit_margin_pct < 15">
+                  <i class="pi" [ngClass]="{
                 'pi-star': analytics.efficiency.profit_margin_pct >= 25,
                 'pi-chart-line': analytics.efficiency.profit_margin_pct >= 15 && analytics.efficiency.profit_margin_pct < 25,
                 'pi-arrow-down': analytics.efficiency.profit_margin_pct < 15
               }"></i>
-                <span *ngIf="analytics.efficiency.profit_margin_pct >= 25">
-                  Outstanding margin! Business is healthy.
-                </span>
-                <span
-                  *ngIf="analytics.efficiency.profit_margin_pct >= 15 && analytics.efficiency.profit_margin_pct < 25">
-                  Good margin. Look for improvement opportunities.
-                </span>
-                <span *ngIf="analytics.efficiency.profit_margin_pct < 15">
-                  Low margin. Review and optimize payouts.
-                </span>
+                  <span *ngIf="analytics.efficiency.profit_margin_pct >= 25">
+                    Outstanding margin! Business is healthy.
+                  </span>
+                  <span
+                    *ngIf="analytics.efficiency.profit_margin_pct >= 15 && analytics.efficiency.profit_margin_pct < 25">
+                    Good margin. Look for improvement opportunities.
+                  </span>
+                  <span *ngIf="analytics.efficiency.profit_margin_pct < 15">
+                    Low margin. Review and optimize payouts.
+                  </span>
+                </div>
               </div>
-            </div>
-          </p-card>
+            </p-card>
 
-          <!-- Targets Overview Card -->
-          <p-card styleClass="analytics-card targets-card">
-            <div class="analytics-content">
-              <div class="targets-header">
-                <h4>Targets Overview</h4>
-              </div>
+            <!-- Targets Overview Card -->
+            <p-card styleClass="analytics-card targets-card">
+              <div class="analytics-content">
+                <div class="targets-header">
+                  <h4>Targets Overview</h4>
+                </div>
 
-              <!-- Department Breakdown for Admin/Ops -->
-              <div class="dept-breakdown"
-                *ngIf="analytics.department_breakdown && analytics.department_breakdown.length > 0">
-                <div class="dept-card" *ngFor="let dept of analytics.department_breakdown">
-                  <div class="dept-card-header">
-                    <span class="dept-name">{{ dept.name }}</span>
-                  </div>
-                  <div class="dept-metrics">
-                    <div class="dept-metric">
-                      <span class="dept-metric-label">Orders:</span>
-                      <span class="dept-metric-value">{{ dept.orders | number }}</span>
-                      <span class="dept-separator">/</span>
-                      <span class="dept-metric-target">{{ dept.targets.orders !== null ? (dept.targets.orders | number)
-                        :
-                        'No target set' }}</span>
-                      <span class="dept-metric-pct"
-                        [style.color]="dept.achievement.orders_pct !== null ? getAchievementColor(dept.achievement.orders_pct) : '#9ca3af'">
-                        {{ dept.achievement.orders_pct !== null ? (dept.achievement.orders_pct | number:'1.0-0') + '%' :
-                        '-' }}
-                      </span>
+                <!-- Department Breakdown for Admin/Ops -->
+                <div class="dept-breakdown"
+                  *ngIf="analytics.department_breakdown && analytics.department_breakdown.length > 0">
+                  <div class="dept-card" *ngFor="let dept of analytics.department_breakdown">
+                    <div class="dept-card-header">
+                      <span class="dept-name">{{ dept.name }}</span>
                     </div>
-                    <div class="dept-metric">
-                      <span class="dept-metric-label">Revenue:</span>
-                      <span class="dept-metric-value">${{ dept.revenue | trimDecimals:2 }}</span>
-                      <span class="dept-separator">/</span>
-                      <span class="dept-metric-target">{{ dept.targets.revenue !== null ? ('$' + (dept.targets.revenue
+                    <div class="dept-metrics">
+                      <div class="dept-metric">
+                        <span class="dept-metric-label">Orders:</span>
+                        <span class="dept-metric-value">{{ dept.orders | number }}</span>
+                        <span class="dept-separator">/</span>
+                        <span class="dept-metric-target">{{ dept.targets.orders !== null ? (dept.targets.orders |
+                          number)
+                          :
+                          'No target set' }}</span>
+                        <span class="dept-metric-pct"
+                          [style.color]="dept.achievement.orders_pct !== null ? getAchievementColor(dept.achievement.orders_pct) : '#9ca3af'">
+                          {{ dept.achievement.orders_pct !== null ? (dept.achievement.orders_pct | number:'1.0-0') + '%'
+                          :
+                          '-' }}
+                        </span>
+                      </div>
+                      <div class="dept-metric">
+                        <span class="dept-metric-label">Revenue:</span>
+                        <span class="dept-metric-value">${{ dept.revenue | trimDecimals:2 }}</span>
+                        <span class="dept-separator">/</span>
+                        <span class="dept-metric-target">{{ dept.targets.revenue !== null ? ('$' + (dept.targets.revenue
+                          | trimDecimals:2)) : 'No target set' }}</span>
+                        <span class="dept-metric-pct"
+                          [style.color]="dept.achievement.revenue_pct !== null ? getAchievementColor(dept.achievement.revenue_pct) : '#9ca3af'">
+                          {{ dept.achievement.revenue_pct !== null ? (dept.achievement.revenue_pct | number:'1.0-0') +
+                          '%'
+                          :
+                          '-' }}
+                        </span>
+                      </div>
+                      <div class="dept-metric">
+                        <span class="dept-metric-label">Profit:</span>
+                        <span class="dept-metric-value">${{ dept.profit | trimDecimals:2 }}</span>
+                        <span class="dept-separator">/</span>
+                        <span class="dept-metric-target">{{ dept.targets.profit !== null ? ('$' + (dept.targets.profit
+                          | trimDecimals:2)) : 'No target set' }}</span>
+                        <span class="dept-metric-pct"
+                          [style.color]="dept.achievement.profit_pct !== null ? getAchievementColor(dept.achievement.profit_pct) : '#9ca3af'">
+                          {{ dept.achievement.profit_pct !== null ? (dept.achievement.profit_pct | number:'1.0-0') + '%'
+                          :
+                          '-' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Individual User Targets -->
+                <div class="targets-summary" *ngIf="!analytics.department_breakdown">
+                  <div class="target-item">
+                    <div class="target-header">
+                      <span class="target-label">Orders</span>
+                    </div>
+                    <div class="target-numbers">
+                      <span class="actual">{{ analytics.mtd.orders | number }}</span>
+                      <span class="separator">/</span>
+                      <span class="target">{{ analytics.targets.orders !== null ? (analytics.targets.orders | number) :
+                        'No
+                        target set' }}</span>
+                    </div>
+                    <div class="target-bar-mini" *ngIf="analytics.targets.orders !== null">
+                      <div class="target-fill" [style.width.%]="analytics.achievement_pct.orders || 0"
+                        [style.background-color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#e5e7eb'">
+                      </div>
+                    </div>
+                    <span class="target-pct"
+                      [style.color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#9ca3af'">
+                      {{ analytics.achievement_pct.orders !== null ? (analytics.achievement_pct.orders | number:'1.0-0')
+                      +
+                      '%' : '-' }}
+                    </span>
+                  </div>
+
+                  <div class="target-item">
+                    <div class="target-header">
+                      <span class="target-label">Revenue</span>
+                    </div>
+                    <div class="target-numbers">
+                      <span class="actual">${{ analytics.mtd.revenue | trimDecimals:2 }}</span>
+                      <span class="separator">/</span>
+                      <span class="target">{{ analytics.targets.revenue !== null ? ('$' + (analytics.targets.revenue
                         | trimDecimals:2)) : 'No target set' }}</span>
-                      <span class="dept-metric-pct"
-                        [style.color]="dept.achievement.revenue_pct !== null ? getAchievementColor(dept.achievement.revenue_pct) : '#9ca3af'">
-                        {{ dept.achievement.revenue_pct !== null ? (dept.achievement.revenue_pct | number:'1.0-0') + '%'
-                        :
-                        '-' }}
-                      </span>
                     </div>
-                    <div class="dept-metric">
-                      <span class="dept-metric-label">Profit:</span>
-                      <span class="dept-metric-value">${{ dept.profit | trimDecimals:2 }}</span>
-                      <span class="dept-separator">/</span>
-                      <span class="dept-metric-target">{{ dept.targets.profit !== null ? ('$' + (dept.targets.profit
-                        | trimDecimals:2)) : 'No target set' }}</span>
-                      <span class="dept-metric-pct"
-                        [style.color]="dept.achievement.profit_pct !== null ? getAchievementColor(dept.achievement.profit_pct) : '#9ca3af'">
-                        {{ dept.achievement.profit_pct !== null ? (dept.achievement.profit_pct | number:'1.0-0') + '%' :
-                        '-' }}
-                      </span>
+                    <div class="target-bar-mini" *ngIf="analytics.targets.revenue !== null">
+                      <div class="target-fill" [style.width.%]="analytics.achievement_pct.revenue || 0"
+                        [style.background-color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#e5e7eb'">
+                      </div>
                     </div>
+                    <span class="target-pct"
+                      [style.color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#9ca3af'">
+                      {{ analytics.achievement_pct.revenue !== null ? (analytics.achievement_pct.revenue |
+                      number:'1.0-0')
+                      +
+                      '%' : '-' }}
+                    </span>
                   </div>
+
+                  <div class="target-item">
+                    <div class="target-header">
+                      <span class="target-label">Profit</span>
+                    </div>
+                    <div class="target-numbers">
+                      <span class="actual">${{ analytics.mtd.profit | trimDecimals:2 }}</span>
+                      <span class="separator">/</span>
+                      <span class="target">{{ analytics.targets.profit !== null ? ('$' + (analytics.targets.profit |
+                        trimDecimals:2)) : 'No target set' }}</span>
+                    </div>
+                    <div class="target-bar-mini" *ngIf="analytics.targets.profit !== null">
+                      <div class="target-fill" [style.width.%]="analytics.achievement_pct.profit || 0"
+                        [style.background-color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#e5e7eb'">
+                      </div>
+                    </div>
+                    <span class="target-pct"
+                      [style.color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#9ca3af'">
+                      {{ analytics.achievement_pct.profit !== null ? (analytics.achievement_pct.profit | number:'1.0-0')
+                      +
+                      '%' : '-' }}
+                    </span>
+                  </div>
+
+                  <div class="target-item" *ngIf="isMediaBuyer">
+                    <div class="target-header">
+                      <span class="target-label">Spend</span>
+                      <span class="target-dept dept-mb">MB</span>
+                    </div>
+                    <div class="target-numbers">
+                      <span class="actual">${{ analytics.mtd.spend | trimDecimals:2 }}</span>
+                      <span class="separator">/</span>
+                      <span class="target">{{ analytics.targets.spend !== null ? ('$' + (analytics.targets.spend |
+                        trimDecimals:2)) : 'No target set' }}</span>
+                    </div>
+                    <div class="target-bar-mini" *ngIf="analytics.targets.spend !== null">
+                      <div class="target-fill" [style.width.%]="analytics.achievement_pct.spend"
+                        [style.background-color]="getAchievementColor(analytics.achievement_pct.spend)"></div>
+                    </div>
+                    <span class="target-pct"
+                      [style.color]="analytics.achievement_pct.spend !== null ? getAchievementColor(analytics.achievement_pct.spend) : '#9ca3af'">
+                      {{ analytics.achievement_pct.spend !== null ? (analytics.achievement_pct.spend | number:'1.0-0') +
+                      '%'
+                      : '-' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="targets-status" [style.background-color]="getPacingColor(analytics.pacing.status) + '15'"
+                  [style.border-color]="getPacingColor(analytics.pacing.status)">
+                  <i class="pi pi-circle-fill" [style.color]="getPacingColor(analytics.pacing.status)"></i>
+                  <span class="status-label">{{ analytics.pacing.status }}</span>
+                  <span class="status-detail">{{ analytics.pacing.revenue_pacing > 0 ? '+' : '' }}{{
+                    analytics.pacing.revenue_pacing | number:'1.1-1' }}% vs expected</span>
                 </div>
               </div>
+            </p-card>
 
-              <!-- Individual User Targets -->
-              <div class="targets-summary" *ngIf="!analytics.department_breakdown">
-                <div class="target-item">
-                  <div class="target-header">
-                    <span class="target-label">Orders</span>
-                  </div>
-                  <div class="target-numbers">
-                    <span class="actual">{{ analytics.mtd.orders | number }}</span>
-                    <span class="separator">/</span>
-                    <span class="target">{{ analytics.targets.orders !== null ? (analytics.targets.orders | number) :
-                      'No
-                      target set' }}</span>
-                  </div>
-                  <div class="target-bar-mini" *ngIf="analytics.targets.orders !== null">
-                    <div class="target-fill" [style.width.%]="analytics.achievement_pct.orders || 0"
-                      [style.background-color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#e5e7eb'">
-                    </div>
-                  </div>
-                  <span class="target-pct"
-                    [style.color]="analytics.achievement_pct.orders !== null ? getAchievementColor(analytics.achievement_pct.orders) : '#9ca3af'">
-                    {{ analytics.achievement_pct.orders !== null ? (analytics.achievement_pct.orders | number:'1.0-0') +
-                    '%' : '-' }}
-                  </span>
-                </div>
-
-                <div class="target-item">
-                  <div class="target-header">
-                    <span class="target-label">Revenue</span>
-                  </div>
-                  <div class="target-numbers">
-                    <span class="actual">${{ analytics.mtd.revenue | trimDecimals:2 }}</span>
-                    <span class="separator">/</span>
-                    <span class="target">{{ analytics.targets.revenue !== null ? ('$' + (analytics.targets.revenue
-                      | trimDecimals:2)) : 'No target set' }}</span>
-                  </div>
-                  <div class="target-bar-mini" *ngIf="analytics.targets.revenue !== null">
-                    <div class="target-fill" [style.width.%]="analytics.achievement_pct.revenue || 0"
-                      [style.background-color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#e5e7eb'">
-                    </div>
-                  </div>
-                  <span class="target-pct"
-                    [style.color]="analytics.achievement_pct.revenue !== null ? getAchievementColor(analytics.achievement_pct.revenue) : '#9ca3af'">
-                    {{ analytics.achievement_pct.revenue !== null ? (analytics.achievement_pct.revenue | number:'1.0-0')
-                    +
-                    '%' : '-' }}
-                  </span>
-                </div>
-
-                <div class="target-item">
-                  <div class="target-header">
-                    <span class="target-label">Profit</span>
-                  </div>
-                  <div class="target-numbers">
-                    <span class="actual">${{ analytics.mtd.profit | trimDecimals:2 }}</span>
-                    <span class="separator">/</span>
-                    <span class="target">{{ analytics.targets.profit !== null ? ('$' + (analytics.targets.profit |
-                      trimDecimals:2)) : 'No target set' }}</span>
-                  </div>
-                  <div class="target-bar-mini" *ngIf="analytics.targets.profit !== null">
-                    <div class="target-fill" [style.width.%]="analytics.achievement_pct.profit || 0"
-                      [style.background-color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#e5e7eb'">
-                    </div>
-                  </div>
-                  <span class="target-pct"
-                    [style.color]="analytics.achievement_pct.profit !== null ? getAchievementColor(analytics.achievement_pct.profit) : '#9ca3af'">
-                    {{ analytics.achievement_pct.profit !== null ? (analytics.achievement_pct.profit | number:'1.0-0') +
-                    '%' : '-' }}
-                  </span>
-                </div>
-
-                <div class="target-item" *ngIf="isMediaBuyer">
-                  <div class="target-header">
-                    <span class="target-label">Spend</span>
-                    <span class="target-dept dept-mb">MB</span>
-                  </div>
-                  <div class="target-numbers">
-                    <span class="actual">${{ analytics.mtd.spend | trimDecimals:2 }}</span>
-                    <span class="separator">/</span>
-                    <span class="target">{{ analytics.targets.spend !== null ? ('$' + (analytics.targets.spend |
-                      trimDecimals:2)) : 'No target set' }}</span>
-                  </div>
-                  <div class="target-bar-mini" *ngIf="analytics.targets.spend !== null">
-                    <div class="target-fill" [style.width.%]="analytics.achievement_pct.spend"
-                      [style.background-color]="getAchievementColor(analytics.achievement_pct.spend)"></div>
-                  </div>
-                  <span class="target-pct"
-                    [style.color]="analytics.achievement_pct.spend !== null ? getAchievementColor(analytics.achievement_pct.spend) : '#9ca3af'">
-                    {{ analytics.achievement_pct.spend !== null ? (analytics.achievement_pct.spend | number:'1.0-0') +
-                    '%'
-                    : '-' }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="targets-status" [style.background-color]="getPacingColor(analytics.pacing.status) + '15'"
-                [style.border-color]="getPacingColor(analytics.pacing.status)">
-                <i class="pi pi-circle-fill" [style.color]="getPacingColor(analytics.pacing.status)"></i>
-                <span class="status-label">{{ analytics.pacing.status }}</span>
-                <span class="status-detail">{{ analytics.pacing.revenue_pacing > 0 ? '+' : '' }}{{
-                  analytics.pacing.revenue_pacing | number:'1.1-1' }}% vs expected</span>
-              </div>
-            </div>
-          </p-card>
-          
           </ng-container> <!-- End Full Analytics -->
         </ng-container>
       </div>
