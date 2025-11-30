@@ -1786,11 +1786,13 @@ def performance_analytics_view(request):
     mtd_agg = perf_qs.aggregate(
         total_orders=Sum("total_orders"),
         total_revenue=Sum("total_revenue"),
-        total_payout=Sum("total_payout")
+        total_payout=Sum("total_payout"),
+        total_sales=Sum("total_sales")
     )
     
     mtd_orders = mtd_agg["total_orders"] or 0
     mtd_revenue = float(mtd_agg["total_revenue"] or 0)
+    mtd_sales = float(mtd_agg["total_sales"] or 0)
     mtd_payout = float(mtd_agg["total_payout"] or 0)
     
     # Get MTD spend for media buyers
@@ -2216,14 +2218,14 @@ def performance_analytics_view(request):
                 run_rate_status = "On Track"
             
             # Build simplified analytics structure
-            print(f"📊 Simplified Analytics: mtd_revenue=${mtd_revenue:.2f}, mtd_payout=${mtd_payout:.2f}, mtd_orders={mtd_orders}")
+            print(f"📊 Simplified Analytics: mtd_sales=${mtd_sales:.2f}, mtd_revenue=${mtd_revenue:.2f}, mtd_payout=${mtd_payout:.2f}, mtd_orders={mtd_orders}")
             response_data["simplified_analytics"] = {
                 "is_department_restricted": True,
                 "earnings": {
                     "total_payout": round(mtd_payout, 2),
                     "total_orders": int(mtd_orders),
                     "avg_commission": round(avg_commission, 2),
-                    "sales_volume": round(mtd_revenue, 2)
+                    "sales_volume": round(mtd_sales, 2)
                 },
                 "yesterday": {
                     "payout": round(yesterday_payout, 2),
