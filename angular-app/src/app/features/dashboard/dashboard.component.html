@@ -199,10 +199,22 @@
     <!-- Performance Analytics Section -->
     <div class="analytics-section" *ngIf="analytics || showSkeletons">
       <div class="analytics-header">
-        <h3 *ngIf="showAnalytics && !showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics - {{
-          analytics?.month |
-          date:'MMMM yyyy' }}</h3>
-        <h3 *ngIf="!showAnalytics || showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
+        <div class="analytics-title-group">
+          <h3 *ngIf="showAnalytics && !showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
+          <h3 *ngIf="!showAnalytics || showSkeletons"><i class="pi pi-chart-bar"></i> Performance Analytics</h3>
+          
+          <!-- Month Selector -->
+          <div class="month-selector" *ngIf="showAnalytics && !showSkeletons">
+            <button class="month-nav-btn" (click)="previousMonth()">
+              <i class="pi pi-chevron-left"></i>
+            </button>
+            <span class="selected-month">{{ selectedMonth | date:'MMMM yyyy' }}</span>
+            <button class="month-nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()">
+              <i class="pi pi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        
         <button class="toggle-btn" (click)="showAnalytics = !showAnalytics"
           [title]="showAnalytics ? 'Hide analytics' : 'Show analytics'" [disabled]="showSkeletons">
           <i class="pi" [ngClass]="showAnalytics ? 'pi-eye-slash' : 'pi-eye'"></i>

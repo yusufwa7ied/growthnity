@@ -107,6 +107,7 @@ export class DashboardComponent implements OnInit {
     activeDatePreset: string = '';
     tableSearchTerm: string = '';
     showFilterModal: boolean = false;
+    selectedMonth: Date = new Date(); // Current month for analytics
 
     // Pagination
     currentPage: number = 1;
@@ -852,11 +853,14 @@ export class DashboardComponent implements OnInit {
             else if (this.user.department === 'influencer') partnerType = 'INF';
         }
 
+        // Format selected month as YYYY-MM
+        const monthStr = `${this.selectedMonth.getFullYear()}-${String(this.selectedMonth.getMonth() + 1).padStart(2, '0')}`;
+        
         this.analyticsService.getPerformanceAnalytics(
             advertiserIds,
             partnerIds,
             partnerType,
-            undefined // current month by default
+            monthStr
         ).subscribe({
             next: (data) => {
                 this.analytics = data;
@@ -893,6 +897,26 @@ export class DashboardComponent implements OnInit {
             case 3: return 'rd';
             default: return 'th';
         }
+    }
+
+    previousMonth(): void {
+        const newMonth = new Date(this.selectedMonth);
+        newMonth.setMonth(newMonth.getMonth() - 1);
+        this.selectedMonth = newMonth;
+        this.loadAnalytics();
+    }
+
+    nextMonth(): void {
+        const newMonth = new Date(this.selectedMonth);
+        newMonth.setMonth(newMonth.getMonth() + 1);
+        this.selectedMonth = newMonth;
+        this.loadAnalytics();
+    }
+
+    isCurrentMonth(): boolean {
+        const now = new Date();
+        return this.selectedMonth.getFullYear() === now.getFullYear() &&
+               this.selectedMonth.getMonth() === now.getMonth();
     }
 
     setDatePreset(preset: string): void {
