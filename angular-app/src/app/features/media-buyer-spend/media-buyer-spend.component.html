@@ -79,20 +79,8 @@
                     <div class="form-field">
                         <label>Advertiser <span class="required">*</span> ({{allAdvertisers.length}} available)</label>
                         <p-select [options]="allAdvertisers" [(ngModel)]="selectedAdvertiser" [filter]="true"
-                            [showClear]="true" optionLabel="label" placeholder="All Advertisers" appendTo="body"
-                            (onChange)="onAdvertiserChange()">
+                            [showClear]="true" optionLabel="label" placeholder="All Advertisers" appendTo="body">
                         </p-select>
-                    </div>
-
-                    <div class="form-field">
-                        <label>Coupon <span class="required">*</span></label>
-                        <p-select [options]="coupons" [(ngModel)]="selectedCoupon" [filter]="true" [showClear]="true"
-                            optionLabel="label" placeholder="Select Coupon" appendTo="body"
-                            [disabled]="!selectedAdvertiser">
-                        </p-select>
-                        <small *ngIf="selectedAdvertiser && coupons.length === 0" class="text-warning">
-                            No coupons available for this advertiser
-                        </small>
                     </div>
 
                     <div class="form-field">
@@ -169,7 +157,6 @@
                         <th>Date</th>
                         <th>Advertiser</th>
                         <th>Partner</th>
-                        <th>Coupon</th>
                         <th>Platform</th>
                         <th>Amount Spent</th>
                         <th>Currency</th>
@@ -181,7 +168,6 @@
                         <td>{{ spend.date }}</td>
                         <td>{{ spend.advertiser_name }}</td>
                         <td>{{ spend.partner_name }}</td>
-                        <td>{{ spend.coupon_code || 'N/A' }}</td>
                         <td>{{ spend.platform || 'N/A' }}</td>
                         <td>{{ spend.amount_spent | number:'1.2-2' }}</td>
                         <td>{{ spend.currency }}</td>
@@ -190,7 +176,7 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="7" class="empty-message">
+                        <td colspan="6" class="empty-message">
                             <i class="pi pi-inbox"></i>
                             <p>No spend records found</p>
                             <span>Add your first daily spend entry using the button above</span>

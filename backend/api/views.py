@@ -526,17 +526,16 @@ def performance_table_view(request):
                 spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
             
             if spend_conditions:
-                # Get spend grouped by date/advertiser/partner/coupon (sum across platforms)
-                spends = MediaBuyerDailySpend.objects.filter(spend_conditions).select_related('coupon')
+                # Get spend grouped by date/advertiser/partner (sum across platforms and coupons)
+                spends = MediaBuyerDailySpend.objects.filter(spend_conditions)
                 
                 for s in spends:
-                    coupon_code = s.coupon.code if s.coupon else None
-                    key = (s.date, s.advertiser_id, s.partner_id, coupon_code)
+                    key = (s.date, s.advertiser_id, s.partner_id)
                     mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
             
-            # Calculate total revenue per (date, advertiser, partner, coupon) for MB records
+            # Calculate total revenue per (date, advertiser, partner) for MB records
             for r in mb_records:
-                key = (r["date"], r["advertiser_id"], r["partner_id"], r["coupon_code"])
+                key = (r["date"], r["advertiser_id"], r["partner_id"])
                 revenue = float(r["total_revenue"] or 0)
                 mb_revenue_totals[key] = mb_revenue_totals.get(key, 0) + revenue
 
@@ -545,16 +544,16 @@ def performance_table_view(request):
             revenue = float(r["total_revenue"] or 0)
             original_payout = float(r["total_payout"] or 0)
             
-            # For MB partners, payout = MB spend (cost) matched by coupon
+            # For MB partners, payout = MB spend (cost) matched by date/advertiser/partner
             # For AFF/INF partners, payout = their actual payout
             if r["partner_type_value"] == "MB":
-                # Match spend by (date, advertiser, partner, coupon)
-                key = (r["date"], r["advertiser_id"], r["partner_id"], r["coupon_code"])
+                # Match spend by (date, advertiser, partner) - distributed across all coupons
+                key = (r["date"], r["advertiser_id"], r["partner_id"])
                 total_spend = mb_spend_lookup.get(key, 0)
                 total_revenue_for_key = mb_revenue_totals.get(key, 1)  # Avoid division by zero
                 
                 # Allocate spend proportionally based on this row's revenue
-                # (in case there are multiple orders with same coupon on same day)
+                # (distributed across all partner's coupons for this advertiser/date)
                 if total_revenue_for_key > 0:
                     payout = total_spend * (revenue / total_revenue_for_key)
                 else:
@@ -623,16 +622,15 @@ def performance_table_view(request):
             spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
         
         if spend_conditions:
-            spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions).select_related('coupon')
-            # Build lookup dict: (date, advertiser_id, partner_id, coupon_code) -> total spend
+            spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions)
+            # Build lookup dict: (date, advertiser_id, partner_id) -> total spend
             for spend in spend_qs:
-                coupon_code = spend.coupon.code if spend.coupon else None
-                key = (str(spend.date), spend.advertiser_id, spend.partner_id, coupon_code)
+                key = (str(spend.date), spend.advertiser_id, spend.partner_id)
                 spend_dict[key] = spend_dict.get(key, 0) + float(spend.amount_spent or 0)
         
-        # Calculate total revenue per day/advertiser/partner/coupon for proportional distribution
+        # Calculate total revenue per day/advertiser/partner for proportional distribution
         for r in data:
-            key = (str(r["date"]), r["advertiser_id"], r["partner_id"], r["coupon_code"])
+            key = (str(r["date"]), r["advertiser_id"], r["partner_id"])
             revenue = float(r["total_revenue"] or 0)
             if key not in daily_revenue_dict:
                 daily_revenue_dict[key] = 0
@@ -643,9 +641,9 @@ def performance_table_view(request):
         company_revenue = float(r["total_revenue"] or 0)
         partner_payout = float(r["total_payout"] or 0)
         
-        # For media buyers, show company revenue and their spend matched by coupon
+        # For media buyers, show company revenue and their spend distributed across all coupons
         if is_media_buyer:
-            key = (str(r["date"]), r["advertiser_id"], r["partner_id"], r["coupon_code"])
+            key = (str(r["date"]), r["advertiser_id"], r["partner_id"])
             daily_spend = spend_dict.get(key, 0)
             daily_revenue = daily_revenue_dict.get(key, 0)
             

@@ -587,7 +587,7 @@ class MediaBuyerDailySpend(models.Model):
     currency = models.CharField(max_length=10, blank=True, null=True)
 
     class Meta:
-        unique_together = ("date", "advertiser", "partner", "coupon", "platform")
+        unique_together = ("date", "advertiser", "partner", "platform")
         verbose_name = "Media Buyer Daily Spend"
 
     def __str__(self):

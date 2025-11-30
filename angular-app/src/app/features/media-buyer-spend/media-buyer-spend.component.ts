@@ -42,7 +42,6 @@ export class MediaBuyerSpendComponent implements OnInit {
   allAdvertisers: any[] = []; // All advertisers for form
   advertisers: any[] = []; // Filtered advertisers for filter dropdown
   partners: any[] = [];
-  coupons: any[] = [];
 
   // Platform options matching backend choices
   platformOptions: Platform[] = [
@@ -60,7 +59,6 @@ export class MediaBuyerSpendComponent implements OnInit {
   selectedDateRange: Date[] | null = null;
   selectedAdvertiser: any = null;
   selectedPartner: any = null;
-  selectedCoupon: any = null;
   selectedPlatform: any = this.platformOptions[0]; // Default to Meta
   amountSpent: number = 0;
   selectedCurrency: string = 'USD';
@@ -102,30 +100,6 @@ export class MediaBuyerSpendComponent implements OnInit {
       },
       error: (err) => console.error('Error loading advertisers:', err)
     });
-  }
-
-  loadCoupons() {
-    if (!this.selectedAdvertiser || !this.selectedAdvertiser.value) {
-      this.coupons = [];
-      this.selectedCoupon = null;
-      return;
-    }
-
-    this.advertiserService.getCoupons().subscribe({
-      next: (data) => {
-        // Filter coupons for selected advertiser
-        const filteredCoupons = data.filter((c: any) => c.advertiser_id === this.selectedAdvertiser.value.id);
-        this.coupons = filteredCoupons.map(c => ({ label: c.code, value: c }));
-
-        // Reset coupon selection when advertiser changes
-        this.selectedCoupon = null;
-      },
-      error: (err) => console.error('Error loading coupons:', err)
-    });
-  }
-
-  onAdvertiserChange() {
-    this.loadCoupons();
   }
 
   loadPartners() {
@@ -187,11 +161,6 @@ export class MediaBuyerSpendComponent implements OnInit {
       return;
     }
 
-    if (!this.selectedCoupon) {
-      alert('Please select a coupon');
-      return;
-    }
-
     if (!this.selectedPlatform) {
       alert('Please select a platform');
       return;
@@ -229,7 +198,6 @@ export class MediaBuyerSpendComponent implements OnInit {
       date: this.formatDate(date),
       advertiser_id: this.selectedAdvertiser.value.id,
       partner_id: this.selectedPartner.value.id,
-      coupon_id: this.selectedCoupon.value.id,
       platform: this.selectedPlatform.value,
       amount_spent: dailyAmount,
       currency: this.selectedCurrency
@@ -279,12 +247,10 @@ export class MediaBuyerSpendComponent implements OnInit {
   resetForm() {
     this.selectedDateRange = null;
     this.selectedAdvertiser = null;
-    this.selectedCoupon = null;
     this.selectedPlatform = this.platformOptions[0]; // Reset to Meta
     // Keep partner as it's auto-selected from user
     this.amountSpent = 0;
     this.selectedCurrency = 'USD';
-    this.coupons = []; // Clear coupons list
   }
 
   applyFilters() {

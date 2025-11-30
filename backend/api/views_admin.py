@@ -351,7 +351,6 @@ def media_buyer_spend_view(request):
         date = request.data.get('date')
         advertiser_id = request.data.get('advertiser_id')
         partner_id = request.data.get('partner_id')
-        coupon_id = request.data.get('coupon_id')
         platform = request.data.get('platform', 'Meta')
         amount_spent = request.data.get('amount_spent')
         currency = request.data.get('currency', 'USD')
@@ -374,11 +373,11 @@ def media_buyer_spend_view(request):
                 date=date,
                 advertiser_id=advertiser_id,
                 partner_id=partner_id,
-                coupon_id=coupon_id,
                 platform=platform,
                 defaults={
                     'amount_spent': amount_spent,
-                    'currency': currency
+                    'currency': currency,
+                    'coupon': None  # Coupon is now always NULL
                 }
             )
             
