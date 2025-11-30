@@ -1699,7 +1699,12 @@ def performance_analytics_view(request):
     # Determine target month (default to current month)
     if month_param:
         try:
-            target_month = datetime.strptime(month_param, '%Y-%m-%d').date()
+            # Try YYYY-MM format first (from month selector)
+            if len(month_param) == 7 and month_param[4] == '-':
+                target_month = datetime.strptime(month_param, '%Y-%m').date()
+            else:
+                # Fall back to YYYY-MM-DD format
+                target_month = datetime.strptime(month_param, '%Y-%m-%d').date()
             target_month = target_month.replace(day=1)
         except:
             target_month = date.today().replace(day=1)
