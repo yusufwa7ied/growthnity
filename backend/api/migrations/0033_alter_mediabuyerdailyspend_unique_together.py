@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0031_noontransaction'),
+        ('api', '0032_remove_duplicate_spend_records'),
     ]
 
     operations = [
