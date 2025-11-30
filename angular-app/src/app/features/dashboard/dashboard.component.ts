@@ -870,7 +870,8 @@ export class DashboardComponent implements OnInit {
                 this.cdr.markForCheck();
             },
             error: (err) => {
-                console.error('Failed to load analytics:', err);
+                console.error('❌ Failed to load analytics:', err);
+                console.error('❌ Error details:', JSON.stringify(err, null, 2));
                 this.cdr.markForCheck();
             }
         });
