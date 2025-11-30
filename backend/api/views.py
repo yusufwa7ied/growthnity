@@ -2194,8 +2194,13 @@ def performance_analytics_view(request):
             
             # Calculate run rate projection for end of month
             if days_elapsed > 0:
-                projected_payout = (mtd_payout / days_elapsed) * days_in_month
-                projected_orders_runrate = int((mtd_orders / days_elapsed) * days_in_month)
+                daily_avg_payout = mtd_payout / days_elapsed
+                daily_avg_orders = mtd_orders / days_elapsed
+                projected_payout = daily_avg_payout * days_in_month
+                projected_orders_runrate = int(daily_avg_orders * days_in_month)
+                print(f"📊 Run Rate Calc: mtd_payout={mtd_payout}, mtd_orders={mtd_orders}, days_elapsed={days_elapsed}, days_in_month={days_in_month}")
+                print(f"📊 Daily avg: payout=${daily_avg_payout:.2f}, orders={daily_avg_orders:.2f}")
+                print(f"📊 Projected: payout=${projected_payout:.2f}, orders={projected_orders_runrate}")
             else:
                 projected_payout = 0
                 projected_orders_runrate = 0

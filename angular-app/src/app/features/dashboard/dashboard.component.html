@@ -352,39 +352,66 @@
             </p-card>
 
             <!-- Run Rate Projection -->
-            <p-card styleClass="analytics-card">
+            <p-card styleClass="analytics-card run-rate-card">
               <div class="analytics-content">
                 <h4><i class="pi pi-forward"></i> Run Rate Projection</h4>
-                <div class="pacing-status"
-                  [style.border-color]="getPacingColor(analytics.simplified_analytics.run_rate.status)">
-                  <i class="pi pi-circle-fill"
-                    [style.color]="getPacingColor(analytics.simplified_analytics.run_rate.status)"></i>
-                  <span class="status-text">{{ analytics.simplified_analytics.run_rate.status }}</span>
+                
+                <!-- Month Progress -->
+                <div class="month-progress-section">
+                  <div class="progress-header-row">
+                    <span class="progress-label-text">Month Progress</span>
+                    <span class="progress-pct-badge">{{ (analytics.days_elapsed / analytics.days_in_month * 100) | number:'1.0-0' }}%</span>
+                  </div>
+                  <div class="progress-bar-thick">
+                    <div class="progress-fill-thick" 
+                      [style.width.%]="(analytics.days_elapsed / analytics.days_in_month * 100)"
+                      [style.background]="getPacingColor(analytics.simplified_analytics.run_rate.status)">
+                    </div>
+                  </div>
+                  <div class="progress-days-text">
+                    <span>Day {{ analytics.days_elapsed }} of {{ analytics.days_in_month }}</span>
+                  </div>
                 </div>
-                <div class="metric-row highlight">
-                  <span class="metric-label">Projected Payout:</span>
-                  <span class="metric-value large">${{ analytics.simplified_analytics.run_rate.projected_payout |
-                    number:'1.2-2' }}</span>
+
+                <!-- Projection Results -->
+                <div class="projection-box-modern" 
+                  [class.projection-ahead]="analytics.simplified_analytics.run_rate.status === 'Ahead'"
+                  [class.projection-ontrack]="analytics.simplified_analytics.run_rate.status === 'On Track'"
+                  [class.projection-behind]="analytics.simplified_analytics.run_rate.status === 'Behind'">
+                  
+                  <div class="projection-status-badge">
+                    <i class="pi pi-circle-fill"></i>
+                    <span>{{ analytics.simplified_analytics.run_rate.status }}</span>
+                  </div>
+
+                  <div class="projection-grid">
+                    <div class="projection-metric-box">
+                      <span class="metric-label-small">Projected Earnings</span>
+                      <span class="metric-value-huge">${{ analytics.simplified_analytics.run_rate.projected_payout | number:'1.0-0' }}</span>
+                    </div>
+                    <div class="projection-metric-box">
+                      <span class="metric-label-small">Projected Orders</span>
+                      <span class="metric-value-huge">{{ analytics.simplified_analytics.run_rate.projected_orders | number }}</span>
+                    </div>
+                  </div>
+
+                  <div class="projection-comparison-row">
+                    <span class="comparison-text">vs Last Month:</span>
+                    <span class="comparison-badge"
+                      [class.positive]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0"
+                      [class.negative]="analytics.simplified_analytics.run_rate.vs_last_month_pct < 0">
+                      {{ analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? '+' : '' }}{{
+                      analytics.simplified_analytics.run_rate.vs_last_month_pct | number:'1.1-1' }}%
+                      <i class="pi"
+                        [ngClass]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+                    </span>
+                  </div>
+                  
+                  <div class="last-month-reference">
+                    Last month: ${{ analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}
+                  </div>
                 </div>
-                <div class="metric-row">
-                  <span class="metric-label">Projected Orders:</span>
-                  <span class="metric-value">{{ analytics.simplified_analytics.run_rate.projected_orders | number
-                    }}</span>
-                </div>
-                <div class="metric-row">
-                  <span class="metric-label">vs Last Month:</span>
-                  <span class="metric-value"
-                    [class.positive]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0"
-                    [class.negative]="analytics.simplified_analytics.run_rate.vs_last_month_pct < 0">
-                    {{ analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? '+' : '' }}{{
-                    analytics.simplified_analytics.run_rate.vs_last_month_pct | number:'1.1-1' }}%
-                    <i class="pi"
-                      [ngClass]="analytics.simplified_analytics.run_rate.vs_last_month_pct > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
-                  </span>
-                </div>
-                <div class="days-info">
-                  <small>Based on {{ analytics.days_elapsed }} of {{ analytics.days_in_month }} days</small>
-                </div>
+
                 <div class="insight-box"
                   [class.insight-success]="analytics.simplified_analytics.run_rate.status === 'Ahead'"
                   [class.insight-warning]="analytics.simplified_analytics.run_rate.status === 'On Track'"
@@ -395,16 +422,13 @@
                     'pi-exclamation-triangle': analytics.simplified_analytics.run_rate.status === 'Behind'
                   }"></i>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'Ahead'">
-                    Great pace! You're on track to exceed last month's earnings of ${{
-                    analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
+                    Great pace! You're on track to exceed last month's earnings.
                   </span>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'On Track'">
-                    Steady progress. You're on track to match last month's ${{
-                    analytics.simplified_analytics.run_rate.last_month_payout | number:'1.0-0' }}.
+                    Steady progress. You're on track to match last month.
                   </span>
                   <span *ngIf="analytics.simplified_analytics.run_rate.status === 'Behind'">
-                    Push harder! Last month you earned ${{ analytics.simplified_analytics.run_rate.last_month_payout |
-                    number:'1.0-0' }}.
+                    Push harder to reach last month's earnings!
                   </span>
                 </div>
               </div>
