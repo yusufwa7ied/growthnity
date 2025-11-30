@@ -2216,6 +2216,7 @@ def performance_analytics_view(request):
                 run_rate_status = "On Track"
             
             # Build simplified analytics structure
+            print(f"📊 Simplified Analytics: mtd_revenue=${mtd_revenue:.2f}, mtd_payout=${mtd_payout:.2f}, mtd_orders={mtd_orders}")
             response_data["simplified_analytics"] = {
                 "is_department_restricted": True,
                 "earnings": {
