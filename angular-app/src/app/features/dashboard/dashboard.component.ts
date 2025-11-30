@@ -863,6 +863,9 @@ export class DashboardComponent implements OnInit {
             monthStr
         ).subscribe({
             next: (data) => {
+                console.log('📊 Analytics data received:', data);
+                console.log('🔍 is_department_restricted:', data.is_department_restricted);
+                console.log('🔍 simplified_analytics:', data.simplified_analytics);
                 this.analytics = data;
                 this.cdr.markForCheck();
             },
