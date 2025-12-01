@@ -38,6 +38,8 @@ export interface Advertiser {
     partner_payouts: PartnerPayout[];
     total_partners?: number;
     active_partners?: number;
+    total_coupons?: number;
+    active_coupons?: number;
     stats?: {
         coupon_count: number;
         partner_count: number;

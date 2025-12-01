@@ -135,7 +135,16 @@ def list_advertisers_view(request):
     # Calculate stats for each advertiser
     data = []
     for adv in advertisers:
-        coupon_count = Coupon.objects.filter(advertiser=adv).count()
+        # Total coupons
+        total_coupons = Coupon.objects.filter(advertiser=adv).count()
+        
+        # Active coupons (those with usage in CampaignPerformance)
+        active_coupons = CampaignPerformance.objects.filter(
+            advertiser=adv,
+            coupon__isnull=False
+        ).values('coupon').distinct().count()
+        
+        # Legacy partner count from payouts
         partner_count = adv.payouts.values('partner').distinct().count()
         
         # Count total partners assigned through coupons
@@ -154,8 +163,10 @@ def list_advertisers_view(request):
             **AdvertiserDetailSerializer(adv).data,
             'total_partners': total_partners,
             'active_partners': active_partners,
+            'total_coupons': total_coupons,
+            'active_coupons': active_coupons,
             'stats': {
-                'coupon_count': coupon_count,
+                'coupon_count': total_coupons,
                 'partner_count': partner_count,
             }
         })

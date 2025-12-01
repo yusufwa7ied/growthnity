@@ -288,6 +288,7 @@
                         <th>FTU Rev</th>
                         <th>RTU Rev</th>
                         <th>Partners (Active/Total)</th>
+                        <th>Coupons (Active/Total)</th>
                         <th>Currency</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
@@ -314,6 +315,12 @@
                         <td>
                             <span class="partner-stats">
                                 <strong>{{ advertiser.active_partners || 0 }}</strong> / {{ advertiser.total_partners ||
+                                0 }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="partner-stats">
+                                <strong>{{ advertiser.active_coupons || 0 }}</strong> / {{ advertiser.total_coupons ||
                                 0 }}
                             </span>
                         </td>
@@ -410,14 +417,100 @@
                                                 (advertiser.active_partners || 0) }}</span>
                                         </div>
                                     </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="pi pi-ticket"></i> Coupon Statistics</h4>
+                                        <div class="detail-row">
+                                            <span class="label">Total Coupons:</span>
+                                            <span class="value">{{ advertiser.total_coupons || 0 }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Active Coupons:</span>
+                                            <span class="value">{{ advertiser.active_coupons || 0 }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Inactive Coupons:</span>
+                                            <span class="value">{{ (advertiser.total_coupons || 0) -
+                                                (advertiser.active_coupons || 0) }}</span>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Summary Card -->
+                                <div class="summary-card">
+                                    <div class="summary-header">
+                                        <h4><i class="pi pi-chart-bar"></i> Performance Summary</h4>
+                                    </div>
+                                    <div class="summary-grid">
+                                        <div class="summary-item">
+                                            <div class="summary-icon partners-icon">
+                                                <i class="pi pi-users"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-label">Partner Activation Rate</div>
+                                                <div class="summary-value">
+                                                    {{ advertiser.total_partners > 0 ? 
+                                                       ((advertiser.active_partners / advertiser.total_partners) * 100).toFixed(1) 
+                                                       : 0 }}%
+                                                </div>
+                                                <div class="summary-detail">
+                                                    {{ advertiser.active_partners || 0 }} of {{ advertiser.total_partners || 0 }} partners active
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="summary-item">
+                                            <div class="summary-icon coupons-icon">
+                                                <i class="pi pi-ticket"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-label">Coupon Usage Rate</div>
+                                                <div class="summary-value">
+                                                    {{ advertiser.total_coupons > 0 ? 
+                                                       ((advertiser.active_coupons / advertiser.total_coupons) * 100).toFixed(1) 
+                                                       : 0 }}%
+                                                </div>
+                                                <div class="summary-detail">
+                                                    {{ advertiser.active_coupons || 0 }} of {{ advertiser.total_coupons || 0 }} coupons used
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="summary-item">
+                                            <div class="summary-icon revenue-icon">
+                                                <i class="pi pi-money-bill"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-label">Revenue Model</div>
+                                                <div class="summary-value">{{ advertiser.rev_rate_type }}</div>
+                                                <div class="summary-detail">
+                                                    FTU: {{ advertiser.rev_ftu_rate || 'N/A' }} | RTU: {{ advertiser.rev_rtu_rate || 'N/A' }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="summary-item">
+                                            <div class="summary-icon currency-icon">
+                                                <i class="pi pi-dollar"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-label">Currency</div>
+                                                <div class="summary-value">{{ advertiser.currency }}</div>
+                                                <div class="summary-detail">
+                                                    Exchange Rate: {{ advertiser.exchange_rate || 1 }} USD
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             </div>
                         </td>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="9" class="empty-state">
+                        <td colspan="10" class="empty-state">
                             <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
                             <p>No advertisers found</p>
                             <button class="p-button p-button-sm p-button-outlined" (click)="showAdd()">
