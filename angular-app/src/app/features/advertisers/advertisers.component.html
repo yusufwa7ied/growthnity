@@ -338,7 +338,7 @@
                         </td>
                     </tr>
                     <tr *ngIf="isRowExpanded(advertiser.id)" class="expanded-row">
-                        <td colspan="9">
+                        <td colspan="10">
                             <div class="expanded-content">
                                 <div class="detail-grid">
                                     <div class="detail-section">
@@ -449,12 +449,14 @@
                                             <div class="summary-content">
                                                 <div class="summary-label">Partner Activation Rate</div>
                                                 <div class="summary-value">
-                                                    {{ advertiser.total_partners > 0 ? 
-                                                       ((advertiser.active_partners / advertiser.total_partners) * 100).toFixed(1) 
-                                                       : 0 }}%
+                                                    {{ advertiser.total_partners > 0 ?
+                                                    ((advertiser.active_partners / advertiser.total_partners) *
+                                                    100).toFixed(1)
+                                                    : 0 }}%
                                                 </div>
                                                 <div class="summary-detail">
-                                                    {{ advertiser.active_partners || 0 }} of {{ advertiser.total_partners || 0 }} partners active
+                                                    {{ advertiser.active_partners || 0 }} of {{
+                                                    advertiser.total_partners || 0 }} partners active
                                                 </div>
                                             </div>
                                         </div>
@@ -466,12 +468,14 @@
                                             <div class="summary-content">
                                                 <div class="summary-label">Coupon Usage Rate</div>
                                                 <div class="summary-value">
-                                                    {{ advertiser.total_coupons > 0 ? 
-                                                       ((advertiser.active_coupons / advertiser.total_coupons) * 100).toFixed(1) 
-                                                       : 0 }}%
+                                                    {{ advertiser.total_coupons > 0 ?
+                                                    ((advertiser.active_coupons / advertiser.total_coupons) *
+                                                    100).toFixed(1)
+                                                    : 0 }}%
                                                 </div>
                                                 <div class="summary-detail">
-                                                    {{ advertiser.active_coupons || 0 }} of {{ advertiser.total_coupons || 0 }} coupons used
+                                                    {{ advertiser.active_coupons || 0 }} of {{ advertiser.total_coupons
+                                                    || 0 }} coupons used
                                                 </div>
                                             </div>
                                         </div>
@@ -484,7 +488,8 @@
                                                 <div class="summary-label">Revenue Model</div>
                                                 <div class="summary-value">{{ advertiser.rev_rate_type }}</div>
                                                 <div class="summary-detail">
-                                                    FTU: {{ advertiser.rev_ftu_rate || 'N/A' }} | RTU: {{ advertiser.rev_rtu_rate || 'N/A' }}
+                                                    FTU: {{ advertiser.rev_ftu_rate || 'N/A' }} | RTU: {{
+                                                    advertiser.rev_rtu_rate || 'N/A' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -504,25 +509,25 @@
                                     </div>
                                 </div>
                             </div>
-                            </div>
-                        </td>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="emptymessage">
-                    <tr>
-                        <td colspan="10" class="empty-state">
-                            <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                            <p>No advertisers found</p>
-                            <button class="p-button p-button-sm p-button-outlined" (click)="showAdd()">
-                                <i class="pi pi-plus"></i> Add Your First Advertiser
-                            </button>
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
         </div>
-
-        <!-- Footer -->
-        <app-footer></app-footer>
+        </td>
+        </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="10" class="empty-state">
+                    <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p>No advertisers found</p>
+                    <button class="p-button p-button-sm p-button-outlined" (click)="showAdd()">
+                        <i class="pi pi-plus"></i> Add Your First Advertiser
+                    </button>
+                </td>
+            </tr>
+        </ng-template>
+        </p-table>
     </div>
+
+    <!-- Footer -->
+    <app-footer></app-footer>
+</div>
 </div>
