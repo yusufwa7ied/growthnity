@@ -793,8 +793,9 @@ def dashboard_pie_chart_data_view(request):
     role = company_user.role.name if company_user and company_user.role else None
 
     # Get filters from request - SUPPORT MULTIPLE VALUES
-    start_date_str = request.GET.get("start_date")
-    end_date_str = request.GET.get("end_date")
+    # Support both naming conventions: date_from/date_to and start_date/end_date
+    start_date_str = request.GET.get("date_from") or request.GET.get("start_date")
+    end_date_str = request.GET.get("date_to") or request.GET.get("end_date")
     advertiser_ids = request.GET.getlist("advertiser_id")  # Support multiple
     partner_ids = request.GET.getlist("partner_id")        # Support multiple
     coupon = request.GET.get("coupon")
