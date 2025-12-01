@@ -115,7 +115,8 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
         transaction_datetime = transaction_date if transaction_date.tzinfo else make_aware(transaction_date)
     
     # Try to find partner-specific historical rule
-    if partner_id:
+    # Handle NA/NaN values in partner_id
+    if partner_id is not None and not pd.isna(partner_id):
         history = PayoutRuleHistory.objects.filter(
             advertiser=advertiser,
             partner_id=partner_id,
