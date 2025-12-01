@@ -134,9 +134,10 @@ export class DashboardComponent implements OnInit {
         // Determine user access level based on role and department
         // 1. ViewOnly = Dashboard only, see all data (like Admin but no other pages)
         // 2. OpsManager (no dept) = Full access (all admin pages + daily spend)
-        // 3. OpsManager (any dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
-        // 4. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
-        // 5. TeamMember (affiliate/influencer) = Filtered dashboard only
+        // 3. OpsManager (media_buying dept) = Full department data + Coupons + Daily Spend (NO other admin pages)
+        // 4. OpsManager (other dept) = Full department data + Coupons only (NO other admin pages, NO daily spend)
+        // 5. TeamMember (media_buying) = Filtered dashboard + Daily Spend only (NO coupons, NO admin pages)
+        // 6. TeamMember (affiliate/influencer) = Filtered dashboard only
 
         if (this.role === 'ViewOnly') {
             // ViewOnly: Dashboard only, see all data (same access as Admin for data)
@@ -150,10 +151,16 @@ export class DashboardComponent implements OnInit {
             this.isMediaBuyer = true;  // Can also see daily spend
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;
-        } else if (this.role === 'OpsManager' && this.user?.department) {
-            // OpsManager with ANY department: Full department data + Coupons only
+        } else if (this.role === 'OpsManager' && this.user?.department === 'media_buying') {
+            // OpsManager with media_buying department: Full department data + Coupons + Daily Spend
             this.isAdmin = false;
-            this.isMediaBuyer = false;  // NO daily spend for OpsManager with department
+            this.isMediaBuyer = true;  // CAN access daily spend for media buying ops managers
+            this.isDepartmentRestricted = false;
+            this.canAccessCoupons = true;  // Can access coupons
+        } else if (this.role === 'OpsManager' && this.user?.department) {
+            // OpsManager with other departments: Full department data + Coupons only
+            this.isAdmin = false;
+            this.isMediaBuyer = false;  // NO daily spend for other departments
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;  // Can access coupons
         } else if (this.role === 'TeamMember' && this.user?.department === 'media_buying') {

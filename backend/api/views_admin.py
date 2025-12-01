@@ -334,7 +334,7 @@ def media_buyer_spend_view(request):
     except CompanyUser.DoesNotExist:
         return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
-    # Only allow Admin, OpsManager, or TeamMembers in media_buying department
+    # Allow: Admin, OpsManager (any dept or no dept), or TeamMembers in media_buying department
     role = company_user.role.name if company_user.role else None
     if role not in ["Admin", "OpsManager"]:
         if role != "TeamMember" or company_user.department != "media_buying":
@@ -452,7 +452,7 @@ def delete_media_buyer_spend_view(request, pk):
     except CompanyUser.DoesNotExist:
         return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
-    # Only allow Admin, OpsManager, or TeamMembers in media_buying department
+    # Allow: Admin, OpsManager (any dept or no dept), or TeamMembers in media_buying department
     role = company_user.role.name if company_user.role else None
     if role not in ["Admin", "OpsManager"]:
         if role != "TeamMember" or company_user.department != "media_buying":
