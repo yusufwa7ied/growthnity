@@ -4247,6 +4247,14 @@
   background: linear-gradient(135deg, #6bcf7f 0%, #95e1d3 100%);
 }
 
+.revenue-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.period-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
 .kpi-content {
   display: flex;
   flex-direction: column;
@@ -4367,7 +4375,7 @@
 
 .coupons-table th {
   padding: 0.875rem 1rem;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   color: #374151;
   font-size: 0.875rem;
@@ -4391,6 +4399,7 @@
 .coupons-table td {
   padding: 0.875rem 1rem;
   color: #374151;
+  text-align: center;
 }
 
 .coupon-code {
@@ -4401,7 +4410,6 @@
 
 .revenue-cell {
   font-weight: 600;
-  text-align: right;
 }
 
 .trend-chart-container {

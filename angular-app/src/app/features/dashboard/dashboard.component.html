@@ -1035,19 +1035,15 @@
 
   <div *ngIf="!advertiserDetailLoading && advertiserDetailData" class="modal-content">
     <!-- Quick Summary -->
-    <div class="summary-banner">
-      <div class="summary-item">
-        <span class="label">Revenue:</span>
-        <span class="value">${{ advertiserDetailData.kpis.revenue | number:'1.2-2' }}</span>
-      </div>
-      <div class="summary-item" *ngIf="filters.date_from && filters.date_to">
-        <span class="label">Period:</span>
-        <span class="value">{{ filters.date_from }} to {{ filters.date_to }}</span>
-      </div>
-    </div>
-
     <!-- KPI Cards -->
     <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon revenue-icon"><i class="pi pi-dollar"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Revenue</span>
+          <span class="kpi-value">${{ advertiserDetailData.kpis.revenue | number:'1.2-2' }}</span>
+        </div>
+      </div>
       <div class="kpi-card">
         <div class="kpi-icon orders-icon"><i class="pi pi-shopping-cart"></i></div>
         <div class="kpi-content">
@@ -1056,7 +1052,7 @@
         </div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-icon sales-icon"><i class="pi pi-dollar"></i></div>
+        <div class="kpi-icon sales-icon"><i class="pi pi-tag"></i></div>
         <div class="kpi-content">
           <span class="kpi-label">Sales (GMV)</span>
           <span class="kpi-value">${{ advertiserDetailData.kpis.sales | number:'1.2-2' }}</span>
@@ -1074,6 +1070,13 @@
         <div class="kpi-content">
           <span class="kpi-label">Profit</span>
           <span class="kpi-value">${{ advertiserDetailData.kpis.profit | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      <div class="kpi-card" *ngIf="filters.date_from && filters.date_to">
+        <div class="kpi-icon period-icon"><i class="pi pi-calendar"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Period</span>
+          <span class="kpi-value" style="font-size: 0.875rem;">{{ filters.date_from }} to {{ filters.date_to }}</span>
         </div>
       </div>
     </div>
