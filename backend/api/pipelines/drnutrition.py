@@ -10,7 +10,7 @@ from api.models import DrNutritionTransaction
 from api.pipelines.helpers import (
     store_raw_snapshot,
     enrich_df,
-    resolve_payouts,
+    resolve_payouts_with_history,
     compute_final_metrics,
     nf,
     nz,
@@ -59,7 +59,7 @@ def run(date_from: date, date_to: date):
     print(enriched_df.head(10))
 
     # 5. RESOLVE PAYOUT RULES
-    payout_df = resolve_payouts_with_history(advertiser, enriched_df, timestamp_col="created_date")
+    payout_df = resolve_payouts_with_history(advertiser, enriched_df)
     print("🔍 PAYOUT DF HEAD:")
     print(payout_df.head(10))
 

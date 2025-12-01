@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import date
 from django.db import transaction
 from api.models import Advertiser, SpringRoseTransaction, CampaignPerformance, Partner, Coupon
-from api.pipelines.helpers import store_raw_snapshot, enrich_df, resolve_payouts, compute_final_metrics, nf, nz
+from api.pipelines.helpers import store_raw_snapshot, enrich_df, resolve_payouts_with_history, compute_final_metrics, nf, nz
 
 # ---------------------------------------------------
 # CONFIG
@@ -40,7 +40,7 @@ def run(date_from: date, date_to: date):
     print(enriched_df.head(10))
 
     # 5. RESOLVE PAYOUTS
-    payout_df = resolve_payouts_with_history(advertiser, enriched_df, timestamp_col="created_date")
+    payout_df = resolve_payouts_with_history(advertiser, enriched_df)
     print("💰 PAYOUT DF HEAD:")
     print(payout_df.head(10))
 
