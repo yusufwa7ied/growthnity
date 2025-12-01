@@ -4100,6 +4100,20 @@
    Advertiser Detail Modal Styles
    ======================================== */
 
+::ng-deep .advertiser-detail-modal {
+  z-index: 9999 !important;
+}
+
+::ng-deep .advertiser-detail-modal .p-dialog-mask {
+  z-index: 9998 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+::ng-deep .advertiser-detail-modal .p-dialog {
+  z-index: 9999 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
 ::ng-deep .advertiser-detail-modal .p-dialog-header {
   background: linear-gradient(135deg, #009292 0%, #00b0b0 100%);
   color: white;
@@ -4111,6 +4125,7 @@
   padding: 0;
   max-height: 70vh;
   overflow-y: auto;
+  background: white;
 }
 
 ::ng-deep .advertiser-detail-modal .p-dialog-footer {
