@@ -983,9 +983,12 @@ def advertiser_detail_summary_view(request):
             total_orders=Sum('total_orders'),
             total_sales=Sum('total_sales'),
             total_revenue=Sum('total_revenue'),
-            total_payout=Sum('total_payout'),
-            total_profit=Sum('total_profit')
+            total_payout=Sum('total_payout')
         )
+        
+        # Calculate profit (revenue - payout)
+        total_profit = (kpis['total_revenue'] or 0) - (kpis['total_payout'] or 0)
+        kpis['total_profit'] = total_profit
 
         # Determine if user can see profit
         can_see_profit = (
