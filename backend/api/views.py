@@ -896,176 +896,191 @@ def advertiser_detail_summary_view(request):
     Includes: KPIs, partner breakdown by type, top 5 coupons, and daily revenue trend.
     Respects role-based access control and department filtering.
     """
-    user = request.user
-    company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
-    
-    # If no CompanyUser, treat as superuser with full access (for admin accounts)
-    if not company_user:
-        if not user.is_superuser:
-            return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-        role = None
-        department = None
-    else:
-        role = company_user.role.name if company_user.role else None
-        department = company_user.department
-
-    # Get filters from request
-    advertiser_id = request.GET.get('advertiser_id')
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-
-    if not advertiser_id:
-        return Response({"detail": "advertiser_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-
     try:
-        advertiser = Advertiser.objects.get(id=advertiser_id)
-    except Advertiser.DoesNotExist:
-        return Response({"detail": "Advertiser not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    # Base queryset filtered by advertiser
-    qs = CampaignPerformance.objects.filter(advertiser_id=advertiser_id)
-
-    # Apply date filters
-    if date_from:
-        try:
-            start_date = datetime.strptime(date_from, "%Y-%m-%d").date()
-            qs = qs.filter(date__gte=start_date)
-        except:
-            pass
-
-    if date_to:
-        try:
-            end_date = datetime.strptime(date_to, "%Y-%m-%d").date()
-            qs = qs.filter(date__lte=end_date)
-        except:
-            pass
-
-    # Department scoping (for OpsManager with department)
-    if company_user and department and role == "OpsManager":
-        if department == "media_buying":
-            qs = qs.filter(partner__partner_type="MB")
-        elif department == "affiliate":
-            qs = qs.filter(partner__partner_type="AFF")
-        elif department == "influencer":
-            qs = qs.filter(partner__partner_type="INF")
-
-    # Role-based access control
-    # Superusers without CompanyUser get full access
-    is_superuser_without_company = not company_user and user.is_superuser
-    full_access_roles = {"Admin", "OpsManager"}
-    has_full_access = is_superuser_without_company or (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
-
-    if not has_full_access:
-        # TeamMembers and OpsManager/ViewOnly with department: filter by assignments
-        assignments = AccountAssignment.objects.filter(
-            company_user=company_user
-        ).prefetch_related("advertisers", "partners")
-
-        assigned_advertiser_ids = set()
-        assigned_partner_ids = set()
-        for a in assignments:
-            assigned_advertiser_ids.update(a.advertisers.values_list("id", flat=True))
-            assigned_partner_ids.update(a.partners.values_list("id", flat=True))
-
-        # Verify user has access to this advertiser
-        if int(advertiser_id) not in assigned_advertiser_ids:
-            return Response({"detail": "Access denied to this advertiser"}, status=status.HTTP_403_FORBIDDEN)
-
-        # Filter by assigned partners
-        if assigned_partner_ids:
-            qs = qs.filter(partner__id__in=assigned_partner_ids)
-        else:
-            qs = qs.none()
-
-    # Calculate KPIs
-    kpis = qs.aggregate(
-        total_orders=Sum('total_orders'),
-        total_sales=Sum('total_sales'),
-        total_revenue=Sum('total_revenue'),
-        total_payout=Sum('total_payout'),
-        total_profit=Sum('total_profit')
-    )
-
-    # Determine if user can see profit
-    can_see_profit = (
-        user.is_superuser or
-        role == "Admin" or 
-        role == "OpsManager" or 
-        (role == "TeamMember" and department == "media_buying")
-    )
-
-    # Partner breakdown by type
-    partner_breakdown = []
-    partner_types = [
-        {'type': 'MB', 'label': 'Media Buyers'},
-        {'type': 'AFF', 'label': 'Affiliates'},
-        {'type': 'INF', 'label': 'Influencers'}
-    ]
-
-    for pt in partner_types:
-        type_qs = qs.filter(partner__partner_type=pt['type'])
-        type_revenue = type_qs.aggregate(total=Sum('total_revenue'))['total'] or 0
-        type_count = type_qs.values('partner').distinct().count()
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
         
-        if type_revenue > 0 or type_count > 0:
-            partner_breakdown.append({
-                'type': pt['type'],
-                'label': pt['label'],
-                'revenue': float(type_revenue),
-                'count': type_count
-            })
+        # If no CompanyUser, treat as superuser with full access (for admin accounts)
+        if not company_user:
+            if not user.is_superuser:
+                return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+            role = None
+            department = None
+        else:
+            role = company_user.role.name if company_user.role else None
+            department = company_user.department
 
-    # Top 5 performing coupons
-    coupon_performance = {}
-    for cp in qs.select_related('coupon', 'partner').exclude(coupon__isnull=True):
-        coupon_code = cp.coupon.code
-        if coupon_code not in coupon_performance:
-            coupon_performance[coupon_code] = {
-                'code': coupon_code,
-                'partner': cp.partner.name if cp.partner else 'N/A',
-                'orders': 0,
-                'revenue': 0
-            }
-        coupon_performance[coupon_code]['orders'] += cp.total_orders or 0
-        coupon_performance[coupon_code]['revenue'] += float(cp.total_revenue or 0)
+        # Get filters from request
+        advertiser_id = request.GET.get('advertiser_id')
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
 
-    top_coupons = sorted(
-        coupon_performance.values(),
-        key=lambda x: x['revenue'],
-        reverse=True
-    )[:5]
+        if not advertiser_id:
+            return Response({"detail": "advertiser_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Daily revenue trend
-    daily_data = qs.values('date').annotate(
-        revenue=Sum('total_revenue')
-    ).order_by('date')
+        try:
+            advertiser = Advertiser.objects.get(id=advertiser_id)
+        except Advertiser.DoesNotExist:
+            return Response({"detail": "Advertiser not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    daily_trend = {
-        'dates': [str(d['date']) for d in daily_data],
-        'revenues': [float(d['revenue'] or 0) for d in daily_data]
-    }
+        # Base queryset filtered by advertiser
+        qs = CampaignPerformance.objects.filter(advertiser_id=advertiser_id)
 
-    # Build response
-    response_data = {
-        'advertiser_id': advertiser.id,
-        'advertiser_name': advertiser.name,
-        'kpis': {
-            'orders': kpis['total_orders'] or 0,
-            'sales': float(kpis['total_sales'] or 0),
-            'revenue': float(kpis['total_revenue'] or 0),
-            'payout': float(kpis['total_payout'] or 0),
-        },
-        'partner_breakdown': partner_breakdown,
-        'top_coupons': top_coupons,
-        'daily_trend': daily_trend,
-        'can_see_profit': can_see_profit
-    }
+        # Apply date filters
+        if date_from:
+            try:
+                start_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+                qs = qs.filter(date__gte=start_date)
+            except:
+                pass
 
-    # Only include profit if user can see it
-    if can_see_profit:
-        response_data['kpis']['profit'] = float(kpis['total_profit'] or 0)
+        if date_to:
+            try:
+                end_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+                qs = qs.filter(date__lte=end_date)
+            except:
+                pass
 
-    return Response(response_data)
+        # Department scoping (for OpsManager with department)
+        if company_user and department and role == "OpsManager":
+            if department == "media_buying":
+                qs = qs.filter(partner__partner_type="MB")
+            elif department == "affiliate":
+                qs = qs.filter(partner__partner_type="AFF")
+            elif department == "influencer":
+                qs = qs.filter(partner__partner_type="INF")
+
+        # Role-based access control
+        # Superusers without CompanyUser get full access
+        is_superuser_without_company = not company_user and user.is_superuser
+        full_access_roles = {"Admin", "OpsManager"}
+        has_full_access = is_superuser_without_company or (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+
+        if not has_full_access:
+            # TeamMembers and OpsManager/ViewOnly with department: filter by assignments
+            assignments = AccountAssignment.objects.filter(
+                company_user=company_user
+            ).prefetch_related("advertisers", "partners")
+
+            assigned_advertiser_ids = set()
+            assigned_partner_ids = set()
+            for a in assignments:
+                assigned_advertiser_ids.update(a.advertisers.values_list("id", flat=True))
+                assigned_partner_ids.update(a.partners.values_list("id", flat=True))
+
+            # Verify user has access to this advertiser
+            if int(advertiser_id) not in assigned_advertiser_ids:
+                return Response({"detail": "Access denied to this advertiser"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Filter by assigned partners
+            if assigned_partner_ids:
+                qs = qs.filter(partner__id__in=assigned_partner_ids)
+            else:
+                qs = qs.none()
+
+        # Calculate KPIs
+        kpis = qs.aggregate(
+            total_orders=Sum('total_orders'),
+            total_sales=Sum('total_sales'),
+            total_revenue=Sum('total_revenue'),
+            total_payout=Sum('total_payout'),
+            total_profit=Sum('total_profit')
+        )
+
+        # Determine if user can see profit
+        can_see_profit = (
+            user.is_superuser or
+            role == "Admin" or 
+            role == "OpsManager" or 
+            (role == "TeamMember" and department == "media_buying")
+        )
+
+        # Partner breakdown by type
+        partner_breakdown = []
+        partner_types = [
+            {'type': 'MB', 'label': 'Media Buyers'},
+            {'type': 'AFF', 'label': 'Affiliates'},
+            {'type': 'INF', 'label': 'Influencers'}
+        ]
+
+        for pt in partner_types:
+            type_qs = qs.filter(partner__partner_type=pt['type'])
+            type_revenue = type_qs.aggregate(total=Sum('total_revenue'))['total'] or 0
+            type_count = type_qs.values('partner').distinct().count()
+            
+            if type_revenue > 0 or type_count > 0:
+                partner_breakdown.append({
+                    'type': pt['type'],
+                    'label': pt['label'],
+                    'revenue': float(type_revenue),
+                    'count': type_count
+                })
+
+        # Top 5 performing coupons
+        coupon_performance = {}
+        for cp in qs.select_related('coupon', 'partner').exclude(coupon__isnull=True):
+            coupon_code = cp.coupon.code
+            if coupon_code not in coupon_performance:
+                coupon_performance[coupon_code] = {
+                    'code': coupon_code,
+                    'partner': cp.partner.name if cp.partner else 'N/A',
+                    'orders': 0,
+                    'revenue': 0
+                }
+            coupon_performance[coupon_code]['orders'] += cp.total_orders or 0
+            coupon_performance[coupon_code]['revenue'] += float(cp.total_revenue or 0)
+
+        top_coupons = sorted(
+            coupon_performance.values(),
+            key=lambda x: x['revenue'],
+            reverse=True
+        )[:5]
+
+        # Daily revenue trend
+        daily_data = qs.values('date').annotate(
+            revenue=Sum('total_revenue')
+        ).order_by('date')
+
+        daily_trend = {
+            'dates': [str(d['date']) for d in daily_data],
+            'revenues': [float(d['revenue'] or 0) for d in daily_data]
+        }
+
+        # Build response
+        response_data = {
+            'advertiser_id': advertiser.id,
+            'advertiser_name': advertiser.name,
+            'kpis': {
+                'orders': kpis['total_orders'] or 0,
+                'sales': float(kpis['total_sales'] or 0),
+                'revenue': float(kpis['total_revenue'] or 0),
+                'payout': float(kpis['total_payout'] or 0),
+            },
+            'partner_breakdown': partner_breakdown,
+            'top_coupons': top_coupons,
+            'daily_trend': daily_trend,
+            'can_see_profit': can_see_profit
+        }
+
+        # Only include profit if user can see it
+        if can_see_profit:
+            response_data['kpis']['profit'] = float(kpis['total_profit'] or 0)
+
+        return Response(response_data)
+    
+    except Exception as e:
+        import traceback
+        error_details = {
+            'error': str(e),
+            'traceback': traceback.format_exc(),
+            'advertiser_id': request.GET.get('advertiser_id'),
+            'user': str(request.user)
+        }
+        print("❌ ERROR in advertiser_detail_summary_view:", error_details)
+        return Response(
+            {"detail": f"Internal server error: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # --- Coupon Management ---
