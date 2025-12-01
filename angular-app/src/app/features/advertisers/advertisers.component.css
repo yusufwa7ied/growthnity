@@ -867,3 +867,122 @@
     vertical-align: middle;
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
+
+/* Partner Statistics */
+.partner-stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.75rem;
+    background: linear-gradient(135deg, rgba(0, 146, 146, 0.08) 0%, rgba(0, 146, 146, 0.05) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 146, 146, 0.15);
+}
+
+.partner-stats strong {
+    color: var(--brand-teal);
+    font-weight: 700;
+}
+
+/* Expandable Row Styles */
+.expand-btn {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expand-btn:hover {
+    background: rgba(0, 146, 146, 0.1);
+    color: var(--brand-teal);
+}
+
+::ng-deep .advertisers-table .p-datatable-tbody>tr.expanded {
+    background: rgba(0, 146, 146, 0.02) !important;
+    border-left: 3px solid var(--brand-teal);
+}
+
+::ng-deep .advertisers-table .p-datatable-tbody>tr.expanded-row {
+    background: linear-gradient(135deg, rgba(0, 146, 146, 0.03) 0%, rgba(0, 146, 146, 0.01) 100%) !important;
+    border-left: 3px solid var(--brand-teal);
+}
+
+::ng-deep .advertisers-table .p-datatable-tbody>tr.expanded-row:hover {
+    background: linear-gradient(135deg, rgba(0, 146, 146, 0.04) 0%, rgba(0, 146, 146, 0.02) 100%) !important;
+}
+
+.expanded-content {
+    padding: 1.5rem;
+    animation: expandDown 0.3s ease-out;
+}
+
+@keyframes expandDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.detail-section {
+    background: white;
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+}
+
+.detail-section h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.detail-section h4 i {
+    color: var(--brand-teal);
+    font-size: 1.1rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.detail-row .value {
+    font-size: 0.875rem;
+    color: #1f2937;
+    font-weight: 600;
+}

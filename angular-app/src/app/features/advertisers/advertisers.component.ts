@@ -27,6 +27,7 @@ export class AdvertisersComponent implements OnInit {
     error = '';
     private skeletonMinDuration = 500; // Minimum ms to show skeleton
     successMessage = '';
+    expandedRows: Set<number> = new Set();
 
     // Form fields
     showAddForm = false;
@@ -366,5 +367,17 @@ export class AdvertisersComponent implements OnInit {
 
     logout(): void {
         this.authService.logout();
+    }
+
+    toggleRow(advertiserId: number): void {
+        if (this.expandedRows.has(advertiserId)) {
+            this.expandedRows.delete(advertiserId);
+        } else {
+            this.expandedRows.add(advertiserId);
+        }
+    }
+
+    isRowExpanded(advertiserId: number): boolean {
+        return this.expandedRows.has(advertiserId);
     }
 }

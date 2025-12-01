@@ -36,6 +36,8 @@ export interface Advertiser {
     default_ftu_fixed_bonus?: number | null;
     default_rtu_fixed_bonus?: number | null;
     partner_payouts: PartnerPayout[];
+    total_partners?: number;
+    active_partners?: number;
     stats?: {
         coupon_count: number;
         partner_count: number;

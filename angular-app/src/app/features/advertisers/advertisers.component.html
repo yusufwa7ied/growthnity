@@ -281,18 +281,25 @@
             <p-table [value]="advertisers" styleClass="p-datatable-sm advertisers-table">
                 <ng-template pTemplate="header">
                     <tr>
+                        <th style="width: 40px;"></th>
                         <th>Name</th>
                         <th>Attribution</th>
                         <th>Revenue Type</th>
                         <th>FTU Rev</th>
                         <th>RTU Rev</th>
-                        <th>Default Payout</th>
+                        <th>Partners (Active/Total)</th>
                         <th>Currency</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-advertiser>
-                    <tr>
+                    <tr [class.expanded]="isRowExpanded(advertiser.id)">
+                        <td>
+                            <button class="expand-btn" (click)="toggleRow(advertiser.id)"
+                                title="Show more details">
+                                <i class="pi" [ngClass]="isRowExpanded(advertiser.id) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                            </button>
+                        </td>
                         <td>
                             {{ advertiser.name }}
                             <span *ngIf="advertiser.name === 'Noon'" class="bracket-badge"
@@ -305,11 +312,9 @@
                         <td>{{ advertiser.rev_ftu_rate || '-' }}</td>
                         <td>{{ advertiser.rev_rtu_rate || '-' }}</td>
                         <td>
-                            <span *ngIf="advertiser.default_ftu_payout || advertiser.default_rtu_payout">
-                                FTU: {{ advertiser.default_ftu_payout || '-' }} / RTU: {{ advertiser.default_rtu_payout
-                                || '-' }}
+                            <span class="partner-stats">
+                                <strong>{{ advertiser.active_partners || 0 }}</strong> / {{ advertiser.total_partners || 0 }}
                             </span>
-                            <span *ngIf="!advertiser.default_ftu_payout && !advertiser.default_rtu_payout">-</span>
                         </td>
                         <td>{{ advertiser.currency }}</td>
                         <td class="actions">
@@ -324,10 +329,93 @@
                             </button>
                         </td>
                     </tr>
+                    <tr *ngIf="isRowExpanded(advertiser.id)" class="expanded-row">
+                        <td colspan="9">
+                            <div class="expanded-content">
+                                <div class="detail-grid">
+                                    <div class="detail-section">
+                                        <h4><i class="pi pi-money-bill"></i> Revenue Configuration</h4>
+                                        <div class="detail-row">
+                                            <span class="label">Rate Type:</span>
+                                            <span class="value">{{ advertiser.rev_rate_type }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">FTU Rate:</span>
+                                            <span class="value">{{ advertiser.rev_ftu_rate || 'N/A' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">RTU Rate:</span>
+                                            <span class="value">{{ advertiser.rev_rtu_rate || 'N/A' }}</span>
+                                        </div>
+                                        <div class="detail-row" *ngIf="advertiser.rev_ftu_fixed_bonus">
+                                            <span class="label">FTU Fixed Bonus:</span>
+                                            <span class="value">{{ advertiser.rev_ftu_fixed_bonus }}</span>
+                                        </div>
+                                        <div class="detail-row" *ngIf="advertiser.rev_rtu_fixed_bonus">
+                                            <span class="label">RTU Fixed Bonus:</span>
+                                            <span class="value">{{ advertiser.rev_rtu_fixed_bonus }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="pi pi-dollar"></i> Default Partner Payouts</h4>
+                                        <div class="detail-row">
+                                            <span class="label">Payout Type:</span>
+                                            <span class="value">{{ advertiser.default_payout_rate_type }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">FTU Payout:</span>
+                                            <span class="value">{{ advertiser.default_ftu_payout || 'N/A' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">RTU Payout:</span>
+                                            <span class="value">{{ advertiser.default_rtu_payout || 'N/A' }}</span>
+                                        </div>
+                                        <div class="detail-row" *ngIf="advertiser.default_ftu_fixed_bonus">
+                                            <span class="label">FTU Fixed Bonus:</span>
+                                            <span class="value">{{ advertiser.default_ftu_fixed_bonus }}</span>
+                                        </div>
+                                        <div class="detail-row" *ngIf="advertiser.default_rtu_fixed_bonus">
+                                            <span class="label">RTU Fixed Bonus:</span>
+                                            <span class="value">{{ advertiser.default_rtu_fixed_bonus }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="pi pi-globe"></i> Currency & Exchange</h4>
+                                        <div class="detail-row">
+                                            <span class="label">Currency:</span>
+                                            <span class="value">{{ advertiser.currency }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Exchange Rate to USD:</span>
+                                            <span class="value">{{ advertiser.exchange_rate || 1 }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="pi pi-users"></i> Partner Statistics</h4>
+                                        <div class="detail-row">
+                                            <span class="label">Total Partners Assigned:</span>
+                                            <span class="value">{{ advertiser.total_partners || 0 }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Active Partners:</span>
+                                            <span class="value">{{ advertiser.active_partners || 0 }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Inactive Partners:</span>
+                                            <span class="value">{{ (advertiser.total_partners || 0) - (advertiser.active_partners || 0) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="8" class="empty-state">
+                        <td colspan="9" class="empty-state">
                             <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
                             <p>No advertisers found</p>
                             <button class="p-button p-button-sm p-button-outlined" (click)="showAdd()">

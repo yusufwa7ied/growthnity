@@ -1271,14 +1271,29 @@ def partner_list_view(request):
 @permission_classes([IsAuthenticated])
 def advertiser_list_view(request):
     advertisers = Advertiser.objects.all()
-    results = [
-        {
+    results = []
+    
+    for adv in advertisers:
+        # Count total partners assigned through coupons
+        total_partners = Coupon.objects.filter(
+            advertiser=adv,
+            partner__isnull=False
+        ).values('partner').distinct().count()
+        
+        # Count active partners (those with performance data)
+        active_partners = CampaignPerformance.objects.filter(
+            advertiser=adv,
+            partner__isnull=False
+        ).values('partner').distinct().count()
+        
+        results.append({
             "id": adv.id,# type: ignore
             "name": adv.name,
             "attribution": adv.get_attribution_display(),  # Returns "Coupon" or "Link" # type: ignore
-        }
-        for adv in advertisers
-    ]
+            "total_partners": total_partners,
+            "active_partners": active_partners,
+        })
+    
     return Response(results)
 
 # --- Partner Payout Management ---
