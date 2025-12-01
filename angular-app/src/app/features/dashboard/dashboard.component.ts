@@ -904,7 +904,9 @@ export class DashboardComponent implements OnInit {
         // Close modal and filter dashboard by this advertiser
         this.showAdvertiserModal = false;
         if (this.selectedAdvertiserId) {
-            this.filters.advertiser_id = this.selectedAdvertiserId;
+            // Use array format to match multiselect component
+            this.filters.advertiser_id = [this.selectedAdvertiserId];
+            this.recomputeFilterDropdowns();
             this.applyFilters();
         }
     }
@@ -1311,9 +1313,19 @@ export class DashboardComponent implements OnInit {
     getActiveFilterCount(): number {
         let count = 0;
         if (this.filters.partner_type) count++;
-        if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length > 0) count++;
-        if (Array.isArray(this.filters.partner_id) && this.filters.partner_id.length > 0) count++;
-        if (Array.isArray(this.filters.coupon_code) && this.filters.coupon_code.length > 0) count++;
+        // Handle both array and single value formats
+        if (this.filters.advertiser_id) {
+            if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length > 0) count++;
+            else if (!Array.isArray(this.filters.advertiser_id)) count++;
+        }
+        if (this.filters.partner_id) {
+            if (Array.isArray(this.filters.partner_id) && this.filters.partner_id.length > 0) count++;
+            else if (!Array.isArray(this.filters.partner_id)) count++;
+        }
+        if (this.filters.coupon_code) {
+            if (Array.isArray(this.filters.coupon_code) && this.filters.coupon_code.length > 0) count++;
+            else if (!Array.isArray(this.filters.coupon_code)) count++;
+        }
         if (this.filters.date_from && this.filters.date_to) count++;
         return count;
     }
