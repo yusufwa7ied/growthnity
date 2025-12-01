@@ -1138,7 +1138,7 @@
       <i class="pi pi-chart-line"></i>
       <span>Daily Revenue Trend</span>
     </div>
-    <div class="trend-chart-container" *ngIf="advertiserDetailData.daily_trend.dates.length > 0">
+    <div class="trend-chart-container" *ngIf="advertiserDetailData.daily_trend.dates.length > 0 && trendChartOptions">
       <canvas baseChart
         [type]="'line'"
         [data]="{
@@ -1152,30 +1152,7 @@
             fill: true
           }]
         }"
-        [options]="{
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context: any) {
-                  return 'Revenue: $' + context.parsed.y.toLocaleString();
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value: any) {
-                  return '$' + value.toLocaleString();
-                }
-              }
-            }
-          }
-        }">
+        [options]="trendChartOptions">
       </canvas>
     </div>
   </div>

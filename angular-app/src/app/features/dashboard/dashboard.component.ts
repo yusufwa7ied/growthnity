@@ -107,6 +107,7 @@ export class DashboardComponent implements OnInit {
     advertiserDetailData: any = null;
     selectedAdvertiserId: number | null = null;
     selectedAdvertiserName: string = '';
+    trendChartOptions: any = null;
 
     // UI State
     sidebarVisible: boolean = false;
@@ -847,12 +848,40 @@ export class DashboardComponent implements OnInit {
             next: (data: AdvertiserDetailSummary) => {
                 this.advertiserDetailData = data;
                 this.advertiserDetailLoading = false;
+                this.buildTrendChartOptions();
             },
             error: (error) => {
                 console.error('Error loading advertiser details:', error);
                 this.advertiserDetailLoading = false;
             }
         });
+    }
+
+    buildTrendChartOptions(): void {
+        this.trendChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context: any) => {
+                            return 'Revenue: $' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value: any) => {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        };
     }
 
     closeAdvertiserModal(): void {
