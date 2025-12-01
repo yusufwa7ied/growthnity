@@ -138,8 +138,22 @@ def list_advertisers_view(request):
         coupon_count = Coupon.objects.filter(advertiser=adv).count()
         partner_count = adv.payouts.values('partner').distinct().count()
         
+        # Count total partners assigned through coupons
+        total_partners = Coupon.objects.filter(
+            advertiser=adv,
+            partner__isnull=False
+        ).values('partner').distinct().count()
+        
+        # Count active partners (those with performance data)
+        active_partners = CampaignPerformance.objects.filter(
+            advertiser=adv,
+            partner__isnull=False
+        ).values('partner').distinct().count()
+        
         data.append({
             **AdvertiserDetailSerializer(adv).data,
+            'total_partners': total_partners,
+            'active_partners': active_partners,
             'stats': {
                 'coupon_count': coupon_count,
                 'partner_count': partner_count,
