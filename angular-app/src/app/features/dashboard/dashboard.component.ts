@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ChartConfiguration } from 'chart.js';
@@ -134,7 +134,8 @@ export class DashboardComponent implements OnInit {
         private router: Router,
         private dashboardService: DashboardService,
         private analyticsService: AnalyticsService,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private ngZone: NgZone
     ) { }
 
     ngOnInit(): void {
@@ -829,7 +830,10 @@ export class DashboardComponent implements OnInit {
                         // Find advertiser ID from name
                         const advertiser = this.allAdvertisers.find(a => a.name === advertiserName);
                         if (advertiser) {
-                            this.onPieChartClick(advertiser.id, advertiserName);
+                            // Run inside Angular zone to ensure change detection
+                            this.ngZone.run(() => {
+                                this.onPieChartClick(advertiser.id, advertiserName);
+                            });
                         }
                     }
                 }
@@ -843,16 +847,21 @@ export class DashboardComponent implements OnInit {
         this.showAdvertiserModal = true;
         this.advertiserDetailLoading = true;
         this.advertiserDetailData = null;
+        
+        // Trigger change detection immediately to show loading state
+        this.cdr.detectChanges();
 
         this.dashboardService.getAdvertiserDetailSummary(advertiserId, this.filters).subscribe({
             next: (data: AdvertiserDetailSummary) => {
                 this.advertiserDetailData = data;
                 this.advertiserDetailLoading = false;
                 this.buildTrendChartOptions();
+                this.cdr.detectChanges();
             },
             error: (error) => {
                 console.error('Error loading advertiser details:', error);
                 this.advertiserDetailLoading = false;
+                this.cdr.detectChanges();
             }
         });
     }
