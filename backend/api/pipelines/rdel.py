@@ -13,7 +13,7 @@ from api.models import (
     RDELTransaction,
     CampaignPerformance,
 )
-from .helpers import enrich_df, resolve_payouts, compute_final_metrics, store_raw_snapshot
+from .helpers import enrich_df, resolve_payouts_with_history, compute_final_metrics, store_raw_snapshot
 from api.services.s3_service import s3_service
 
 
@@ -138,7 +138,7 @@ def run_rdel_pipeline(start_date: str, end_date: str):
         print(f"✅ Enriched {len(enriched)} rows for {adv_name}")
         
         # Apply payout rules
-        payout_df = resolve_payouts_with_history(advertiser, enriched, timestamp_col="created_date")
+        payout_df = resolve_payouts_with_history(advertiser, enriched)
         
         # Calculate final metrics for this advertiser
         final_adv_df = compute_final_metrics(payout_df, advertiser)

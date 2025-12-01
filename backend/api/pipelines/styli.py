@@ -59,7 +59,7 @@ def run(date_from: date, date_to: date):
     print(enriched_df.head(10))
 
     # 5. RESOLVE PAYOUT RULES (ftu/rtu rate)
-    payout_df = resolve_payouts_with_history(advertiser, enriched_df, timestamp_col="created_date")
+    payout_df = resolve_payouts_with_history(advertiser, enriched_df)
     print("🔍 PAYOUT DF HEAD:")
     print(payout_df.head(10))
 

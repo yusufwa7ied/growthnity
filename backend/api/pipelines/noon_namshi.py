@@ -16,6 +16,7 @@ from api.models import (
 from api.pipelines.helpers import (
     store_raw_snapshot,
     enrich_df,
+    resolve_payouts_with_history,
     compute_final_metrics,
     nf,
     nz,
@@ -157,11 +158,10 @@ def calculate_noon_payouts(df, advertiser):
     - The ftu_payout, rtu_payout, and fixed_bonus values are IGNORED
     - Only the bracket amounts (from NOON_BRACKETS dict) are used
     """
-    from api.pipelines.helpers import resolve_payouts
     
     if advertiser.name == "Namshi":
         # Use existing percentage-based logic for Namshi
-        return resolve_payouts_with_history(advertiser, df, timestamp_col="created_date")
+        return resolve_payouts_with_history(advertiser, df)
     
     # For Noon, apply bracket-based logic to ALL orders
     if df.empty:
