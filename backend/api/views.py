@@ -753,14 +753,14 @@ def dashboard_filter_options_view(request):
         if cp.advertiser_id not in advertisers_map:
             advertisers_map[cp.advertiser_id] = {
                 "advertiser_id": cp.advertiser_id,
-                "campaign": cp.advertiser.name
+                "campaign": cp.advertiser.name if cp.advertiser else "Unknown"
             }
         
         # Partners
         if cp.partner_id and cp.partner_id not in partners_map:
             partners_map[cp.partner_id] = {
                 "partner_id": cp.partner_id,
-                "partner": cp.partner.name
+                "partner": cp.partner.name if cp.partner else "Unknown"
             }
         
         # Coupons
@@ -867,6 +867,9 @@ def dashboard_pie_chart_data_view(request):
     # Aggregate by campaign
     campaign_totals = {}
     for cp in qs.select_related('advertiser'):
+        # Skip records with NULL advertiser
+        if not cp.advertiser:
+            continue
         campaign_name = cp.advertiser.name
         if campaign_name not in campaign_totals:
             campaign_totals[campaign_name] = {
