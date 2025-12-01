@@ -898,8 +898,16 @@ def advertiser_detail_summary_view(request):
     """
     user = request.user
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
-    role = company_user.role.name if company_user and company_user.role else None
-    department = company_user.department if company_user else None
+    
+    # If no CompanyUser, treat as superuser with full access (for admin accounts)
+    if not company_user:
+        if not user.is_superuser:
+            return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        role = None
+        department = None
+    else:
+        role = company_user.role.name if company_user.role else None
+        department = company_user.department if company_user else None
 
     # Get filters from request
     advertiser_id = request.GET.get('advertiser_id')
@@ -942,8 +950,10 @@ def advertiser_detail_summary_view(request):
             qs = qs.filter(partner__partner_type="INF")
 
     # Role-based access control
+    # Superusers without CompanyUser get full access
+    is_superuser_without_company = not company_user and user.is_superuser
     full_access_roles = {"Admin", "OpsManager"}
-    has_full_access = (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
+    has_full_access = is_superuser_without_company or (role in full_access_roles and not department) or (role == "ViewOnly" and not department)
 
     if not has_full_access:
         # TeamMembers and OpsManager/ViewOnly with department: filter by assignments
@@ -978,6 +988,7 @@ def advertiser_detail_summary_view(request):
 
     # Determine if user can see profit
     can_see_profit = (
+        user.is_superuser or
         role == "Admin" or 
         role == "OpsManager" or 
         (role == "TeamMember" and department == "media_buying")
