@@ -252,7 +252,7 @@ class Command(BaseCommand):
             csv_buffer.seek(0)
             
             # Upload to S3
-            s3_service.client.put_object(
+            s3_service.s3_client.put_object(
                 Bucket=s3_service.bucket_name,
                 Key=s3_key,
                 Body=csv_buffer.getvalue(),
