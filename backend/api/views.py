@@ -1287,9 +1287,33 @@ def advertiser_list_view(request):
         ).values('partner').distinct().count()
         
         results.append({
-            "id": adv.id,# type: ignore
+            "id": adv.id,  # type: ignore
             "name": adv.name,
-            "attribution": adv.get_attribution_display(),  # Returns "Coupon" or "Link" # type: ignore
+            "attribution": adv.get_attribution_display(),  # type: ignore
+            "rev_rate_type": adv.rev_rate_type,
+            "rev_ftu_rate": adv.rev_ftu_rate,
+            "rev_rtu_rate": adv.rev_rtu_rate,
+            "rev_ftu_fixed_bonus": adv.rev_ftu_fixed_bonus,
+            "rev_rtu_fixed_bonus": adv.rev_rtu_fixed_bonus,
+            "currency": adv.currency,
+            "exchange_rate": adv.exchange_rate,
+            "default_payout_rate_type": adv.default_payout_rate_type,
+            "default_ftu_payout": adv.default_ftu_payout,
+            "default_rtu_payout": adv.default_rtu_payout,
+            "default_ftu_fixed_bonus": adv.default_ftu_fixed_bonus,
+            "default_rtu_fixed_bonus": adv.default_rtu_fixed_bonus,
+            "partner_payouts": [
+                {
+                    "partner_id": pp.partner.id,  # type: ignore
+                    "partner_name": pp.partner.name,  # type: ignore
+                    "rate_type": pp.rate_type,
+                    "ftu_payout": pp.ftu_payout,
+                    "rtu_payout": pp.rtu_payout,
+                    "ftu_fixed_bonus": pp.ftu_fixed_bonus,
+                    "rtu_fixed_bonus": pp.rtu_fixed_bonus,
+                }
+                for pp in adv.partner_payouts.select_related('partner').all()  # type: ignore
+            ],
             "total_partners": total_partners,
             "active_partners": active_partners,
         })
