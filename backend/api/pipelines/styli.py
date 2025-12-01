@@ -16,7 +16,7 @@ from api.models import (
 from api.pipelines.helpers import (
     store_raw_snapshot,
     enrich_df,
-    resolve_payouts,
+    resolve_payouts_with_history,
     compute_final_metrics,
     nf,
     nz,

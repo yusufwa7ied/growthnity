@@ -126,14 +126,14 @@ class Command(BaseCommand):
                     self.style.ERROR(f"❌ Failed to sync {tab_name}: {str(e)}")
                 )
                 # Update error status
-                SheetSyncStatus.objects.update_or_create(
+                status, created = SheetSyncStatus.objects.get_or_create(
                     sheet_id=self.SHEET_ID,
                     tab_name=tab_name,
-                    defaults={
-                        'last_error': str(e),
-                        'consecutive_failures': models.F('consecutive_failures') + 1
-                    }
+                    defaults={'consecutive_failures': 0, 'last_error': ''}
                 )
+                status.last_error = str(e)
+                status.consecutive_failures += 1
+                status.save()
                 continue
 
     def sync_single_tab(self, tab_name, date_from, date_to, dry_run):
@@ -200,14 +200,14 @@ class Command(BaseCommand):
                 self.style.ERROR(f"❌ Pipeline failed: {str(e)}")
             )
             # Update error status
-            SheetSyncStatus.objects.update_or_create(
+            status, created = SheetSyncStatus.objects.get_or_create(
                 sheet_id=self.SHEET_ID,
                 tab_name=tab_name,
-                defaults={
-                    'last_error': str(e),
-                    'consecutive_failures': models.F('consecutive_failures') + 1
-                }
+                defaults={'consecutive_failures': 0, 'last_error': ''}
             )
+            status.last_error = str(e)
+            status.consecutive_failures += 1
+            status.save()
             raise
 
     def read_google_sheet(self, tab_name):
