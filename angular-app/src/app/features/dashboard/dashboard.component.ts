@@ -7,13 +7,14 @@ import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';
+import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { MultiSelect } from 'primeng/multiselect';
 import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { catchError, forkJoin, of } from 'rxjs';
-import { Advertiser, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
+import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
 import { AnalyticsService, PerformanceAnalytics } from '../../core/services/analytics.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -33,6 +34,7 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         Select,
         MultiSelect,
         DatePicker,
+        Dialog,
         FooterComponent,
         InputText,
         TableModule,
@@ -98,6 +100,13 @@ export class DashboardComponent implements OnInit {
     // Analytics
     analytics: PerformanceAnalytics | null = null;
     showAnalytics: boolean = false;
+
+    // Advertiser Detail Modal
+    showAdvertiserModal: boolean = false;
+    advertiserDetailLoading: boolean = false;
+    advertiserDetailData: any = null;
+    selectedAdvertiserId: number | null = null;
+    selectedAdvertiserName: string = '';
 
     // UI State
     sidebarVisible: boolean = false;
@@ -811,9 +820,55 @@ export class DashboardComponent implements OnInit {
                             }
                         }
                     }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const advertiserName = labels[index];
+                        // Find advertiser ID from name
+                        const advertiser = this.allAdvertisers.find(a => a.name === advertiserName);
+                        if (advertiser) {
+                            this.onPieChartClick(advertiser.id, advertiserName);
+                        }
+                    }
                 }
             }
         };
+    }
+
+    onPieChartClick(advertiserId: number, advertiserName: string): void {
+        this.selectedAdvertiserId = advertiserId;
+        this.selectedAdvertiserName = advertiserName;
+        this.showAdvertiserModal = true;
+        this.advertiserDetailLoading = true;
+        this.advertiserDetailData = null;
+
+        this.dashboardService.getAdvertiserDetailSummary(advertiserId, this.filters).subscribe({
+            next: (data: AdvertiserDetailSummary) => {
+                this.advertiserDetailData = data;
+                this.advertiserDetailLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading advertiser details:', error);
+                this.advertiserDetailLoading = false;
+            }
+        });
+    }
+
+    closeAdvertiserModal(): void {
+        this.showAdvertiserModal = false;
+        this.advertiserDetailData = null;
+        this.selectedAdvertiserId = null;
+        this.selectedAdvertiserName = '';
+    }
+
+    viewFullDetails(): void {
+        // Close modal and filter dashboard by this advertiser
+        this.showAdvertiserModal = false;
+        if (this.selectedAdvertiserId) {
+            this.filters.advertiser_id = this.selectedAdvertiserId;
+            this.applyFilters();
+        }
     }
 
     applyFilters(): void {

@@ -109,3 +109,32 @@ export interface DashboardContext {
   department?: string;
   advertiser_partner_map?: any;
 }
+
+export interface AdvertiserDetailSummary {
+  advertiser_id: number;
+  advertiser_name: string;
+  kpis: {
+    orders: number;
+    sales: number;
+    revenue: number;
+    payout: number;
+    profit?: number;
+  };
+  partner_breakdown: Array<{
+    type: string;
+    label: string;
+    revenue: number;
+    count: number;
+  }>;
+  top_coupons: Array<{
+    code: string;
+    partner: string;
+    orders: number;
+    revenue: number;
+  }>;
+  daily_trend: {
+    dates: string[];
+    revenues: number[];
+  };
+  can_see_profit: boolean;
+}

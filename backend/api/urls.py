@@ -8,6 +8,7 @@ from .views import (
     performance_table_view,
     dashboard_filter_options_view,
     dashboard_pie_chart_data_view,
+    advertiser_detail_summary_view,
     coupons_view,
     partner_list_view,
     advertiser_list_view,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("dashboard/performance-table/", performance_table_view),
     path("dashboard/filter-options/", dashboard_filter_options_view),
     path("dashboard/pie-chart-data/", dashboard_pie_chart_data_view),
+    path("dashboard/advertiser-detail-summary/", advertiser_detail_summary_view),
     path("coupons/", coupons_view, name="coupons"), # type: ignore
     path("coupons/<str:code>/", coupon_detail_view, name="coupon-detail"),
     path("coupons/<str:code>/history/", coupon_history_view, name="coupon-history"),

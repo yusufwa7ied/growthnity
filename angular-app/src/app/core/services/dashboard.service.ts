@@ -184,6 +184,20 @@ export class DashboardService {
     return this.http.get<any[]>(`${this.API_BASE_URL}/team-members/`, { params });
   }
 
+  // Get advertiser detail summary for modal
+  getAdvertiserDetailSummary(advertiserId: number, filters: DashboardFilters): Observable<any> {
+    let params = new HttpParams().set('advertiser_id', advertiserId.toString());
+    
+    if (filters.date_from) {
+      params = params.set('date_from', filters.date_from);
+    }
+    if (filters.date_to) {
+      params = params.set('date_to', filters.date_to);
+    }
+
+    return this.http.get<any>(`${this.API_BASE_URL}/dashboard/advertiser-detail-summary/`, { params });
+  }
+
   // Helper to build HTTP params from filters
   private buildParams(filters: DashboardFilters): HttpParams {
     let params = new HttpParams();

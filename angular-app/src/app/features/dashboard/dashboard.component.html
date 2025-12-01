@@ -1017,3 +1017,177 @@
   <!-- Footer -->
   <app-footer></app-footer>
 </div>
+
+<!-- Advertiser Detail Modal -->
+<p-dialog [(visible)]="showAdvertiserModal" [modal]="true" [draggable]="false" [resizable]="false"
+  styleClass="advertiser-detail-modal" [style]="{width: '900px', maxWidth: '95vw'}">
+  <ng-template pTemplate="header">
+    <div class="modal-header-content">
+      <i class="pi pi-chart-pie"></i>
+      <span>{{ selectedAdvertiserName }} Performance Summary</span>
+    </div>
+  </ng-template>
+
+  <div *ngIf="advertiserDetailLoading" class="modal-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Loading details...</p>
+  </div>
+
+  <div *ngIf="!advertiserDetailLoading && advertiserDetailData" class="modal-content">
+    <!-- Quick Summary -->
+    <div class="summary-banner">
+      <div class="summary-item">
+        <span class="label">Revenue:</span>
+        <span class="value">${{ advertiserDetailData.kpis.revenue | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-item" *ngIf="filters.date_from && filters.date_to">
+        <span class="label">Period:</span>
+        <span class="value">{{ filters.date_from }} to {{ filters.date_to }}</span>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon orders-icon"><i class="pi pi-shopping-cart"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Orders</span>
+          <span class="kpi-value">{{ advertiserDetailData.kpis.orders | number }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon sales-icon"><i class="pi pi-dollar"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Sales (GMV)</span>
+          <span class="kpi-value">${{ advertiserDetailData.kpis.sales | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon payout-icon"><i class="pi pi-money-bill"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Payout</span>
+          <span class="kpi-value">${{ advertiserDetailData.kpis.payout | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      <div class="kpi-card" *ngIf="advertiserDetailData.can_see_profit">
+        <div class="kpi-icon profit-icon"><i class="pi pi-chart-line"></i></div>
+        <div class="kpi-content">
+          <span class="kpi-label">Profit</span>
+          <span class="kpi-value">${{ advertiserDetailData.kpis.profit | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partner Breakdown -->
+    <div class="section-title">
+      <i class="pi pi-users"></i>
+      <span>Partner Distribution</span>
+    </div>
+    <div class="partner-breakdown" *ngIf="advertiserDetailData.partner_breakdown.length > 0">
+      <div class="partner-row" *ngFor="let partner of advertiserDetailData.partner_breakdown">
+        <div class="partner-info">
+          <span class="partner-label">{{ partner.label }}</span>
+          <span class="partner-count">{{ partner.count }} partner{{ partner.count !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="partner-bar-container">
+          <div class="partner-bar" [style.width.%]="(partner.revenue / advertiserDetailData.kpis.revenue * 100)"></div>
+        </div>
+        <div class="partner-revenue">
+          <span class="revenue-amount">${{ partner.revenue | number:'1.0-0' }}</span>
+          <span class="revenue-percentage">({{ (partner.revenue / advertiserDetailData.kpis.revenue * 100) | number:'1.0-0' }}%)</span>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="advertiserDetailData.partner_breakdown.length === 0">
+      <i class="pi pi-info-circle"></i>
+      <p>No partner data available</p>
+    </div>
+
+    <!-- Top Coupons -->
+    <div class="section-title">
+      <i class="pi pi-ticket"></i>
+      <span>Top 5 Performing Coupons</span>
+    </div>
+    <div class="coupons-table" *ngIf="advertiserDetailData.top_coupons.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Coupon Code</th>
+            <th>Partner</th>
+            <th>Orders</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let coupon of advertiserDetailData.top_coupons">
+            <td class="coupon-code">{{ coupon.code }}</td>
+            <td>{{ coupon.partner }}</td>
+            <td>{{ coupon.orders | number }}</td>
+            <td class="revenue-cell">${{ coupon.revenue | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="empty-state" *ngIf="advertiserDetailData.top_coupons.length === 0">
+      <i class="pi pi-info-circle"></i>
+      <p>No coupon data available</p>
+    </div>
+
+    <!-- Daily Trend Chart -->
+    <div class="section-title" *ngIf="advertiserDetailData.daily_trend.dates.length > 0">
+      <i class="pi pi-chart-line"></i>
+      <span>Daily Revenue Trend</span>
+    </div>
+    <div class="trend-chart-container" *ngIf="advertiserDetailData.daily_trend.dates.length > 0">
+      <canvas baseChart
+        [type]="'line'"
+        [data]="{
+          labels: advertiserDetailData.daily_trend.dates,
+          datasets: [{
+            label: 'Revenue',
+            data: advertiserDetailData.daily_trend.revenues,
+            borderColor: '#009292',
+            backgroundColor: 'rgba(0, 146, 146, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        }"
+        [options]="{
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context: any) {
+                  return 'Revenue: $' + context.parsed.y.toLocaleString();
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value: any) {
+                  return '$' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }">
+      </canvas>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="closeAdvertiserModal()">
+        <i class="pi pi-times"></i> Close
+      </button>
+      <button type="button" class="btn-primary" (click)="viewFullDetails()">
+        <i class="pi pi-eye"></i> View Full Details
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>
