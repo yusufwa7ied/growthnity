@@ -295,9 +295,9 @@
                 <ng-template pTemplate="body" let-advertiser>
                     <tr [class.expanded]="isRowExpanded(advertiser.id)">
                         <td>
-                            <button class="expand-btn" (click)="toggleRow(advertiser.id)"
-                                title="Show more details">
-                                <i class="pi" [ngClass]="isRowExpanded(advertiser.id) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                            <button class="expand-btn" (click)="toggleRow(advertiser.id)" title="Show more details">
+                                <i class="pi"
+                                    [ngClass]="isRowExpanded(advertiser.id) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
                             </button>
                         </td>
                         <td>
@@ -313,7 +313,8 @@
                         <td>{{ advertiser.rev_rtu_rate || '-' }}</td>
                         <td>
                             <span class="partner-stats">
-                                <strong>{{ advertiser.active_partners || 0 }}</strong> / {{ advertiser.total_partners || 0 }}
+                                <strong>{{ advertiser.active_partners || 0 }}</strong> / {{ advertiser.total_partners ||
+                                0 }}
                             </span>
                         </td>
                         <td>{{ advertiser.currency }}</td>
@@ -405,7 +406,8 @@
                                         </div>
                                         <div class="detail-row">
                                             <span class="label">Inactive Partners:</span>
-                                            <span class="value">{{ (advertiser.total_partners || 0) - (advertiser.active_partners || 0) }}</span>
+                                            <span class="value">{{ (advertiser.total_partners || 0) -
+                                                (advertiser.active_partners || 0) }}</span>
                                         </div>
                                     </div>
                                 </div>

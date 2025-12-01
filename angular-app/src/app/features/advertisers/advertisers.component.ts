@@ -80,12 +80,6 @@ export class AdvertisersComponent implements OnInit {
         const startTime = Date.now();
         this.advertiserService.getAdvertisers().subscribe({
             next: (data) => {
-                console.log('Advertisers loaded:', data);
-                if (data && data.length > 0) {
-                    console.log('First advertiser:', data[0]);
-                    console.log('Total partners:', data[0].total_partners);
-                    console.log('Active partners:', data[0].active_partners);
-                }
                 this.advertisers = data;
                 // Ensure minimum skeleton display duration
                 const elapsed = Date.now() - startTime;
