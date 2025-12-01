@@ -844,4 +844,36 @@ class NoonTransaction(models.Model):
         return f"Noon {self.region.upper()} | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
 
 
+class SheetSyncStatus(models.Model):
+    """
+    Tracks the sync status for Google Sheets tabs.
+    Used for incremental data reading - only process new rows since last sync.
+    """
+    sheet_id = models.CharField(max_length=255, help_text="Google Sheet ID from URL")
+    tab_name = models.CharField(max_length=255, help_text="Tab/Sheet name (e.g., 'Noon_Transactions')")
+    
+    # Tracking information
+    last_row_processed = models.IntegerField(default=0, help_text="Last row number that was processed")
+    total_rows_synced = models.IntegerField(default=0, help_text="Total rows processed so far")
+    last_sync_rows = models.IntegerField(default=0, help_text="Number of rows in last sync")
+    
+    # Timestamps
+    last_sync_time = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Status tracking
+    last_error = models.TextField(blank=True, help_text="Last error message if sync failed")
+    consecutive_failures = models.IntegerField(default=0, help_text="Number of consecutive failures")
+    
+    class Meta:
+        unique_together = [["sheet_id", "tab_name"]]
+        ordering = ["-last_sync_time"]
+        verbose_name = "Sheet Sync Status"
+        verbose_name_plural = "Sheet Sync Statuses"
+    
+    def __str__(self):
+        return f"{self.tab_name} | Last sync: {self.last_sync_time.strftime('%Y-%m-%d %H:%M')} | Row {self.last_row_processed}"
+
+
+
 
