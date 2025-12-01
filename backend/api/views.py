@@ -907,7 +907,7 @@ def advertiser_detail_summary_view(request):
         department = None
     else:
         role = company_user.role.name if company_user.role else None
-        department = company_user.department if company_user else None
+        department = company_user.department
 
     # Get filters from request
     advertiser_id = request.GET.get('advertiser_id')
