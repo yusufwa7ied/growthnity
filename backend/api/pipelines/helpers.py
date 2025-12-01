@@ -425,9 +425,14 @@ def resolve_payouts_with_history(advertiser: Advertiser, df: pd.DataFrame) -> pd
             continue
         
         partner_id = row.get("partner_id")
-        user_type = str(row.get("user_type", "RTU")).upper()
-        sales = float(row.get("sales", 0))
-        orders = int(row.get("orders", 1))
+        # Handle NA/NaN values in user_type
+        user_type_raw = row.get("user_type", "RTU")
+        if pd.isna(user_type_raw) or user_type_raw is None or str(user_type_raw).lower() == "nan":
+            user_type = "RTU"
+        else:
+            user_type = str(user_type_raw).upper()
+        sales = float(row.get("sales", 0)) if not pd.isna(row.get("sales")) else 0.0
+        orders = int(row.get("orders", 1)) if not pd.isna(row.get("orders")) else 1
         
         # 1️⃣ Get payout rules at this date
         payout_rules = get_payout_rules_at_date(advertiser, partner_id, transaction_date)
