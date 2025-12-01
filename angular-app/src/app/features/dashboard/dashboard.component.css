@@ -4204,7 +4204,7 @@
   margin-bottom: 2rem;
 }
 
-.kpi-card {
+.kpi-grid .kpi-card {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -4215,12 +4215,12 @@
   transition: all 0.2s ease;
 }
 
-.kpi-card:hover {
+.kpi-grid .kpi-card:hover {
   box-shadow: 0 4px 12px rgba(0, 146, 146, 0.1);
   transform: translateY(-2px);
 }
 
-.kpi-icon {
+.kpi-grid .kpi-icon {
   width: 48px;
   height: 48px;
   border-radius: 8px;
@@ -4231,43 +4231,43 @@
   color: white;
 }
 
-.orders-icon {
+.kpi-grid .orders-icon {
   background: linear-gradient(135deg, #009292 0%, #00b0b0 100%);
 }
 
-.sales-icon {
+.kpi-grid .sales-icon {
   background: linear-gradient(135deg, #4ecdc4 0%, #95e1d3 100%);
 }
 
-.payout-icon {
+.kpi-grid .payout-icon {
   background: linear-gradient(135deg, #ff6b6b 0%, #f38181 100%);
 }
 
-.profit-icon {
+.kpi-grid .profit-icon {
   background: linear-gradient(135deg, #6bcf7f 0%, #95e1d3 100%);
 }
 
-.revenue-icon {
+.kpi-grid .revenue-icon {
   background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
 }
 
-.period-icon {
+.kpi-grid .period-icon {
   background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
 }
 
-.kpi-content {
+.kpi-grid .kpi-content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.kpi-label {
+.kpi-grid .kpi-label {
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
 }
 
-.kpi-value {
+.kpi-grid .kpi-value {
   font-size: 1.5rem;
   font-weight: 700;
   color: #101010;
