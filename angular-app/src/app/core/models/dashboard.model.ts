@@ -1,6 +1,7 @@
 export interface DashboardFilters {
   advertiser_id?: number | number[] | null;
   partner_id?: number | number[] | null;
+  team_member_id?: number | number[] | null;
   coupon_code?: string | string[] | null;
   partner_type?: string | null;
   date_from?: string;
@@ -17,6 +18,12 @@ export interface Partner {
   id: number;
   name: string;
   type: string;
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+  role: string;
 }
 
 export interface Coupon {
@@ -84,6 +91,11 @@ export interface FilterOptions {
   partners: Array<{
     partner_id: number;
     partner: string;
+  }>;
+  team_members?: Array<{
+    company_user_id: number;
+    username: string;
+    role: string;
   }>;
   coupons: Array<{
     coupon: string;

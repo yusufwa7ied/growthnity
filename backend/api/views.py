@@ -13,6 +13,7 @@ from .serializers import AdvertiserSerializer, PartnerSerializer
 
 from django.db.models import Sum
 from django.utils.dateparse import parse_date
+from django.db import models
 
 from decimal import Decimal
 from rest_framework.decorators import api_view, permission_classes # type: ignore
@@ -21,6 +22,25 @@ from django.db.models import F, Q
 from datetime import datetime, date, timedelta
 from calendar import monthrange
 
+
+# Helper function to apply team member filter
+def apply_team_member_filter(qs, team_member_ids):
+    """
+    Translate team_member_id filter to partner_ids based on AccountAssignment.
+    Returns filtered queryset.
+    """
+    if team_member_ids:
+        team_partner_ids = set()
+        for tm_id in team_member_ids:
+            assignments = AccountAssignment.objects.filter(company_user_id=tm_id).prefetch_related('partners')
+            for assignment in assignments:
+                team_partner_ids.update(assignment.partners.values_list('id', flat=True))
+        
+        if team_partner_ids:
+            return qs.filter(partner_id__in=team_partner_ids)
+        else:
+            return qs.none()
+    return qs
 
 # Pagination class for performance table
 class PerformanceTablePagination(PageNumberPagination):
@@ -163,10 +183,14 @@ def kpis_view(request):
     # -------------------------------
     advertiser_ids = request.GET.getlist("advertiser_id")
     partner_ids = request.GET.getlist("partner_id")
+    team_member_ids = request.GET.getlist("team_member_id")
     coupon_codes = request.GET.getlist("coupon_code")
     partner_type = request.GET.get("partner_type")
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
+
+    # Apply team member filter (translate to partner_ids)
+    qs = apply_team_member_filter(qs, team_member_ids)
 
     # -------------------------------
     # Department scoping (only for OpsManager with department)
@@ -306,8 +330,12 @@ def graph_data_view(request):
     date_to = request.GET.get("date_to")
     coupon_codes = request.GET.getlist("coupon_code")
     partner_ids = request.GET.getlist("partner_id")
+    team_member_ids = request.GET.getlist("team_member_id")
     advertiser_ids = request.GET.getlist("advertiser_id")
     partner_type = request.GET.get("partner_type")
+
+    # Apply team member filter
+    qs = apply_team_member_filter(qs, team_member_ids)
 
     # Department scope: MB, AFF, INF (only for OpsManager with department)
     # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
@@ -420,8 +448,12 @@ def performance_table_view(request):
     partner_ids = request.GET.getlist("partner_id")
     coupon_codes = request.GET.getlist("coupon_code")
     partner_type = request.GET.get("partner_type")
+    team_member_ids = request.GET.getlist("team_member_id")
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
+
+    # Apply team member filter
+    qs = apply_team_member_filter(qs, team_member_ids)
 
     # -------------------------------
     # Department scoping (only for OpsManager with department)
@@ -772,11 +804,37 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
+    # Get team members in same department (for OpsManager with department)
+    team_members_list = []
+    if company_user and department and role == "OpsManager":
+        # Get all CompanyUsers in the same department who have AccountAssignments
+        team_members = CompanyUser.objects.filter(
+            department=department
+        ).select_related('role', 'user').prefetch_related(
+            models.Prefetch(
+                'accountassignment_set',
+                queryset=AccountAssignment.objects.prefetch_related('partners')
+            )
+        )
+        
+        for tm in team_members:
+            # Only include users who have account assignments
+            if tm.accountassignment_set.exists() and tm.user:
+                team_members_list.append({
+                    "company_user_id": tm.id,
+                    "username": tm.user.username,
+                    "role": tm.role.name if tm.role else "Unknown"
+                })
+
     result = {
         "advertisers": list(advertisers_map.values()),
         "partners": list(partners_map.values()),
         "coupons": list(coupons_map.values())
     }
+    
+    # Only include team_members if there are any
+    if team_members_list:
+        result["team_members"] = team_members_list
 
     return Response(result)
 
@@ -798,10 +856,14 @@ def dashboard_pie_chart_data_view(request):
     end_date_str = request.GET.get("date_to") or request.GET.get("end_date")
     advertiser_ids = request.GET.getlist("advertiser_id")  # Support multiple
     partner_ids = request.GET.getlist("partner_id")        # Support multiple
+    team_member_ids = request.GET.getlist("team_member_id")  # Support multiple
     coupon = request.GET.get("coupon")
     partner_type = request.GET.get("partner_type")
 
     qs = CampaignPerformance.objects.all()
+
+    # Apply team member filter
+    qs = apply_team_member_filter(qs, team_member_ids)
 
     # Department scoping (only for OpsManager with department)
     # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)

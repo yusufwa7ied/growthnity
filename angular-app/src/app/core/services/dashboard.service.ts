@@ -213,6 +213,10 @@ export class DashboardService {
       const partnerIds = Array.isArray(filters.partner_id) ? filters.partner_id : [filters.partner_id];
       partnerIds.forEach(id => params = params.append('partner_id', id.toString()));
     }
+    if (filters.team_member_id) {
+      const teamMemberIds = Array.isArray(filters.team_member_id) ? filters.team_member_id : [filters.team_member_id];
+      teamMemberIds.forEach(id => params = params.append('team_member_id', id.toString()));
+    }
     if (filters.coupon_code) {
       const codes = Array.isArray(filters.coupon_code) ? filters.coupon_code : [filters.coupon_code];
       codes.forEach(code => params = params.append('coupon_code', code));

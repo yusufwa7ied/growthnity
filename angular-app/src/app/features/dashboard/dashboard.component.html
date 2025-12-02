@@ -51,8 +51,19 @@
           </div>
         </div>
 
-        <!-- Partner Filter (Admin and OpsManager with department) -->
-        <div class="filter-group-horizontal" *ngIf="isAdmin || (role === 'OpsManager' && user?.department)">
+        <!-- Team Member Filter (OpsManager with department) -->
+        <div class="filter-group-horizontal" *ngIf="role === 'OpsManager' && user?.department && teamMembers.length > 0">
+          <label class="filter-label-inline">Team Member</label>
+          <div class="filter-input-wrapper">
+            <p-multiselect [options]="teamMembers" [(ngModel)]="filters.team_member_id" (onChange)="onTeamMemberChangeRealtime()"
+              (onClear)="onTeamMemberChangeRealtime()" optionLabel="name" optionValue="id" placeholder="Select team member"
+              [showClear]="true" [filter]="true" filterPlaceholder="Search..." display="chip" [maxSelectedLabels]="2"
+              styleClass="modal-multiselect"></p-multiselect>
+          </div>
+        </div>
+
+        <!-- Partner Filter (Admin only) -->
+        <div class="filter-group-horizontal" *ngIf="isAdmin">
           <label class="filter-label-inline">Partner</label>
           <div class="filter-input-wrapper">
             <p-multiselect [options]="partners" [(ngModel)]="filters.partner_id" (onChange)="onPartnerChangeRealtime()"

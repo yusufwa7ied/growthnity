@@ -14,7 +14,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { catchError, forkJoin, of } from 'rxjs';
-import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow } from '../../core/models/dashboard.model';
+import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TeamMember, TableRow } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
 import { AnalyticsService, PerformanceAnalytics } from '../../core/services/analytics.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -73,11 +73,13 @@ export class DashboardComponent implements OnInit {
     // All available options (never filtered)
     allAdvertisers: Advertiser[] = [];
     allPartners: Partner[] = [];
+    allTeamMembers: TeamMember[] = [];
     allCoupons: Coupon[] = [];
 
     // Filtered options (dynamically updated based on selections)
     advertisers: Advertiser[] = [];
     partners: Partner[] = [];
+    teamMembers: TeamMember[] = [];
     coupons: Coupon[] = [];
 
     // Department options for admin filter
@@ -395,6 +397,15 @@ export class DashboardComponent implements OnInit {
         this.debouncedLoadData();
     }
 
+    onTeamMemberChangeRealtime(): void {
+        // Normalize empty arrays to null
+        if (Array.isArray(this.filters.team_member_id) && this.filters.team_member_id.length === 0) {
+            this.filters.team_member_id = null;
+        }
+        // Load data and analytics with debounce
+        this.debouncedLoadData();
+    }
+
     /**
      * Debounced data loading to prevent excessive API calls during rapid filter changes
      */
@@ -514,6 +525,15 @@ export class DashboardComponent implements OnInit {
                     type: ''
                 })).sort((a, b) => a.name.localeCompare(b.name));
 
+                // Populate team members (if provided)
+                if (options.team_members) {
+                    this.allTeamMembers = options.team_members.map(tm => ({
+                        id: tm.company_user_id,
+                        name: tm.username,
+                        role: tm.role
+                    })).sort((a, b) => a.name.localeCompare(b.name));
+                }
+
                 // Populate coupons
                 this.allCoupons = options.coupons.map(c => ({
                     code: c.coupon,
@@ -527,6 +547,7 @@ export class DashboardComponent implements OnInit {
                 // Initially, show all options in dropdowns
                 this.advertisers = [...this.allAdvertisers];
                 this.partners = [...this.allPartners];
+                this.teamMembers = [...this.allTeamMembers];
                 this.coupons = [...this.allCoupons];
                 this.cdr.markForCheck();
             },
