@@ -30,12 +30,17 @@ def apply_team_member_filter(qs, team_member_ids):
     Returns filtered queryset.
     """
     if team_member_ids:
+        print(f"DEBUG apply_team_member_filter: team_member_ids = {team_member_ids}")
         team_partner_ids = set()
         for tm_id in team_member_ids:
             assignments = AccountAssignment.objects.filter(company_user_id=tm_id).prefetch_related('partners')
+            print(f"DEBUG: User {tm_id} has {assignments.count()} assignments")
             for assignment in assignments:
-                team_partner_ids.update(assignment.partners.values_list('id', flat=True))
+                partner_ids = list(assignment.partners.values_list('id', flat=True))
+                print(f"DEBUG: Assignment has partners: {partner_ids}")
+                team_partner_ids.update(partner_ids)
         
+        print(f"DEBUG: Final partner_ids to filter: {team_partner_ids}")
         if team_partner_ids:
             return qs.filter(partner_id__in=team_partner_ids)
         else:
@@ -190,7 +195,10 @@ def kpis_view(request):
     date_to = request.GET.get("date_to")
 
     # Apply team member filter (translate to partner_ids)
+    print(f"DEBUG kpis_view: team_member_ids received = {team_member_ids}")
     qs = apply_team_member_filter(qs, team_member_ids)
+    if team_member_ids:
+        print(f"DEBUG kpis_view: After team member filter, queryset count = {qs.count()}")
 
     # -------------------------------
     # Department scoping (only for OpsManager with department)

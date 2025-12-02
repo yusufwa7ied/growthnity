@@ -14,7 +14,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { catchError, forkJoin, of } from 'rxjs';
-import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TeamMember, TableRow } from '../../core/models/dashboard.model';
+import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow, TeamMember } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
 import { AnalyticsService, PerformanceAnalytics } from '../../core/services/analytics.service';
 import { AuthService } from '../../core/services/auth.service';
