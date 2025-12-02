@@ -206,7 +206,7 @@ export class DashboardComponent implements OnInit {
 
     hasActiveFilters(): boolean {
         return !!(this.filters.partner_type || this.filters.advertiser_id || this.filters.partner_id ||
-            this.filters.coupon_code || (this.filters.date_from && this.filters.date_to));
+            this.filters.team_member_id || this.filters.coupon_code || (this.filters.date_from && this.filters.date_to));
     }
 
     getAdvertiserNames(): string {
@@ -1342,6 +1342,10 @@ export class DashboardComponent implements OnInit {
         if (this.filters.partner_id) {
             if (Array.isArray(this.filters.partner_id) && this.filters.partner_id.length > 0) count++;
             else if (!Array.isArray(this.filters.partner_id)) count++;
+        }
+        if (this.filters.team_member_id) {
+            if (Array.isArray(this.filters.team_member_id) && this.filters.team_member_id.length > 0) count++;
+            else if (!Array.isArray(this.filters.team_member_id)) count++;
         }
         if (this.filters.coupon_code) {
             if (Array.isArray(this.filters.coupon_code) && this.filters.coupon_code.length > 0) count++;

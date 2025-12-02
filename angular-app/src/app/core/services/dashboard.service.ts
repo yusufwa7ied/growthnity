@@ -237,6 +237,7 @@ export class DashboardService {
       filters.partner_type || '',
       Array.isArray(filters.advertiser_id) ? filters.advertiser_id.join(',') : (filters.advertiser_id || ''),
       Array.isArray(filters.partner_id) ? filters.partner_id.join(',') : (filters.partner_id || ''),
+      Array.isArray(filters.team_member_id) ? filters.team_member_id.join(',') : (filters.team_member_id || ''),
       Array.isArray(filters.coupon_code) ? filters.coupon_code.join(',') : (filters.coupon_code || ''),
       filters.date_from || '',
       filters.date_to || ''
