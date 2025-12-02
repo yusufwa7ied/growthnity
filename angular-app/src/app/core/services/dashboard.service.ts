@@ -45,10 +45,22 @@ export class DashboardService {
 
   // Get all filter options (advertisers, partners, coupons) based on user permissions
   // Cache for 10 minutes since filter options don't change often
-  getFilterOptions(): Observable<FilterOptions> {
+  getFilterOptions(filters?: DashboardFilters): Observable<FilterOptions> {
+    // Build cache key including team_member_id filter
+    const teamMemberId = filters?.team_member_id ? 
+      (Array.isArray(filters.team_member_id) ? filters.team_member_id.join(',') : filters.team_member_id) : '';
+    const cacheKey = `filter-options:${teamMemberId}`;
+    
+    // Build params - only include team_member_id for filtering
+    let params = new HttpParams();
+    if (filters?.team_member_id) {
+      const teamMemberIds = Array.isArray(filters.team_member_id) ? filters.team_member_id : [filters.team_member_id];
+      teamMemberIds.forEach(id => params = params.append('team_member_id', id.toString()));
+    }
+    
     return this.cacheService.get(
-      'filter-options',
-      this.http.get<FilterOptions>(`${this.API_BASE_URL}/dashboard/filter-options/`),
+      cacheKey,
+      this.http.get<FilterOptions>(`${this.API_BASE_URL}/dashboard/filter-options/`, { params }),
       10 * 60 * 1000 // 10 minutes cache
     );
   }

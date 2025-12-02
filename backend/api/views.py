@@ -738,6 +738,7 @@ def dashboard_filter_options_view(request):
     """
     Returns all available filter options for the dashboard based on user permissions.
     This ensures dropdowns show all available options, not just what's in the current page.
+    Filters are applied progressively: if team_member_id is selected, only show their coupons/partners.
     """
     user = request.user
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
@@ -747,13 +748,17 @@ def dashboard_filter_options_view(request):
     # Get base queryset with same logic as performance_table_view
     qs = CampaignPerformance.objects.all()
 
-    # Check if explicit partner_type filter is provided
+    # Check if explicit partner_type or team_member_id filter is provided
     partner_type = request.GET.get("partner_type")
+    team_member_ids = request.GET.getlist("team_member_id")
+
+    # Apply team member filter first (this narrows down the scope)
+    qs = apply_team_member_filter(qs, team_member_ids)
 
     # Department scoping (only for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # BUT: Skip if explicit partner_type OR team_member_id filter is provided (user's choice takes precedence)
     # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
-    if company_user and department and role == "OpsManager" and not partner_type:
+    if company_user and department and role == "OpsManager" and not partner_type and not team_member_ids:
         if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
         elif department == "influencer":

@@ -402,6 +402,8 @@ export class DashboardComponent implements OnInit {
         if (Array.isArray(this.filters.team_member_id) && this.filters.team_member_id.length === 0) {
             this.filters.team_member_id = null;
         }
+        // Reload filter options to show only selected team member's coupons/partners
+        this.loadFilterOptions();
         // Load data and analytics with debounce
         this.debouncedLoadData();
     }
@@ -509,7 +511,8 @@ export class DashboardComponent implements OnInit {
     loadFilterOptions(): void {
         // Load all available filter options from the API
         // This loads the full dataset for dropdowns, respecting user permissions
-        this.dashboardService.getFilterOptions().subscribe({
+        // Pass current team_member_id filter to get filtered options
+        this.dashboardService.getFilterOptions(this.filters).subscribe({
             next: (options) => {
                 // Populate advertisers
                 this.allAdvertisers = options.advertisers.map(a => ({
