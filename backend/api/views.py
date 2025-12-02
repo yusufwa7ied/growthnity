@@ -202,10 +202,11 @@ def kpis_view(request):
 
     # -------------------------------
     # Department scoping (only for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # BUT: Skip if explicit partner_type OR team_member_id filter is provided
+    # (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
     # -------------------------------
-    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
+    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type and not team_member_ids:
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -348,9 +349,9 @@ def graph_data_view(request):
     qs = apply_team_member_filter(qs, team_member_ids)
 
     # Department scope: MB, AFF, INF (only for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # BUT: Skip if explicit partner_type OR team_member_id filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
+    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type and not team_member_ids:
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -467,10 +468,10 @@ def performance_table_view(request):
 
     # -------------------------------
     # Department scoping (only for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # BUT: Skip if explicit partner_type OR team_member_id filter is provided (user's choice takes precedence)
     # TeamMembers will be filtered by AccountAssignment later
     # -------------------------------
-    if company_user and company_user.department and role == "OpsManager" and not partner_type:
+    if company_user and company_user.department and role == "OpsManager" and not partner_type and not team_member_ids:
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -875,10 +876,10 @@ def dashboard_pie_chart_data_view(request):
     qs = apply_team_member_filter(qs, team_member_ids)
 
     # Department scoping (only for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
+    # BUT: Skip if explicit partner_type OR team_member_id filter is provided (user's choice takes precedence)
     # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
     department = company_user.department if company_user else None
-    if company_user and department and role == "OpsManager" and not partner_type:
+    if company_user and department and role == "OpsManager" and not partner_type and not team_member_ids:
         if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
         elif department == "influencer":
