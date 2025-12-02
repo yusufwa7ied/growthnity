@@ -187,7 +187,7 @@ export class DashboardService {
   // Get advertiser detail summary for modal
   getAdvertiserDetailSummary(advertiserId: number, filters: DashboardFilters): Observable<any> {
     let params = new HttpParams().set('advertiser_id', advertiserId.toString());
-    
+
     if (filters.date_from) {
       params = params.set('date_from', filters.date_from);
     }

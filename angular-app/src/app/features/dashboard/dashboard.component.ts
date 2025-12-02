@@ -847,7 +847,7 @@ export class DashboardComponent implements OnInit {
         this.showAdvertiserModal = true;
         this.advertiserDetailLoading = true;
         this.advertiserDetailData = null;
-        
+
         // Trigger change detection immediately to show loading state
         this.cdr.detectChanges();
 

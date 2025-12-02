@@ -51,8 +51,8 @@
           </div>
         </div>
 
-        <!-- Partner Filter (Admin only) -->
-        <div class="filter-group-horizontal" *ngIf="isAdmin">
+        <!-- Partner Filter (Admin and OpsManager with department) -->
+        <div class="filter-group-horizontal" *ngIf="isAdmin || (role === 'OpsManager' && user?.department)">
           <label class="filter-label-inline">Partner</label>
           <div class="filter-input-wrapper">
             <p-multiselect [options]="partners" [(ngModel)]="filters.partner_id" (onChange)="onPartnerChangeRealtime()"
@@ -1076,8 +1076,10 @@
         <div class="kpi-icon period-icon"><i class="pi pi-calendar"></i></div>
         <div class="kpi-content">
           <span class="kpi-label">Period</span>
-          <span class="kpi-value" style="font-size: 0.875rem;" *ngIf="filters.date_from && filters.date_to">{{ filters.date_from }} to {{ filters.date_to }}</span>
-          <span class="kpi-value" style="font-size: 0.875rem;" *ngIf="!filters.date_from || !filters.date_to">All Time</span>
+          <span class="kpi-value" style="font-size: 0.875rem;" *ngIf="filters.date_from && filters.date_to">{{
+            filters.date_from }} to {{ filters.date_to }}</span>
+          <span class="kpi-value" style="font-size: 0.875rem;" *ngIf="!filters.date_from || !filters.date_to">All
+            Time</span>
         </div>
       </div>
     </div>
@@ -1098,7 +1100,8 @@
         </div>
         <div class="partner-revenue">
           <span class="revenue-amount">${{ partner.revenue | number:'1.0-0' }}</span>
-          <span class="revenue-percentage">({{ (partner.revenue / advertiserDetailData.kpis.revenue * 100) | number:'1.0-0' }}%)</span>
+          <span class="revenue-percentage">({{ (partner.revenue / advertiserDetailData.kpis.revenue * 100) |
+            number:'1.0-0' }}%)</span>
         </div>
       </div>
     </div>
@@ -1143,9 +1146,7 @@
       <span>Daily Revenue Trend</span>
     </div>
     <div class="trend-chart-container" *ngIf="advertiserDetailData.daily_trend.dates.length > 0 && trendChartOptions">
-      <canvas baseChart
-        [type]="'line'"
-        [data]="{
+      <canvas baseChart [type]="'line'" [data]="{
           labels: advertiserDetailData.daily_trend.dates,
           datasets: [{
             label: 'Revenue',
@@ -1155,8 +1156,7 @@
             tension: 0.4,
             fill: true
           }]
-        }"
-        [options]="trendChartOptions">
+        }" [options]="trendChartOptions">
       </canvas>
     </div>
   </div>
