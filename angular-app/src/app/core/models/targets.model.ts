@@ -9,8 +9,8 @@ export interface DepartmentTarget {
     assigned_to_username?: string | null; // Team member username
     orders_target: number;
     revenue_target: number;
-    profit_target: number;
-    spend_target?: number | null;
+    profit_target: number; // Auto-calculated as revenue_target - spend_target
+    spend_target: number; // Now required
 }
 
 export interface TargetWithActuals extends DepartmentTarget {

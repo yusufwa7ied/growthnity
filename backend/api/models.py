@@ -638,15 +638,25 @@ class DepartmentTarget(models.Model):
     # Common targets
     orders_target = models.IntegerField()
     revenue_target = models.DecimalField(max_digits=12, decimal_places=2)
-    profit_target = models.DecimalField(max_digits=12, decimal_places=2)
+    profit_target = models.DecimalField(max_digits=12, decimal_places=2, help_text="Auto-calculated as revenue_target - spend_target")
 
-    # Media Buyers only
-    spend_target = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Spend target (required for all departments)
+    spend_target = models.DecimalField(max_digits=12, decimal_places=2, help_text="Required for calculating profit")
 
     class Meta:
         unique_together = ("month", "advertiser", "partner_type", "assigned_to")
         verbose_name = "Target"
         verbose_name_plural = "Targets"
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate profit_target before saving"""
+        # Ensure spend_target defaults to 0 if somehow None
+        if self.spend_target is None:
+            self.spend_target = 0
+        
+        # Auto-calculate profit = revenue - spend
+        self.profit_target = self.revenue_target - self.spend_target
+        super().save(*args, **kwargs)
 
     def __str__(self):
         target_type = f" | {self.assigned_to.user.username}" if self.assigned_to else f" | {self.get_partner_type_display()}"

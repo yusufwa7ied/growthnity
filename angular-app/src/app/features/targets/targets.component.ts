@@ -67,7 +67,7 @@ export class TargetsComponent implements OnInit {
     orders_target: 0,
     revenue_target: 0,
     profit_target: 0,
-    spend_target: null
+    spend_target: 0
   };
 
   partnerTypes = [
@@ -217,6 +217,11 @@ export class TargetsComponent implements OnInit {
     this.formData = { ...target };
     // Convert YYYY-MM-DD to YYYY-MM for month input
     this.formData.month = target.month.substring(0, 7);
+    // Ensure spend_target is not null for calculations
+    if (this.formData.spend_target === null || this.formData.spend_target === undefined) {
+      this.formData.spend_target = 0;
+    }
+    this.calculateProfit();
     this.showForm = true;
   }
 
@@ -282,6 +287,20 @@ export class TargetsComponent implements OnInit {
     }
   }
 
+  calculateProfit(): void {
+    const revenue = this.formData.revenue_target || 0;
+    const spend = this.formData.spend_target || 0;
+    this.formData.profit_target = revenue - spend;
+  }
+
+  onRevenueChange(): void {
+    this.calculateProfit();
+  }
+
+  onSpendChange(): void {
+    this.calculateProfit();
+  }
+
   resetForm(): void {
     this.formData = {
       month: new Date().toISOString().substring(0, 7), // YYYY-MM format
@@ -291,7 +310,7 @@ export class TargetsComponent implements OnInit {
       orders_target: 0,
       revenue_target: 0,
       profit_target: 0,
-      spend_target: null
+      spend_target: 0
     };
   }
 }
