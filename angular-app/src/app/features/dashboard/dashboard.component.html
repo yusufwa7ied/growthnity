@@ -118,7 +118,7 @@
         </button>
       </div>
     </div>
-    <div class="kpi-cards">
+    <div class="kpi-cards" [class.kpi-cards-centered]="!isAdmin && !isOpsManager">
       <!-- KPI Skeleton Loaders -->
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>

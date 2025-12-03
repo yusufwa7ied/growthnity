@@ -2054,6 +2054,14 @@
   margin-bottom: 3.5rem;
 }
 
+/* Center 3 cards for TeamMembers */
+.kpi-cards-centered {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @media (max-width: 1400px) {
   .kpi-cards {
     grid-template-columns: repeat(3, 1fr);
