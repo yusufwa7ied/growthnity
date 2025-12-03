@@ -109,8 +109,9 @@ export class MediaBuyerSpendComponent implements OnInit {
         const mediaBuyers = data.filter((p: any) => p.type === 'Media Buying');
         this.partners = mediaBuyers.map(p => ({ label: p.name, value: p }));
 
-        // Auto-select partner from current user if available
-        if (this.user && this.user.partner_id && this.partners.length > 0) {
+        // Auto-select partner ONLY for TeamMembers who have a partner_id
+        // OpsManagers and Admins should manually select from dropdown
+        if (this.role !== 'OpsManager' && this.role !== 'Admin' && this.user && this.user.partner_id && this.partners.length > 0) {
           const userPartner = this.partners.find(p => p.value.id === this.user.partner_id);
           if (userPartner) {
             this.selectedPartner = userPartner;
@@ -157,7 +158,11 @@ export class MediaBuyerSpendComponent implements OnInit {
     }
 
     if (!this.selectedPartner) {
-      alert('Partner information is missing. Your user account may not be associated with a partner.');
+      if (this.role === 'OpsManager' || this.role === 'Admin') {
+        alert('Please select a partner from the dropdown.');
+      } else {
+        alert('Partner information is missing. Your user account may not be associated with a partner.');
+      }
       return;
     }
 

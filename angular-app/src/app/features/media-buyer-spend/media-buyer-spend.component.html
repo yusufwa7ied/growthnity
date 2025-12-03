@@ -77,6 +77,13 @@
                     </div>
 
                     <div class="form-field">
+                        <label>Partner <span class="required">*</span></label>
+                        <p-select [options]="partners" [(ngModel)]="selectedPartner" [filter]="true"
+                            [showClear]="true" optionLabel="label" placeholder="Select Partner" appendTo="body">
+                        </p-select>
+                    </div>
+
+                    <div class="form-field">
                         <label>Advertiser <span class="required">*</span> ({{allAdvertisers.length}} available)</label>
                         <p-select [options]="allAdvertisers" [(ngModel)]="selectedAdvertiser" [filter]="true"
                             [showClear]="true" optionLabel="label" placeholder="All Advertisers" appendTo="body">
