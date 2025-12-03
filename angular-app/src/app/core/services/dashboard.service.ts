@@ -231,14 +231,14 @@ export class DashboardService {
         const parts = keyStr.split('_');
         const advertiserId = parseInt(parts[0]);
         advertiserIds.push(advertiserId);
-        
+
         if (parts.length > 1) {
           geoValues.push(parts[1]);
         }
       });
 
       advertiserIds.forEach(id => params = params.append('advertiser_id', id.toString()));
-      
+
       // Add geo values from composite keys
       if (geoValues.length > 0) {
         geoValues.forEach(geo => params = params.append('geo', geo));

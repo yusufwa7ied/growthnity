@@ -248,9 +248,7 @@ def update_advertiser_view(request, pk):
         
         serializer.save()
         
-        # Add new partner payouts if provided
-        # This endpoint ONLY adds new special payouts, never updates or deletes existing ones
-        # Existing payouts are managed via Django admin (where dates can be set)
+        # Handle partner payouts - update existing or create new ones
         partner_payouts = request.data.get('partner_payouts', [])
         if partner_payouts:
             from django.utils import timezone
@@ -261,42 +259,76 @@ def update_advertiser_view(request, pk):
                 if not partner_id:
                     continue
                 
-                # Always create new records - don't update existing ones
-                # Use create() which will raise IntegrityError if duplicate exists
-                try:
-                    payout = PartnerPayout.objects.create(
-                        advertiser=advertiser,
-                        partner_id=partner_id,
-                        ftu_payout=payout_data.get('ftu_payout'),
-                        rtu_payout=payout_data.get('rtu_payout'),
-                        ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
-                        rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
-                        exchange_rate=payout_data.get('exchange_rate'),
-                        currency=payout_data.get('currency'),
-                        rate_type=payout_data.get('rate_type', 'percent'),
-                        condition=payout_data.get('condition'),
-                        # App doesn't set dates - admin sets them later if needed
-                        start_date=None,
-                        end_date=None,
-                    )
-                    
-                    # Create PayoutRuleHistory for this new partner payout
-                    PayoutRuleHistory.objects.create(
-                        advertiser=advertiser,
-                        partner_id=partner_id,
-                        effective_date=timezone.now(),
-                        ftu_payout=payout_data.get('ftu_payout'),
-                        rtu_payout=payout_data.get('rtu_payout'),
-                        ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
-                        rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
-                        rate_type=payout_data.get('rate_type', 'percent'),
-                        assigned_by=request.user,
-                        notes=f"Partner-specific payout created via API by {request.user.username}"
-                    )
-                except Exception as e:
-                    # If duplicate (same advertiser+partner+start_date), skip it
-                    # This prevents errors if user tries to add same partner twice
-                    continue
+                payout_id = payout_data.get('id')
+                
+                # If ID is provided, update existing payout
+                if payout_id:
+                    try:
+                        payout = PartnerPayout.objects.get(id=payout_id, advertiser=advertiser)
+                        # Update fields
+                        payout.partner_id = partner_id
+                        payout.ftu_payout = payout_data.get('ftu_payout')
+                        payout.rtu_payout = payout_data.get('rtu_payout')
+                        payout.ftu_fixed_bonus = payout_data.get('ftu_fixed_bonus')
+                        payout.rtu_fixed_bonus = payout_data.get('rtu_fixed_bonus')
+                        payout.exchange_rate = payout_data.get('exchange_rate')
+                        payout.currency = payout_data.get('currency')
+                        payout.rate_type = payout_data.get('rate_type', 'percent')
+                        payout.condition = payout_data.get('condition')
+                        payout.save()
+                        
+                        # Create history for the update
+                        PayoutRuleHistory.objects.create(
+                            advertiser=advertiser,
+                            partner_id=partner_id,
+                            effective_date=timezone.now(),
+                            ftu_payout=payout_data.get('ftu_payout'),
+                            rtu_payout=payout_data.get('rtu_payout'),
+                            ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
+                            rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
+                            rate_type=payout_data.get('rate_type', 'percent'),
+                            assigned_by=request.user,
+                            notes=f"Partner-specific payout updated via API by {request.user.username}"
+                        )
+                    except PartnerPayout.DoesNotExist:
+                        # If payout with this ID doesn't exist, skip it
+                        continue
+                else:
+                    # No ID provided - create new payout
+                    try:
+                        payout = PartnerPayout.objects.create(
+                            advertiser=advertiser,
+                            partner_id=partner_id,
+                            ftu_payout=payout_data.get('ftu_payout'),
+                            rtu_payout=payout_data.get('rtu_payout'),
+                            ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
+                            rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
+                            exchange_rate=payout_data.get('exchange_rate'),
+                            currency=payout_data.get('currency'),
+                            rate_type=payout_data.get('rate_type', 'percent'),
+                            condition=payout_data.get('condition'),
+                            # App doesn't set dates - admin sets them later if needed
+                            start_date=None,
+                            end_date=None,
+                        )
+                        
+                        # Create PayoutRuleHistory for this new partner payout
+                        PayoutRuleHistory.objects.create(
+                            advertiser=advertiser,
+                            partner_id=partner_id,
+                            effective_date=timezone.now(),
+                            ftu_payout=payout_data.get('ftu_payout'),
+                            rtu_payout=payout_data.get('rtu_payout'),
+                            ftu_fixed_bonus=payout_data.get('ftu_fixed_bonus'),
+                            rtu_fixed_bonus=payout_data.get('rtu_fixed_bonus'),
+                            rate_type=payout_data.get('rate_type', 'percent'),
+                            assigned_by=request.user,
+                            notes=f"Partner-specific payout created via API by {request.user.username}"
+                        )
+                    except Exception as e:
+                        # If duplicate (same advertiser+partner+start_date), skip it
+                        # This prevents errors if user tries to add same partner twice
+                        continue
         
         advertiser.refresh_from_db()
         return Response(AdvertiserDetailSerializer(advertiser).data)
