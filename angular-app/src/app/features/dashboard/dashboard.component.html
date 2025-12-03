@@ -153,7 +153,7 @@
           <i class="pi pi-dollar kpi-icon"></i>
           <div>
             <h4>SALES</h4>
-            <p class="kpi-value">${{ kpis.total_sales | number:'1.2-2' }}</p>
+            <p class="kpi-value">${{ kpis.total_sales | number:'1.0-0' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.sales_change !== undefined"
               [class.trend-up]="kpis.trends?.sales_change! > 0" [class.trend-down]="kpis.trends?.sales_change! < 0"
               [class.trend-neutral]="kpis.trends?.sales_change === 0">
@@ -173,7 +173,7 @@
           <i class="pi pi-chart-line kpi-icon"></i>
           <div>
             <h4>REVENUE</h4>
-            <p class="kpi-value">${{ kpis.total_revenue | number:'1.2-2' }}</p>
+            <p class="kpi-value">${{ kpis.total_revenue | number:'1.0-0' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.revenue_change !== undefined"
               [class.trend-up]="kpis.trends?.revenue_change! > 0" [class.trend-down]="kpis.trends?.revenue_change! < 0"
               [class.trend-neutral]="kpis.trends?.revenue_change === 0">
@@ -193,7 +193,7 @@
           <i class="pi pi-wallet kpi-icon"></i>
           <div>
             <h4>PAYOUT</h4>
-            <p class="kpi-value">${{ kpis.total_payout | number:'1.2-2' }}</p>
+            <p class="kpi-value">${{ kpis.total_payout | number:'1.0-0' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.payout_change !== undefined"
               [class.trend-down]="kpis.trends?.payout_change! > 0" [class.trend-up]="kpis.trends?.payout_change! < 0"
               [class.trend-neutral]="kpis.trends?.payout_change === 0">
@@ -213,7 +213,7 @@
           <i class="pi pi-money-bill kpi-icon"></i>
           <div>
             <h4>PROFIT</h4>
-            <p class="kpi-value">${{ kpis.total_profit | number:'1.2-2' }}</p>
+            <p class="kpi-value">${{ kpis.total_profit | number:'1.0-0' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.profit_change !== undefined"
               [class.trend-up]="kpis.trends?.profit_change! > 0" [class.trend-down]="kpis.trends?.profit_change! < 0"
               [class.trend-neutral]="kpis.trends?.profit_change === 0">
