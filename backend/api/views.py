@@ -1578,15 +1578,15 @@ def advertiser_list_view(request):
             "default_rtu_fixed_bonus": adv.default_rtu_fixed_bonus,
             "partner_payouts": [
                 {
-                    "partner_id": pp.partner.id,  # type: ignore
-                    "partner_name": pp.partner.name,  # type: ignore
+                    "partner_id": pp.partner.id if pp.partner else None,  # type: ignore
+                    "partner_name": pp.partner.name if pp.partner else "Default",  # type: ignore
                     "rate_type": pp.rate_type,
                     "ftu_payout": pp.ftu_payout,
                     "rtu_payout": pp.rtu_payout,
                     "ftu_fixed_bonus": pp.ftu_fixed_bonus,
                     "rtu_fixed_bonus": pp.rtu_fixed_bonus,
                 }
-                for pp in adv.partner_payouts.select_related('partner').all()  # type: ignore
+                for pp in adv.payouts.select_related('partner').all()  # type: ignore
             ],
             "total_partners": total_partners,
             "active_partners": active_partners,
