@@ -205,6 +205,7 @@ def kpis_view(request):
     team_member_ids = request.GET.getlist("team_member_id")
     coupon_codes = request.GET.getlist("coupon_code")
     partner_type = request.GET.get("partner_type")
+    geos = request.GET.getlist("geo")
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
 
@@ -232,6 +233,9 @@ def kpis_view(request):
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
+
+    if geos:
+        qs = qs.filter(geo__in=geos)
 
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
@@ -359,6 +363,7 @@ def graph_data_view(request):
     team_member_ids = request.GET.getlist("team_member_id")
     advertiser_ids = request.GET.getlist("advertiser_id")
     partner_type = request.GET.get("partner_type")
+    geos = request.GET.getlist("geo")
 
     # Department scope: MB, AFF, INF (ALWAYS apply for OpsManager with department)
     # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
@@ -377,6 +382,8 @@ def graph_data_view(request):
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
+    if geos:
+        qs = qs.filter(geo__in=geos)
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
     if coupon_codes:
@@ -473,6 +480,7 @@ def performance_table_view(request):
     advertiser_ids = request.GET.getlist("advertiser_id")
     partner_ids = request.GET.getlist("partner_id")
     coupon_codes = request.GET.getlist("coupon_code")
+    geos = request.GET.getlist("geo")
     partner_type = request.GET.get("partner_type")
     team_member_ids = request.GET.getlist("team_member_id")
     date_from = request.GET.get("date_from")
@@ -497,6 +505,9 @@ def performance_table_view(request):
 
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
+
+    if geos:
+        qs = qs.filter(geo__in=geos)
 
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
@@ -902,6 +913,7 @@ def dashboard_pie_chart_data_view(request):
     team_member_ids = request.GET.getlist("team_member_id")  # Support multiple
     coupon = request.GET.get("coupon")
     partner_type = request.GET.get("partner_type")
+    geos = request.GET.getlist("geo")
 
     qs = CampaignPerformance.objects.all()
 
@@ -962,6 +974,9 @@ def dashboard_pie_chart_data_view(request):
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
 
+    if geos:
+        qs = qs.filter(geo__in=geos)
+
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
 
@@ -1018,6 +1033,7 @@ def advertiser_detail_summary_view(request):
         advertiser_id = request.GET.get('advertiser_id')
         date_from = request.GET.get('date_from')
         date_to = request.GET.get('date_to')
+        geo = request.GET.get('geo')
 
         if not advertiser_id:
             return Response({"detail": "advertiser_id is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1029,6 +1045,10 @@ def advertiser_detail_summary_view(request):
 
         # Base queryset filtered by advertiser
         qs = CampaignPerformance.objects.filter(advertiser_id=advertiser_id)
+
+        # Apply geo filter
+        if geo:
+            qs = qs.filter(geo=geo)
 
         # Apply date filters
         if date_from:

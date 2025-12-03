@@ -245,6 +245,7 @@ export class DashboardComponent implements OnInit {
                 return;
             case 'advertiser':
                 this.filters.advertiser_id = undefined;
+                this.filters.geo = undefined;
                 break;
             case 'partner':
                 this.filters.partner_id = undefined;
@@ -335,6 +336,7 @@ export class DashboardComponent implements OnInit {
 
     clearAdvertiserFilter(): void {
         this.filters.advertiser_id = null;
+        this.filters.geo = null;
         this.recomputeFilterDropdowns();
     }
 
@@ -368,6 +370,21 @@ export class DashboardComponent implements OnInit {
         // Normalize empty arrays to null
         if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length === 0) {
             this.filters.advertiser_id = null;
+            this.filters.geo = null;
+        } else if (this.filters.advertiser_id) {
+            // Extract geo values from selected advertisers
+            const selectedIds = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            const geoValues: string[] = [];
+            
+            selectedIds.forEach(id => {
+                const advertiser = this.allAdvertisers.find(a => a.id === id);
+                if (advertiser && advertiser.geo) {
+                    geoValues.push(advertiser.geo);
+                }
+            });
+            
+            // Only set geo filter if we found geo values
+            this.filters.geo = geoValues.length > 0 ? geoValues : null;
         }
         // Instantly recompute other dropdown options
         this.recomputeFilterDropdowns();
@@ -872,10 +889,18 @@ export class DashboardComponent implements OnInit {
         this.advertiserDetailLoading = true;
         this.advertiserDetailData = null;
 
+        // Extract geo from advertiser name if it's "Noon GCC" or "Noon Egypt"
+        let geo: string | undefined = undefined;
+        if (advertiserName === 'Noon GCC') {
+            geo = 'gcc';
+        } else if (advertiserName === 'Noon Egypt') {
+            geo = 'egypt';
+        }
+
         // Trigger change detection immediately to show loading state
         this.cdr.detectChanges();
 
-        this.dashboardService.getAdvertiserDetailSummary(advertiserId, this.filters).subscribe({
+        this.dashboardService.getAdvertiserDetailSummary(advertiserId, geo, this.filters).subscribe({
             next: (data: AdvertiserDetailSummary) => {
                 this.advertiserDetailData = data;
                 this.advertiserDetailLoading = false;

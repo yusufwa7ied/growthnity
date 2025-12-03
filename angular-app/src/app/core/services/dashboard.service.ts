@@ -197,9 +197,12 @@ export class DashboardService {
   }
 
   // Get advertiser detail summary for modal
-  getAdvertiserDetailSummary(advertiserId: number, filters: DashboardFilters): Observable<any> {
+  getAdvertiserDetailSummary(advertiserId: number, geo: string | undefined, filters: DashboardFilters): Observable<any> {
     let params = new HttpParams().set('advertiser_id', advertiserId.toString());
 
+    if (geo) {
+      params = params.set('geo', geo);
+    }
     if (filters.date_from) {
       params = params.set('date_from', filters.date_from);
     }
@@ -220,6 +223,10 @@ export class DashboardService {
     if (filters.advertiser_id) {
       const advIds = Array.isArray(filters.advertiser_id) ? filters.advertiser_id : [filters.advertiser_id];
       advIds.forEach(id => params = params.append('advertiser_id', id.toString()));
+    }
+    if (filters.geo) {
+      const geos = Array.isArray(filters.geo) ? filters.geo : [filters.geo];
+      geos.forEach(geo => params = params.append('geo', geo));
     }
     if (filters.partner_id) {
       const partnerIds = Array.isArray(filters.partner_id) ? filters.partner_id : [filters.partner_id];
@@ -248,6 +255,7 @@ export class DashboardService {
     const filterParts = [
       filters.partner_type || '',
       Array.isArray(filters.advertiser_id) ? filters.advertiser_id.join(',') : (filters.advertiser_id || ''),
+      Array.isArray(filters.geo) ? filters.geo.join(',') : (filters.geo || ''),
       Array.isArray(filters.partner_id) ? filters.partner_id.join(',') : (filters.partner_id || ''),
       Array.isArray(filters.team_member_id) ? filters.team_member_id.join(',') : (filters.team_member_id || ''),
       Array.isArray(filters.coupon_code) ? filters.coupon_code.join(',') : (filters.coupon_code || ''),

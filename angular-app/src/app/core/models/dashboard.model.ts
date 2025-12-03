@@ -4,6 +4,7 @@ export interface DashboardFilters {
   team_member_id?: number | number[] | null;
   coupon_code?: string | string[] | null;
   partner_type?: string | null;
+  geo?: string | string[] | null;
   date_from?: string;
   date_to?: string;
 }
@@ -12,6 +13,7 @@ export interface Advertiser {
   id: number;
   name: string;
   attribution: string;
+  geo?: string;
 }
 
 export interface Partner {
@@ -87,6 +89,7 @@ export interface FilterOptions {
   advertisers: Array<{
     advertiser_id: number;
     campaign: string;
+    geo?: string;
   }>;
   partners: Array<{
     partner_id: number;
