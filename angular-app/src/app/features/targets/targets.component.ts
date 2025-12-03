@@ -206,7 +206,12 @@ export class TargetsComponent implements OnInit {
 
   toggleForm(): void {
     this.showForm = !this.showForm;
-    if (!this.showForm) {
+    if (this.showForm && !this.editingTarget) {
+      // When opening form for new target, load team members for default department
+      if (this.formData.partner_type) {
+        this.loadTeamMembers(this.formData.partner_type);
+      }
+    } else if (!this.showForm) {
       this.editingTarget = null;
       this.resetForm();
     }
