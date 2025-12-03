@@ -23,6 +23,20 @@ from datetime import datetime, date, timedelta
 from calendar import monthrange
 
 
+# Helper function to format advertiser name with geo for Noon
+def format_advertiser_name(advertiser_name, geo=None):
+    """
+    Format advertiser name to include geo for Noon.
+    Returns "Noon GCC" or "Noon Egypt" for Noon, otherwise returns advertiser name as-is.
+    """
+    if advertiser_name == "Noon" and geo:
+        if geo.lower() == "gcc":
+            return "Noon GCC"
+        elif geo.lower() == "egypt":
+            return "Noon Egypt"
+    return advertiser_name
+
+
 # Helper function to apply team member filter
 def apply_team_member_filter(qs, team_member_ids):
     """
@@ -539,6 +553,7 @@ def performance_table_view(request):
             "advertiser_id",
             "partner_id",
             "campaign",
+            "geo",
             "coupon_code",
             "partner_name",
             "partner_type_value",
@@ -608,13 +623,16 @@ def performance_table_view(request):
             # Now profit = revenue - payout works for all types
             profit = revenue - payout
             
+            # Format advertiser name with geo for Noon
+            campaign_display = format_advertiser_name(r["campaign"], r.get("geo"))
+            
             # For all partner types: spend column shows their cost
             # MB: spend = media buying cost, AFF/INF: spend = payout (what we pay them)
             result.append({
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
                 "partner_id": r["partner_id"],
-                "campaign": r["campaign"],
+                "campaign": campaign_display,
                 "coupon": r["coupon_code"],
                 "partner": r["partner_name"],
                 "partner_type": r["partner_type_value"],
@@ -643,6 +661,7 @@ def performance_table_view(request):
         "advertiser_id",
         "partner_id",
         "campaign",
+        "geo",
         "coupon_code",
         "partner_type_value",
         "total_orders",
@@ -700,7 +719,7 @@ def performance_table_view(request):
             row = {
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
-                "campaign": r["campaign"],
+                "campaign": format_advertiser_name(r["campaign"], r.get("geo")),
                 "coupon": r["coupon_code"],
                 "partner_type": "MB",
                 "orders": int(r["total_orders"] or 0),
@@ -715,7 +734,7 @@ def performance_table_view(request):
             row = {
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
-                "campaign": r["campaign"],
+                "campaign": format_advertiser_name(r["campaign"], r.get("geo")),
                 "coupon": r["coupon_code"],
                 "partner_type": r.get("partner_type_value", "AFF"),  # AFF or INF
                 "orders": int(r["total_orders"] or 0),
@@ -797,11 +816,19 @@ def dashboard_filter_options_view(request):
     coupons_map = {}
 
     for cp in qs.select_related('advertiser', 'partner', 'coupon'):
-        # Advertisers
-        if cp.advertiser_id not in advertisers_map:
-            advertisers_map[cp.advertiser_id] = {
+        # Advertisers - format Noon with geo
+        advertiser_display_name = format_advertiser_name(
+            cp.advertiser.name if cp.advertiser else "Unknown",
+            cp.geo
+        )
+        # Use a composite key for Noon to separate GCC and Egypt in dropdown
+        advertiser_key = f"{cp.advertiser_id}_{cp.geo}" if cp.advertiser and cp.advertiser.name == "Noon" and cp.geo else str(cp.advertiser_id)
+        
+        if advertiser_key not in advertisers_map:
+            advertisers_map[advertiser_key] = {
                 "advertiser_id": cp.advertiser_id,
-                "campaign": cp.advertiser.name if cp.advertiser else "Unknown"
+                "campaign": advertiser_display_name,
+                "geo": cp.geo if cp.advertiser and cp.advertiser.name == "Noon" else None
             }
         
         # Partners
@@ -941,13 +968,13 @@ def dashboard_pie_chart_data_view(request):
     if coupon:
         qs = qs.filter(coupon=coupon)
 
-    # Aggregate by campaign
+    # Aggregate by campaign - format Noon with geo
     campaign_totals = {}
     for cp in qs.select_related('advertiser'):
         # Skip records with NULL advertiser
         if not cp.advertiser:
             continue
-        campaign_name = cp.advertiser.name
+        campaign_name = format_advertiser_name(cp.advertiser.name, cp.geo)
         if campaign_name not in campaign_totals:
             campaign_totals[campaign_name] = {
                 "campaign": campaign_name,
