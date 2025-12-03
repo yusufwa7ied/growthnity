@@ -222,29 +222,43 @@ export class TargetsComponent implements OnInit {
       this.formData.spend_target = 0;
     }
     this.calculateProfit();
+    
+    // Load team members for the department when editing
+    if (this.formData.partner_type) {
+      this.loadTeamMembers(this.formData.partner_type);
+    }
+    
     this.showForm = true;
   }
 
-  onPartnerTypeChange(partnerType: string): void {
-    this.formData.assigned_to = null; // Reset member selection when type changes
-
-    // Load team members for the selected department (partner_type)
-    if (partnerType) {
-      this.dashboardService.getTeamMembersByDepartment(partnerType).subscribe({
-        next: (data) => {
-          // Transform team members data for dropdown
-          this.teamMembers = data.map((m: any) => ({
-            id: m.id,
-            name: m.name,
-            username: m.username
-          }));
-        },
-        error: (err) => {
-          console.error('Error loading team members for department:', err);
-          this.teamMembers = [];
-        }
-      });
+  loadTeamMembers(partnerType: string): void {
+    if (!partnerType) {
+      this.teamMembers = [];
+      return;
     }
+
+    this.dashboardService.getTeamMembersByDepartment(partnerType).subscribe({
+      next: (data) => {
+        // Transform team members data for dropdown
+        this.teamMembers = data.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          username: m.username
+        }));
+      },
+      error: (err) => {
+        console.error('Error loading team members for department:', err);
+        this.teamMembers = [];
+      }
+    });
+  }
+
+  onPartnerTypeChange(partnerType: string): void {
+    // Reset member selection when type changes
+    this.formData.assigned_to = null;
+    
+    // Load team members for the selected department
+    this.loadTeamMembers(partnerType);
   }
 
   deleteTarget(id: number): void {

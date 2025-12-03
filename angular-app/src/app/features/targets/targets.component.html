@@ -191,7 +191,7 @@
                 <div class="form-group">
                     <label for="partner_type">Department <span class="required">*</span></label>
                     <select [(ngModel)]="formData.partner_type" name="partner_type" id="partner_type"
-                        class="form-control" (change)="onPartnerTypeChange(formData.partner_type)" required>
+                        class="form-control" (ngModelChange)="onPartnerTypeChange($event)" required>
                         <option value="">Select Department</option>
                         <option value="MB">Media Buying</option>
                         <option value="AFF">Affiliate</option>

@@ -822,3 +822,37 @@ form {
 .required {
     color: #ef4444;
 }
+
+/* Dialog Footer Button Styling */
+::ng-deep .p-dialog .p-dialog-footer .p-button {
+    border-radius: 8px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+::ng-deep .p-dialog .p-dialog-footer .p-button-secondary {
+    background: white !important;
+    color: #6b7280 !important;
+    border: 2px solid #d1d5db !important;
+}
+
+::ng-deep .p-dialog .p-dialog-footer .p-button-secondary:hover {
+    background: #f9fafb !important;
+    border-color: #9ca3af !important;
+    color: #374151 !important;
+}
+
+::ng-deep .p-dialog .p-dialog-footer .p-button:not(.p-button-secondary):not(.p-button-outlined) {
+    background: linear-gradient(135deg, var(--brand-teal) 0%, #007a7a 100%) !important;
+    border: none !important;
+    color: white !important;
+}
+
+::ng-deep .p-dialog .p-dialog-footer .p-button:not(.p-button-secondary):not(.p-button-outlined):hover {
+    background: linear-gradient(135deg, #007a7a 0%, #006868 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3);
+}
