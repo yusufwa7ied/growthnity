@@ -370,26 +370,6 @@ export class DashboardComponent implements OnInit {
         // Normalize empty arrays to null
         if (Array.isArray(this.filters.advertiser_id) && this.filters.advertiser_id.length === 0) {
             this.filters.advertiser_id = null;
-            this.filters.geo = null;
-        } else if (this.filters.advertiser_id) {
-            // Parse composite keys (format: "advertiserId_geo" or just "advertiserId")
-            const selectedKeys = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
-            const advertiserIds: number[] = [];
-            const geoValues: string[] = [];
-
-            selectedKeys.forEach(key => {
-                const parts = key.toString().split('_');
-                const advertiserId = parseInt(parts[0]);
-                advertiserIds.push(advertiserId);
-                
-                if (parts.length > 1) {
-                    geoValues.push(parts[1]);
-                }
-            });
-
-            // Store actual advertiser IDs for backend (not composite keys)
-            this.filters.advertiser_id = advertiserIds;
-            this.filters.geo = geoValues.length > 0 ? geoValues : null;
         }
         // Instantly recompute other dropdown options
         this.recomputeFilterDropdowns();
@@ -485,7 +465,13 @@ export class DashboardComponent implements OnInit {
         const advertiserIds = new Set(couponsForAdvertisers.map(c => c.advertiser_id));
         if (hasAdvertiserFilter) {
             const selected = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
-            selected.forEach(id => { if (id != null) advertiserIds.add(id); });
+            // Parse composite keys to get advertiser IDs
+            selected.forEach(key => {
+                if (key != null) {
+                    const parts = key.toString().split('_');
+                    advertiserIds.add(parseInt(parts[0]));
+                }
+            });
         }
         this.advertisers = this.allAdvertisers.filter(a => advertiserIds.has(a.id));
 
@@ -495,7 +481,9 @@ export class DashboardComponent implements OnInit {
             couponsForPartners = couponsForPartners.filter(c => c.partner_type === this.filters.partner_type);
         }
         if (hasAdvertiserFilter) {
-            const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            const keys = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            // Parse composite keys to get advertiser IDs
+            const ids = keys.filter(k => k != null).map(key => parseInt(key!.toString().split('_')[0]));
             couponsForPartners = couponsForPartners.filter(c => ids.includes(c.advertiser_id));
         }
         if (hasCouponFilter) {
@@ -515,7 +503,9 @@ export class DashboardComponent implements OnInit {
             couponsForCoupons = couponsForCoupons.filter(c => c.partner_type === this.filters.partner_type);
         }
         if (hasAdvertiserFilter) {
-            const ids = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            const keys = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            // Parse composite keys to get advertiser IDs
+            const ids = keys.filter(k => k != null).map(key => parseInt(key!.toString().split('_')[0]));
             couponsForCoupons = couponsForCoupons.filter(c => ids.includes(c.advertiser_id));
         }
         if (hasPartnerFilter) {
@@ -992,10 +982,12 @@ export class DashboardComponent implements OnInit {
     }
 
     loadAnalytics(): void {
-        // Support multiple advertiser IDs - send all of them
-        const advertiserIds = Array.isArray(this.filters.advertiser_id)
-            ? this.filters.advertiser_id
-            : this.filters.advertiser_id ? [this.filters.advertiser_id] : undefined;
+        // Support multiple advertiser IDs - parse composite keys
+        let advertiserIds: number[] | undefined = undefined;
+        if (this.filters.advertiser_id) {
+            const keys = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            advertiserIds = keys.filter(k => k != null).map(key => parseInt(key!.toString().split('_')[0]));
+        }
 
         const partnerIds = Array.isArray(this.filters.partner_id)
             ? this.filters.partner_id

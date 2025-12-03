@@ -1,5 +1,5 @@
 export interface DashboardFilters {
-  advertiser_id?: number | number[] | null;
+  advertiser_id?: string | string[] | number | number[] | null; // Can be composite keys (string) or IDs (number)
   partner_id?: number | number[] | null;
   team_member_id?: number | number[] | null;
   coupon_code?: string | string[] | null;

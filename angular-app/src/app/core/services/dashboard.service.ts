@@ -221,10 +221,31 @@ export class DashboardService {
       params = params.set('partner_type', filters.partner_type);
     }
     if (filters.advertiser_id) {
-      const advIds = Array.isArray(filters.advertiser_id) ? filters.advertiser_id : [filters.advertiser_id];
-      advIds.forEach(id => params = params.append('advertiser_id', id.toString()));
+      // Parse composite keys (format: "advertiserId_geo" or just "advertiserId")
+      const keys = Array.isArray(filters.advertiser_id) ? filters.advertiser_id : [filters.advertiser_id];
+      const advertiserIds: number[] = [];
+      const geoValues: string[] = [];
+
+      keys.forEach(key => {
+        const keyStr = key.toString();
+        const parts = keyStr.split('_');
+        const advertiserId = parseInt(parts[0]);
+        advertiserIds.push(advertiserId);
+        
+        if (parts.length > 1) {
+          geoValues.push(parts[1]);
+        }
+      });
+
+      advertiserIds.forEach(id => params = params.append('advertiser_id', id.toString()));
+      
+      // Add geo values from composite keys
+      if (geoValues.length > 0) {
+        geoValues.forEach(geo => params = params.append('geo', geo));
+      }
     }
-    if (filters.geo) {
+    // Note: filters.geo is now handled above when parsing composite keys
+    if (filters.geo && !filters.advertiser_id) {
       const geos = Array.isArray(filters.geo) ? filters.geo : [filters.geo];
       geos.forEach(geo => params = params.append('geo', geo));
     }
