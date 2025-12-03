@@ -14,6 +14,7 @@ export interface Advertiser {
   name: string;
   attribution: string;
   geo?: string;
+  compositeKey?: string;
 }
 
 export interface Partner {

@@ -372,18 +372,23 @@ export class DashboardComponent implements OnInit {
             this.filters.advertiser_id = null;
             this.filters.geo = null;
         } else if (this.filters.advertiser_id) {
-            // Extract geo values from selected advertisers
-            const selectedIds = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            // Parse composite keys (format: "advertiserId_geo" or just "advertiserId")
+            const selectedKeys = Array.isArray(this.filters.advertiser_id) ? this.filters.advertiser_id : [this.filters.advertiser_id];
+            const advertiserIds: number[] = [];
             const geoValues: string[] = [];
-            
-            selectedIds.forEach(id => {
-                const advertiser = this.allAdvertisers.find(a => a.id === id);
-                if (advertiser && advertiser.geo) {
-                    geoValues.push(advertiser.geo);
+
+            selectedKeys.forEach(key => {
+                const parts = key.toString().split('_');
+                const advertiserId = parseInt(parts[0]);
+                advertiserIds.push(advertiserId);
+                
+                if (parts.length > 1) {
+                    geoValues.push(parts[1]);
                 }
             });
-            
-            // Only set geo filter if we found geo values
+
+            // Store actual advertiser IDs for backend (not composite keys)
+            this.filters.advertiser_id = advertiserIds;
             this.filters.geo = geoValues.length > 0 ? geoValues : null;
         }
         // Instantly recompute other dropdown options
@@ -531,11 +536,13 @@ export class DashboardComponent implements OnInit {
         // Pass current team_member_id filter to get filtered options
         this.dashboardService.getFilterOptions(this.filters).subscribe({
             next: (options) => {
-                // Populate advertisers
+                // Populate advertisers - use composite key for Noon regions
                 this.allAdvertisers = options.advertisers.map(a => ({
                     id: a.advertiser_id,
                     name: a.campaign,
-                    attribution: ''
+                    attribution: '',
+                    geo: a.geo,
+                    compositeKey: a.geo ? `${a.advertiser_id}_${a.geo}` : `${a.advertiser_id}`
                 })).sort((a, b) => a.name.localeCompare(b.name));
 
                 // Populate partners

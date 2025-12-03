@@ -45,7 +45,7 @@
           <div class="filter-input-wrapper">
             <p-multiselect [options]="advertisers" [(ngModel)]="filters.advertiser_id"
               (onChange)="onAdvertiserChangeRealtime()" (onClear)="onAdvertiserChangeRealtime()" optionLabel="name"
-              optionValue="id" placeholder="Select advertiser" [showClear]="true" [filter]="true"
+              optionValue="compositeKey" placeholder="Select advertiser" [showClear]="true" [filter]="true"
               filterPlaceholder="Search..." display="chip" [maxSelectedLabels]="2"
               styleClass="modal-multiselect"></p-multiselect>
           </div>
