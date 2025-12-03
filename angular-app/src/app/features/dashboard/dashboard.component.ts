@@ -63,6 +63,7 @@ export class DashboardComponent implements OnInit {
     user: User | null = null;
     role: string = '';
     isAdmin: boolean = false;              // OpsManager or Admin (full access)
+    isOpsManager: boolean = false;         // OpsManager role
     isMediaBuyer: boolean = false;         // TeamMember with media_buying department
     isDepartmentRestricted: boolean = false; // TeamMember with affiliate/influencer department
     canAccessCoupons: boolean = false;     // Only OpsManager/Admin
@@ -161,18 +162,21 @@ export class DashboardComponent implements OnInit {
         } else if ((this.role === 'OpsManager' || this.role === 'Admin') && !this.user?.department) {
             // OpsManager/Admin with NO department: Full system access
             this.isAdmin = true;
+            this.isOpsManager = true;
             this.isMediaBuyer = true;  // Can also see daily spend
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;
         } else if (this.role === 'OpsManager' && this.user?.department === 'media_buying') {
             // OpsManager with media_buying department: Full department data + Coupons + Daily Spend
             this.isAdmin = false;
+            this.isOpsManager = true;
             this.isMediaBuyer = true;  // CAN access daily spend for media buying ops managers
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;  // Can access coupons
         } else if (this.role === 'OpsManager' && this.user?.department) {
             // OpsManager with other departments: Full department data + Coupons only
             this.isAdmin = false;
+            this.isOpsManager = true;
             this.isMediaBuyer = false;  // NO daily spend for other departments
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;  // Can access coupons

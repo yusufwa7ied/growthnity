@@ -123,6 +123,7 @@
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
+      <app-skeleton-loader *ngIf="showSkeletons && (isAdmin || isOpsManager)" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons && (isAdmin || isMediaBuyer)" type="kpi"
         [count]="4"></app-skeleton-loader>
 
@@ -182,6 +183,26 @@
                 'pi-minus': kpis.trends?.revenue_change === 0
               }"></i>
               <span>{{ kpis.trends?.revenue_change! > 0 ? '+' : '' }}{{ kpis.trends?.revenue_change | number:'1.1-1'
+                }}%</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+      <p-card *ngIf="kpis && !showSkeletons && (isAdmin || isOpsManager)" styleClass="kpi-card">
+        <div class="kpi-content">
+          <i class="pi pi-wallet kpi-icon"></i>
+          <div>
+            <h4>PAYOUT</h4>
+            <p class="kpi-value">${{ kpis.total_payout | number:'1.2-2' }}</p>
+            <div class="kpi-trend" *ngIf="kpis.trends?.payout_change !== undefined"
+              [class.trend-down]="kpis.trends?.payout_change! > 0" [class.trend-up]="kpis.trends?.payout_change! < 0"
+              [class.trend-neutral]="kpis.trends?.payout_change === 0">
+              <i class="pi" [ngClass]="{
+                'pi-arrow-up': kpis.trends?.payout_change! > 0,
+                'pi-arrow-down': kpis.trends?.payout_change! < 0,
+                'pi-minus': kpis.trends?.payout_change === 0
+              }"></i>
+              <span>{{ kpis.trends?.payout_change! > 0 ? '+' : '' }}{{ kpis.trends?.payout_change | number:'1.1-1'
                 }}%</span>
             </div>
           </div>
