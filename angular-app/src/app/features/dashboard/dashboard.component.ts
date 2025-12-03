@@ -672,24 +672,37 @@ export class DashboardComponent implements OnInit {
             return `${day}${suffix} ${month}`;
         });
 
-        const datasets: any[] = [
-            {
+        const datasets: any[] = [];
+
+        // For Admin/OpsManager: Show Revenue and Payout
+        if (this.isAdmin || this.isOpsManager) {
+            datasets.push({
                 label: 'Revenue',
                 data: data.daily_revenue,
                 borderColor: '#009292',
                 backgroundColor: 'rgba(0, 146, 146, 0.1)',
                 tension: 0.4,
                 fill: true
-            },
-            {
+            });
+            datasets.push({
                 label: 'Payout',
                 data: data.daily_payout,
                 borderColor: '#ff6b6b',
                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
                 tension: 0.4,
                 fill: true
-            }
-        ];
+            });
+        } else {
+            // For TeamMembers: Show only Payout (their earnings)
+            datasets.push({
+                label: 'Payout',
+                data: data.daily_payout,
+                borderColor: '#009292',
+                backgroundColor: 'rgba(0, 146, 146, 0.1)',
+                tension: 0.4,
+                fill: true
+            });
+        }
 
         // Only admin roles see Profit
         if (this.isAdmin && data.daily_profit) {

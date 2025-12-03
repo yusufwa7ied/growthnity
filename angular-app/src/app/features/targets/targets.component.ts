@@ -227,12 +227,12 @@ export class TargetsComponent implements OnInit {
       this.formData.spend_target = 0;
     }
     this.calculateProfit();
-    
+
     // Load team members for the department when editing
     if (this.formData.partner_type) {
       this.loadTeamMembers(this.formData.partner_type);
     }
-    
+
     this.showForm = true;
   }
 
@@ -261,7 +261,7 @@ export class TargetsComponent implements OnInit {
   onPartnerTypeChange(partnerType: string): void {
     // Reset member selection when type changes
     this.formData.assigned_to = null;
-    
+
     // Load team members for the selected department
     this.loadTeamMembers(partnerType);
   }
