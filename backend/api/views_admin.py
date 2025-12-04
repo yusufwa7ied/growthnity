@@ -510,6 +510,187 @@ def delete_media_buyer_spend_view(request, pk):
     return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def media_buyer_spend_analytics_view(request):
+    """Get performance analytics for media buyer spend"""
+    from django.db.models import Sum, Count, Q
+    from datetime import datetime, timedelta
+    
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Allow: Admin, OpsManager, or TeamMembers in media_buying department
+    role = company_user.role.name if company_user.role else None
+    if role not in ["Admin", "OpsManager"]:
+        if role != "TeamMember" or company_user.department != "media_buying":
+            return Response({"detail": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Get filter parameters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    advertiser_id = request.GET.get('advertiser_id')
+    partner_id = request.GET.get('partner_id')
+    platform = request.GET.get('platform')
+
+    # Build spend queryset
+    spend_qs = MediaBuyerDailySpend.objects.select_related('advertiser', 'partner').all()
+
+    # Apply role-based filtering
+    if role == "TeamMember" and company_user.department == "media_buying":
+        assignment = company_user.accountassignment_set.first()
+        if assignment:
+            user_partners = assignment.partners.filter(partner_type="MB")
+            spend_qs = spend_qs.filter(partner__in=user_partners)
+        else:
+            spend_qs = spend_qs.none()
+
+    # Apply filters
+    if date_from:
+        spend_qs = spend_qs.filter(date__gte=date_from)
+    if date_to:
+        spend_qs = spend_qs.filter(date__lte=date_to)
+    if advertiser_id:
+        spend_qs = spend_qs.filter(advertiser_id=advertiser_id)
+    if partner_id:
+        spend_qs = spend_qs.filter(partner_id=partner_id)
+    if platform:
+        spend_qs = spend_qs.filter(platform=platform)
+
+    # Calculate total spend
+    total_spend = spend_qs.aggregate(total=Sum('amount_spent'))['total'] or 0
+
+    # Get matching performance data
+    perf_qs = CampaignPerformance.objects.filter(partner__partner_type="MB")
+    
+    # Apply same filters to performance data
+    if date_from:
+        perf_qs = perf_qs.filter(date__gte=date_from)
+    if date_to:
+        perf_qs = perf_qs.filter(date__lte=date_to)
+    if advertiser_id:
+        perf_qs = perf_qs.filter(advertiser_id=advertiser_id)
+    if partner_id:
+        perf_qs = perf_qs.filter(partner_id=partner_id)
+
+    # Apply role-based filtering to performance
+    if role == "TeamMember" and company_user.department == "media_buying":
+        assignment = company_user.accountassignment_set.first()
+        if assignment:
+            user_partners = assignment.partners.filter(partner_type="MB")
+            perf_qs = perf_qs.filter(partner__in=user_partners)
+        else:
+            perf_qs = perf_qs.none()
+
+    # Calculate performance metrics
+    perf_agg = perf_qs.aggregate(
+        total_orders=Sum('total_orders'),
+        total_revenue=Sum('total_revenue'),
+        total_sales=Sum('total_sales')
+    )
+
+    total_orders = perf_agg['total_orders'] or 0
+    total_revenue = float(perf_agg['total_revenue'] or 0)
+    total_sales = float(perf_agg['total_sales'] or 0)
+    total_spend = float(total_spend)
+
+    # Calculate metrics
+    profit = total_revenue - total_spend
+    roas = (total_revenue / total_spend) if total_spend > 0 else 0
+    cpo = (total_spend / total_orders) if total_orders > 0 else 0
+
+    # Get daily trend data (last 30 days or filtered range)
+    if date_from and date_to:
+        trend_date_from = date_from
+        trend_date_to = date_to
+    else:
+        trend_date_to = datetime.now().date()
+        trend_date_from = trend_date_to - timedelta(days=30)
+
+    # Daily spend trend
+    daily_spend = spend_qs.filter(
+        date__gte=trend_date_from,
+        date__lte=trend_date_to
+    ).values('date').annotate(
+        spend=Sum('amount_spent')
+    ).order_by('date')
+
+    # Daily revenue trend
+    daily_revenue = perf_qs.filter(
+        date__gte=trend_date_from,
+        date__lte=trend_date_to
+    ).values('date').annotate(
+        revenue=Sum('total_revenue')
+    ).order_by('date')
+
+    # Merge daily data
+    daily_data = {}
+    for item in daily_spend:
+        date_str = str(item['date'])
+        daily_data[date_str] = {
+            'date': date_str,
+            'spend': float(item['spend'] or 0),
+            'revenue': 0
+        }
+    
+    for item in daily_revenue:
+        date_str = str(item['date'])
+        if date_str in daily_data:
+            daily_data[date_str]['revenue'] = float(item['revenue'] or 0)
+        else:
+            daily_data[date_str] = {
+                'date': date_str,
+                'spend': 0,
+                'revenue': float(item['revenue'] or 0)
+            }
+
+    trend_data = sorted(daily_data.values(), key=lambda x: x['date'])
+
+    # Platform breakdown
+    platform_breakdown = []
+    if not platform:  # Only show breakdown if no platform filter
+        platforms = spend_qs.values('platform').distinct()
+        for plat in platforms:
+            plat_name = plat['platform']
+            plat_spend_total = spend_qs.filter(platform=plat_name).aggregate(total=Sum('amount_spent'))['total'] or 0
+            plat_perf = perf_qs.filter(partner__partner_type="MB").aggregate(
+                revenue=Sum('total_revenue'),
+                orders=Sum('total_orders')
+            )
+            plat_revenue = float(plat_perf['revenue'] or 0)
+            plat_orders = plat_perf['orders'] or 0
+            plat_spend = float(plat_spend_total)
+            
+            plat_roas = (plat_revenue / plat_spend) if plat_spend > 0 else 0
+            plat_profit = plat_revenue - plat_spend
+            
+            platform_breakdown.append({
+                'platform': plat_name,
+                'spend': plat_spend,
+                'revenue': plat_revenue,
+                'orders': plat_orders,
+                'profit': plat_profit,
+                'roas': plat_roas
+            })
+
+    return Response({
+        'summary': {
+            'total_spend': round(total_spend, 2),
+            'total_revenue': round(total_revenue, 2),
+            'total_orders': int(total_orders),
+            'total_sales': round(total_sales, 2),
+            'profit': round(profit, 2),
+            'roas': round(roas, 2),
+            'cpo': round(cpo, 2)
+        },
+        'trend_data': trend_data,
+        'platform_breakdown': platform_breakdown
+    })
+
+
 # ==================== Partner Management ====================
 
 @api_view(['GET', 'POST'])

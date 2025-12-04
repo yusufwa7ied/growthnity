@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { Card } from 'primeng/card';
+import { ChartModule } from 'primeng/chart';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
@@ -22,6 +23,7 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
     FormsModule,
     TableModule,
     ButtonModule,
+    ChartModule,
     DatePicker,
     Select,
     InputNumber,
@@ -69,6 +71,12 @@ export class MediaBuyerSpendComponent implements OnInit {
   filterPartner: any = null;
   filterPlatform: any = null;
 
+  // Analytics data
+  analytics: any = null;
+  loadingAnalytics = false;
+  chartData: any = null;
+  chartOptions: any = null;
+
   loading = false;
   saving = false;
   showSkeletons = true;
@@ -90,6 +98,7 @@ export class MediaBuyerSpendComponent implements OnInit {
     this.loadAdvertisers();
     this.loadPartners();
     this.loadSpendRecords();
+    this.loadAnalytics();
   }
 
   loadAdvertisers() {
@@ -259,6 +268,122 @@ export class MediaBuyerSpendComponent implements OnInit {
     this.selectedCurrency = 'USD';
   }
 
+  loadAnalytics() {
+    this.loadingAnalytics = true;
+
+    const filters: any = {};
+    
+    if (this.filterDateRange && this.filterDateRange.length > 0) {
+      filters.date_from = this.formatDate(this.filterDateRange[0]);
+      if (this.filterDateRange[1]) {
+        filters.date_to = this.formatDate(this.filterDateRange[1]);
+      }
+    }
+
+    if (this.filterAdvertiser && this.filterAdvertiser.value) {
+      filters.advertiser_id = this.filterAdvertiser.value.id;
+    }
+
+    if (this.filterPartner && this.filterPartner.value) {
+      filters.partner_id = this.filterPartner.value.id;
+    }
+
+    if (this.filterPlatform && this.filterPlatform.value) {
+      filters.platform = this.filterPlatform.value;
+    }
+
+    this.spendService.getSpendAnalytics(filters).subscribe({
+      next: (data) => {
+        this.analytics = data;
+        this.prepareChartData(data.trend_data);
+        this.loadingAnalytics = false;
+      },
+      error: (err) => {
+        console.error('Error loading analytics:', err);
+        this.loadingAnalytics = false;
+      }
+    });
+  }
+
+  prepareChartData(trendData: any[]) {
+    if (!trendData || trendData.length === 0) {
+      this.chartData = null;
+      return;
+    }
+
+    const labels = trendData.map(d => d.date);
+    const spendData = trendData.map(d => d.spend);
+    const revenueData = trendData.map(d => d.revenue);
+
+    this.chartData = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Spend',
+          data: spendData,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Revenue',
+          data: revenueData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+
+    this.chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context: any) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += '$' + context.parsed.y.toFixed(2);
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Date'
+          }
+        },
+        y: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Amount (USD)'
+          },
+          ticks: {
+            callback: function(value: any) {
+              return '$' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    };
+  }
+
   applyFilters() {
     let filtered = [...this.allSpendRecords];
 
@@ -289,6 +414,9 @@ export class MediaBuyerSpendComponent implements OnInit {
     }
 
     this.spendRecords = filtered;
+    
+    // Reload analytics with new filters
+    this.loadAnalytics();
   }
 
   clearFilters() {
@@ -297,6 +425,7 @@ export class MediaBuyerSpendComponent implements OnInit {
     this.filterPartner = null;
     this.filterPlatform = null;
     this.spendRecords = [...this.allSpendRecords];
+    this.loadAnalytics();
   }
 
   formatDate(date: Date): string {

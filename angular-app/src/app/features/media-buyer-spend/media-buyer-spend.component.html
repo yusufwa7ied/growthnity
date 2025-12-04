@@ -61,6 +61,66 @@
             </div>
         </div>
 
+        <!-- Performance Metrics Section -->
+        <div class="performance-section" *ngIf="analytics && !loadingAnalytics">
+            <h3 class="section-title"><i class="pi pi-chart-bar"></i> Performance Overview</h3>
+            
+            <div class="performance-metrics">
+                <div class="metric-card metric-revenue">
+                    <div class="metric-icon">
+                        <i class="pi pi-dollar"></i>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Total Revenue</span>
+                        <span class="metric-value">${{analytics.summary.total_revenue | number:'1.2-2'}}</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-profit" [ngClass]="{'metric-loss': analytics.summary.profit < 0}">
+                    <div class="metric-icon">
+                        <i class="pi" [ngClass]="analytics.summary.profit >= 0 ? 'pi-chart-line' : 'pi-exclamation-triangle'"></i>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Profit/Loss</span>
+                        <span class="metric-value">${{analytics.summary.profit | number:'1.2-2'}}</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-roas">
+                    <div class="metric-icon">
+                        <i class="pi pi-percentage"></i>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">ROAS</span>
+                        <span class="metric-value">{{analytics.summary.roas | number:'1.2'}}x</span>
+                        <span class="metric-subtext">Return on Ad Spend</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-cpo">
+                    <div class="metric-icon">
+                        <i class="pi pi-shopping-cart"></i>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">CPO</span>
+                        <span class="metric-value">${{analytics.summary.cpo | number:'1.2-2'}}</span>
+                        <span class="metric-subtext">Cost Per Order</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spend vs Revenue Trend Chart -->
+        <p-card class="chart-card" *ngIf="chartData && !loadingAnalytics">
+            <div class="chart-header">
+                <h3><i class="pi pi-chart-line"></i> Spend vs Revenue Trend</h3>
+                <p class="chart-subtitle">Daily performance comparison over time</p>
+            </div>
+            <div class="chart-container">
+                <p-chart type="line" [data]="chartData" [options]="chartOptions" [style]="{'height': '350px'}"></p-chart>
+            </div>
+        </p-card>
+
         <!-- Add Spend Form -->
         <p-card class="spend-card form-card" *ngIf="showAddForm">
             <div class="form-section">
@@ -150,8 +210,7 @@
                 <div class="filter-item">
                     <label>Platform</label>
                     <p-select [options]="platformOptions" [(ngModel)]="filterPlatform" placeholder="All Platforms"
-                        [showClear]="true" optionLabel="label" (onChange)="applyFilters()"
-                        appendTo="body">
+                        [showClear]="true" optionLabel="label" (onChange)="applyFilters()" appendTo="body">
                     </p-select>
                 </div>
 
@@ -161,7 +220,8 @@
                 </div>
 
                 <!-- Filtered Total Spend - Inline -->
-                <div class="filter-total" *ngIf="filterDateRange || filterAdvertiser || filterPartner || filterPlatform">
+                <div class="filter-total"
+                    *ngIf="filterDateRange || filterAdvertiser || filterPartner || filterPlatform">
                     <label>Filtered Total</label>
                     <div class="total-display">
                         <i class="pi pi-dollar"></i>

@@ -32,6 +32,7 @@ from .views_admin import (
     delete_advertiser_view,
     media_buyer_spend_view,
     delete_media_buyer_spend_view,
+    media_buyer_spend_analytics_view,
     partners_view,
     partner_detail_view,
 )
@@ -75,6 +76,7 @@ urlpatterns = [
     # Media Buyer Spend endpoints
     path("media-buyer-spend/", media_buyer_spend_view, name="media-buyer-spend"),
     path("media-buyer-spend/<int:pk>/delete/", delete_media_buyer_spend_view, name="media-buyer-spend-delete"),
+    path("media-buyer-spend/analytics/", media_buyer_spend_analytics_view, name="media-buyer-spend-analytics"),
     
     # Partner management endpoints
     path("admin/partners/", partners_view, name="admin-partners"),

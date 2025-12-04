@@ -58,4 +58,17 @@ export class MediaBuyerSpendService {
     deleteSpendRecord(id: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}${id}/delete/`);
     }
+
+    getSpendAnalytics(filters?: SpendFilters): Observable<any> {
+        let params = new HttpParams();
+
+        if (filters) {
+            if (filters.date_from) params = params.set('date_from', filters.date_from);
+            if (filters.date_to) params = params.set('date_to', filters.date_to);
+            if (filters.advertiser_id) params = params.set('advertiser_id', filters.advertiser_id.toString());
+            if (filters.partner_id) params = params.set('partner_id', filters.partner_id.toString());
+        }
+
+        return this.http.get(`${this.apiUrl}analytics/`, { params });
+    }
 }

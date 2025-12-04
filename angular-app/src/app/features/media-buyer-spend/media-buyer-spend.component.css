@@ -353,6 +353,194 @@
     font-weight: 500;
 }
 
+/* Performance Metrics Section */
+.performance-section {
+    margin-bottom: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: var(--brand-teal);
+}
+
+.performance-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 146, 146, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.metric-card:hover::before {
+    width: 6px;
+}
+
+.metric-revenue::before {
+    background: var(--success-green);
+}
+
+.metric-profit::before {
+    background: var(--brand-teal);
+}
+
+.metric-loss::before {
+    background: var(--error-red) !important;
+}
+
+.metric-roas::before {
+    background: var(--info-blue);
+}
+
+.metric-cpo::before {
+    background: var(--warning-orange);
+}
+
+.metric-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.metric-revenue .metric-icon {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    color: var(--success-green);
+}
+
+.metric-profit .metric-icon {
+    background: linear-gradient(135deg, rgba(0, 146, 146, 0.1) 0%, rgba(0, 146, 146, 0.05) 100%);
+    color: var(--brand-teal);
+}
+
+.metric-loss .metric-icon {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+    color: var(--error-red) !important;
+}
+
+.metric-roas .metric-icon {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+    color: var(--info-blue);
+}
+
+.metric-cpo .metric-icon {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    color: var(--warning-orange);
+}
+
+.metric-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.metric-loss .metric-value {
+    color: var(--error-red);
+}
+
+.metric-subtext {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+/* Chart Card */
+::ng-deep .chart-card.p-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(0, 146, 146, 0.08);
+    border-left: 4px solid var(--brand-teal);
+}
+
+::ng-deep .chart-card .p-card-body {
+    padding: 1.75rem;
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-header h3 i {
+    color: var(--brand-teal);
+}
+
+.chart-subtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.chart-container {
+    width: 100%;
+    min-height: 350px;
+}
+
 /* Card Styling */
 ::ng-deep .spend-card.p-card {
     background: white;
