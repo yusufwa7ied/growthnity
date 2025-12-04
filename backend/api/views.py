@@ -304,7 +304,6 @@ def kpis_view(request):
     total_payout_original = agg["total_payout_sum"] or 0
     
     # Check if we have MB records in the filtered data
-    is_media_buyer = company_user and company_user.department == "media_buying"
     mb_qs = qs.filter(partner__partner_type="MB")
     has_mb = mb_qs.exists()
     
@@ -2159,11 +2158,14 @@ def performance_analytics_view(request):
     mtd_sales = float(mtd_agg["total_sales"] or 0)
     mtd_payout = float(mtd_agg["total_payout"] or 0)
     
-    # Get MTD spend for media buyers
-    is_media_buyer = company_user and company_user.department == "media_buying"
-    if is_media_buyer:
-        # Filter spend by the exact date/advertiser/partner combinations in the filtered data
-        spend_keys = perf_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
+    # Check if we have MB records in the filtered data (same logic as KPIs view)
+    mb_qs = perf_qs.filter(partner__partner_type="MB")
+    has_mb = mb_qs.exists()
+    
+    # Get MTD spend if there are any MB records
+    if has_mb:
+        # Filter spend by the exact date/advertiser/partner combinations in the filtered MB data
+        spend_keys = mb_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
         
         from django.db.models import Q
         spend_conditions = Q()
@@ -2176,13 +2178,21 @@ def performance_analytics_view(request):
             mtd_spend = float(spend_agg["total_spend"] or 0)
         else:
             mtd_spend = 0
-        mtd_profit = mtd_revenue - mtd_spend
     else:
         mtd_spend = 0
-        mtd_profit = mtd_revenue - mtd_payout
+    
+    # Get non-MB payout
+    non_mb_qs = perf_qs.exclude(partner__partner_type="MB")
+    non_mb_agg = non_mb_qs.aggregate(total_payout=Sum("total_payout"))
+    non_mb_payout = float(non_mb_agg["total_payout"] or 0)
+    
+    # Total "payout" = MB spend + non-MB actual payout
+    total_mtd_payout = mtd_spend + non_mb_payout
+    mtd_profit = mtd_revenue - total_mtd_payout
     
     # Get today's performance
-    today_agg = perf_qs.filter(date=today).aggregate(
+    today_qs = perf_qs.filter(date=today)
+    today_agg = today_qs.aggregate(
         total_orders=Sum("total_orders"),
         total_revenue=Sum("total_revenue"),
         total_payout=Sum("total_payout")
@@ -2192,10 +2202,14 @@ def performance_analytics_view(request):
     today_revenue = float(today_agg["total_revenue"] or 0)
     today_payout = float(today_agg["total_payout"] or 0)
     
-    # Get today's spend for media buyers
-    if is_media_buyer:
-        # Filter spend by the exact advertiser/partner combinations in today's filtered data
-        today_keys = perf_qs.filter(date=today).values_list('advertiser_id', 'partner_id').distinct()
+    # Check if we have MB records in today's filtered data
+    today_mb_qs = today_qs.filter(partner__partner_type="MB")
+    today_has_mb = today_mb_qs.exists()
+    
+    # Get today's spend if there are any MB records
+    if today_has_mb:
+        # Filter spend by the exact advertiser/partner combinations in today's filtered MB data
+        today_keys = today_mb_qs.values_list('advertiser_id', 'partner_id').distinct()
         
         from django.db.models import Q
         today_spend_conditions = Q(date=today)
@@ -2210,9 +2224,17 @@ def performance_analytics_view(request):
             today_spend = float(today_spend_agg["total_spend"] or 0)
         else:
             today_spend = 0
-        today_profit = today_revenue - today_spend
     else:
-        today_profit = today_revenue - today_payout
+        today_spend = 0
+    
+    # Get today's non-MB payout
+    today_non_mb_qs = today_qs.exclude(partner__partner_type="MB")
+    today_non_mb_agg = today_non_mb_qs.aggregate(total_payout=Sum("total_payout"))
+    today_non_mb_payout = float(today_non_mb_agg["total_payout"] or 0)
+    
+    # Total today's "payout" = MB spend + non-MB actual payout
+    total_today_payout = today_spend + today_non_mb_payout
+    today_profit = today_revenue - total_today_payout
     
     # Get targets
     target_qs = DepartmentTarget.objects.filter(

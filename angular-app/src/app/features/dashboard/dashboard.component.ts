@@ -1020,7 +1020,7 @@ export class DashboardComponent implements OnInit {
             else if (this.user.department === 'influencer') partnerType = 'INF';
         }
 
-        // Format selected month as YYYY-MM
+        // Analytics always shows current month - Format selected month as YYYY-MM
         const monthStr = `${this.selectedMonth.getFullYear()}-${String(this.selectedMonth.getMonth() + 1).padStart(2, '0')}`;
 
         this.analyticsService.getPerformanceAnalytics(
@@ -1031,6 +1031,7 @@ export class DashboardComponent implements OnInit {
         ).subscribe({
             next: (data) => {
                 console.log('📊 Analytics data received:', data);
+                console.log('🔍 Filters applied - advertiser:', advertiserIds, 'partner:', partnerIds, 'type:', partnerType);
                 console.log('🔍 is_department_restricted:', data.is_department_restricted);
                 console.log('🔍 simplified_analytics:', data.simplified_analytics);
                 this.analytics = data;
