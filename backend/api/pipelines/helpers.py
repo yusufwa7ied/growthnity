@@ -151,7 +151,12 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
     # No history found - use current PartnerPayout or advertiser defaults
     if partner_id:
         try:
-            payout = PartnerPayout.objects.get(advertiser=advertiser, partner_id=partner_id)
+            # Convert partner_id to Python int for database query
+            partner_id_int = int(partner_id) if not pd.isna(partner_id) else None
+            print(f"🔍 DEBUG get_payout_rules_at_date: advertiser={advertiser.name}, partner_id={partner_id} (type={type(partner_id)}), partner_id_int={partner_id_int}")
+            
+            payout = PartnerPayout.objects.get(advertiser=advertiser, partner_id=partner_id_int)
+            print(f"✅ Found PartnerPayout: FTU={payout.ftu_payout}%, RTU={payout.rtu_payout}%")
             return {
                 'ftu_payout': payout.ftu_payout,
                 'rtu_payout': payout.rtu_payout,
@@ -160,6 +165,7 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
                 'rate_type': payout.rate_type
             }
         except PartnerPayout.DoesNotExist:
+            print(f"❌ PartnerPayout.DoesNotExist for partner_id={partner_id_int}")
             pass
     
     # Try default PartnerPayout
