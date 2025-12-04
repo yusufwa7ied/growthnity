@@ -44,7 +44,10 @@ class Command(BaseCommand):
         'noon_egypt': ('pipeline-data/noon_egypt.csv', 'run_noon'),
         'styli': ('pipeline-data/styli.csv', 'run_styli'),
         'namshi': ('pipeline-data/namshi.csv', 'run_nn'),
-        'rdel': ('pipeline-data/rdel.csv', 'run_rdel'),
+        'daham': ('pipeline-data/daham.csv', 'run_daham'),
+        'reef': ('pipeline-data/reef.csv', 'run_reef'),
+        'el_esaei_kids': ('pipeline-data/el_esaei_kids.csv', 'run_el_esaei'),
+        'elnahdi': ('pipeline-data/elnahdi.csv', 'run_elnahdi'),
     }
 
     def add_arguments(self, parser):
