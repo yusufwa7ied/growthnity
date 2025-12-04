@@ -339,8 +339,9 @@ class StyliTransaction(models.Model):
     # 3) Core metadata
     country = models.CharField(max_length=10)
     coupon = models.CharField(max_length=50)
-    user_type = models.CharField(max_length=10)  # FTU or RTU
+    user_type = models.CharField(max_length=10)  # FTU / RTU
 
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noonnamshi_txns")
     partner_name = models.CharField(max_length=150, null=True, blank=True)
     partner_type = models.CharField(max_length=20, null=True, blank=True)
 
@@ -388,7 +389,7 @@ class RDELTransaction(models.Model):
     user_type = models.CharField(max_length=10, default="RTU")  # FTU or RTU
 
     # 3) Partner & Advertiser
-    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noonnamshi_transactions")
     partner_name = models.CharField(max_length=150, null=True, blank=True)
     advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE)
     advertiser_name = models.CharField(max_length=150)
@@ -488,6 +489,7 @@ class NoonNamshiTransaction(models.Model):
     coupon = models.CharField(max_length=50)
     user_type = models.CharField(max_length=10)  # FTU / RTU
 
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_namshi_transactions")
     partner_name = models.CharField(max_length=150, null=True, blank=True)
     partner_type = models.CharField(max_length=20, null=True, blank=True)
 

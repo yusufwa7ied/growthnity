@@ -161,6 +161,9 @@ def calculate_noon_payouts(df, advertiser):
     
     if advertiser.name == "Namshi":
         # Use existing percentage-based logic for Namshi
+        print(f"🔍 DEBUG: Namshi df columns: {df.columns.tolist()}")
+        print(f"🔍 DEBUG: First row partner_id: {df.iloc[0].get('partner_id') if len(df) > 0 else 'NO ROWS'}")
+        print(f"🔍 DEBUG: First row partner_name: {df.iloc[0].get('partner_name') if len(df) > 0 else 'NO ROWS'}")
         return resolve_payouts_with_history(advertiser, df)
     
     # For Noon, apply bracket-based logic to ALL orders
@@ -424,6 +427,12 @@ def save_final_rows(df: pd.DataFrame, date_from: date, date_to: date) -> int:
             adv = Advertiser.objects.filter(name=r.get("advertiser_name")).first()
             currency = getattr(adv, "currency", "AED") if adv else "AED"
             rate_type = getattr(adv, "rev_rate_type", "percent") if adv else "percent"
+            
+            # Lookup partner by ID if available
+            partner_id = r.get("partner_id")
+            partner = None
+            if partner_id and not pd.isna(partner_id):
+                partner = Partner.objects.filter(id=int(partner_id)).first()
 
             objs.append(
                 NoonNamshiTransaction(
@@ -433,6 +442,7 @@ def save_final_rows(df: pd.DataFrame, date_from: date, date_to: date) -> int:
                     country=r.get("country"),
                     coupon=r.get("coupon"),
                     user_type=r.get("user_type"),
+                    partner=partner,
                     partner_name=r.get("partner_name"),
                     partner_type=r.get("partner_type"),
                     advertiser_name=r.get("advertiser_name") or (adv.name if adv else ""),
