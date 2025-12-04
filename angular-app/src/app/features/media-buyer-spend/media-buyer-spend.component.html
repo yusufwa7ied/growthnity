@@ -139,9 +139,37 @@
                     </p-select>
                 </div>
 
+                <div class="filter-item">
+                    <label>Partner</label>
+                    <p-select [options]="partners" [(ngModel)]="filterPartner" placeholder="All Partners"
+                        [filter]="true" [showClear]="true" optionLabel="label" (onChange)="applyFilters()"
+                        appendTo="body">
+                    </p-select>
+                </div>
+
+                <div class="filter-item">
+                    <label>Platform</label>
+                    <p-select [options]="platformOptions" [(ngModel)]="filterPlatform" placeholder="All Platforms"
+                        [showClear]="true" optionLabel="label" (onChange)="applyFilters()"
+                        appendTo="body">
+                    </p-select>
+                </div>
+
                 <div class="filter-actions">
                     <button pButton type="button" label="Clear All" (click)="clearFilters()"
                         class="p-button-secondary p-button-outlined"></button>
+                </div>
+            </div>
+
+            <!-- Filtered Total Spend Summary -->
+            <div class="filtered-summary" *ngIf="filterDateRange || filterAdvertiser || filterPartner || filterPlatform">
+                <div class="summary-card">
+                    <i class="pi pi-filter"></i>
+                    <div class="summary-content">
+                        <span class="summary-label">Filtered Total Spend</span>
+                        <span class="summary-value">${{getTotalSpend() | number:'1.2-2'}}</span>
+                        <span class="summary-count">{{spendRecords.length}} records</span>
+                    </div>
                 </div>
             </div>
 

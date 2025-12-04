@@ -67,6 +67,7 @@ export class MediaBuyerSpendComponent implements OnInit {
   filterDateRange: Date[] | null = null;
   filterAdvertiser: any = null;
   filterPartner: any = null;
+  filterPlatform: any = null;
 
   loading = false;
   saving = false;
@@ -277,12 +278,24 @@ export class MediaBuyerSpendComponent implements OnInit {
       filtered = filtered.filter(r => r.advertiser_id === this.filterAdvertiser.value.id);
     }
 
+    // Filter by partner
+    if (this.filterPartner && this.filterPartner.value) {
+      filtered = filtered.filter(r => r.partner_id === this.filterPartner.value.id);
+    }
+
+    // Filter by platform
+    if (this.filterPlatform && this.filterPlatform.value) {
+      filtered = filtered.filter(r => r.platform === this.filterPlatform.value);
+    }
+
     this.spendRecords = filtered;
   }
 
   clearFilters() {
     this.filterDateRange = null;
     this.filterAdvertiser = null;
+    this.filterPartner = null;
+    this.filterPlatform = null;
     this.spendRecords = [...this.allSpendRecords];
   }
 
