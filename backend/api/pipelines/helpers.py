@@ -114,12 +114,22 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
     else:
         transaction_datetime = transaction_date if transaction_date.tzinfo else make_aware(transaction_date)
     
-    # Try to find partner-specific historical rule
+    # Priority order for payout resolution:
+    # 1. Partner-specific PayoutRuleHistory (time-based changes)
+    # 2. Current PartnerPayout for this partner (active configuration)
+    # 3. Default PayoutRuleHistory (advertiser-wide time-based changes)
+    # 4. Default PartnerPayout (advertiser defaults)
+    # 5. Advertiser model defaults (last resort)
+    
     # Handle NA/NaN values in partner_id
     if partner_id is not None and not pd.isna(partner_id):
+        # Convert partner_id to Python int for database queries
+        partner_id_int = int(partner_id) if not pd.isna(partner_id) else None
+        
+        # 1. Try partner-specific historical rule
         history = PayoutRuleHistory.objects.filter(
             advertiser=advertiser,
-            partner_id=partner_id,
+            partner_id=partner_id_int,
             effective_date__lte=transaction_datetime
         ).order_by('-effective_date').first()
         
@@ -131,8 +141,21 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
                 'rtu_fixed_bonus': history.rtu_fixed_bonus or 0,
                 'rate_type': history.rate_type
             }
+        
+        # 2. Try current PartnerPayout for this partner
+        try:
+            payout = PartnerPayout.objects.get(advertiser=advertiser, partner_id=partner_id_int)
+            return {
+                'ftu_payout': payout.ftu_payout,
+                'rtu_payout': payout.rtu_payout,
+                'ftu_fixed_bonus': payout.ftu_fixed_bonus or 0,
+                'rtu_fixed_bonus': payout.rtu_fixed_bonus or 0,
+                'rate_type': payout.rate_type
+            }
+        except PartnerPayout.DoesNotExist:
+            pass
     
-    # Try to find default (partner=NULL) historical rule
+    # 3. Try default (partner=NULL) historical rule
     default_history = PayoutRuleHistory.objects.filter(
         advertiser=advertiser,
         partner__isnull=True,
@@ -147,26 +170,6 @@ def get_payout_rules_at_date(advertiser, partner_id, transaction_date):
             'rtu_fixed_bonus': default_history.rtu_fixed_bonus or 0,
             'rate_type': default_history.rate_type
         }
-    
-    # No history found - use current PartnerPayout or advertiser defaults
-    if partner_id:
-        try:
-            # Convert partner_id to Python int for database query
-            partner_id_int = int(partner_id) if not pd.isna(partner_id) else None
-            print(f"🔍 DEBUG get_payout_rules_at_date: advertiser={advertiser.name}, partner_id={partner_id} (type={type(partner_id)}), partner_id_int={partner_id_int}")
-            
-            payout = PartnerPayout.objects.get(advertiser=advertiser, partner_id=partner_id_int)
-            print(f"✅ Found PartnerPayout: FTU={payout.ftu_payout}%, RTU={payout.rtu_payout}%")
-            return {
-                'ftu_payout': payout.ftu_payout,
-                'rtu_payout': payout.rtu_payout,
-                'ftu_fixed_bonus': payout.ftu_fixed_bonus or 0,
-                'rtu_fixed_bonus': payout.rtu_fixed_bonus or 0,
-                'rate_type': payout.rate_type
-            }
-        except PartnerPayout.DoesNotExist:
-            print(f"❌ PartnerPayout.DoesNotExist for partner_id={partner_id_int}")
-            pass
     
     # Try default PartnerPayout
     try:
