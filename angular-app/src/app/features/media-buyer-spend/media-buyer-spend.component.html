@@ -159,16 +159,14 @@
                     <button pButton type="button" label="Clear All" (click)="clearFilters()"
                         class="p-button-secondary p-button-outlined"></button>
                 </div>
-            </div>
 
-            <!-- Filtered Total Spend Summary -->
-            <div class="filtered-summary" *ngIf="filterDateRange || filterAdvertiser || filterPartner || filterPlatform">
-                <div class="summary-card">
-                    <i class="pi pi-filter"></i>
-                    <div class="summary-content">
-                        <span class="summary-label">Filtered Total Spend</span>
-                        <span class="summary-value">${{getTotalSpend() | number:'1.2-2'}}</span>
-                        <span class="summary-count">{{spendRecords.length}} records</span>
+                <!-- Filtered Total Spend - Inline -->
+                <div class="filter-total" *ngIf="filterDateRange || filterAdvertiser || filterPartner || filterPlatform">
+                    <label>Filtered Total</label>
+                    <div class="total-display">
+                        <i class="pi pi-dollar"></i>
+                        <span class="total-amount">{{getTotalSpend() | number:'1.2-2'}}</span>
+                        <span class="total-records">({{spendRecords.length}} records)</span>
                     </div>
                 </div>
             </div>
