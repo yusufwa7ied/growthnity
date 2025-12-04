@@ -2430,7 +2430,7 @@ def performance_analytics_view(request):
             "orders": int(mtd_orders),
             "revenue": round(mtd_revenue, 2),
             "profit": round(mtd_profit, 2),
-            "payout": round(mtd_payout, 2),
+            "payout": round(total_mtd_payout, 2),  # Use total_mtd_payout (MB spend + non-MB payout)
             "spend": round(mtd_spend, 2)
         },
         
