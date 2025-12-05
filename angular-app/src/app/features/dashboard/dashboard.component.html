@@ -124,9 +124,7 @@
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons" type="kpi" [count]="4"></app-skeleton-loader>
       <app-skeleton-loader *ngIf="showSkeletons && (isAdmin || isOpsManager)" type="kpi"
-        [count]="4"></app-skeleton-loader>
-      <app-skeleton-loader *ngIf="showSkeletons && (isAdmin || isMediaBuyer)" type="kpi"
-        [count]="4"></app-skeleton-loader>
+        [count]="1"></app-skeleton-loader>
 
       <!-- KPI Cards -->
       <p-card *ngIf="kpis && !showSkeletons" styleClass="kpi-card">
@@ -232,7 +230,7 @@
           </div>
         </div>
       </p-card>
-      <p-card *ngIf="kpis && !showSkeletons && (isAdmin || isMediaBuyer)" styleClass="kpi-card">
+      <p-card *ngIf="kpis && !showSkeletons && (isAdmin || isOpsManager)" styleClass="kpi-card">
         <div class="kpi-content">
           <i class="pi pi-money-bill kpi-icon"></i>
           <div>
@@ -1027,13 +1025,13 @@
             </th>
             <th class="col-orders" pSortableColumn="orders">Orders <p-sortIcon field="orders"></p-sortIcon></th>
             <th class="col-amount" pSortableColumn="sales">Sales <p-sortIcon field="sales"></p-sortIcon></th>
-            <th *ngIf="isAdmin || isMediaBuyer" class="col-amount" pSortableColumn="revenue">Revenue <p-sortIcon
+            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="revenue">Revenue <p-sortIcon
                 field="revenue"></p-sortIcon></th>
-            <th *ngIf="isMediaBuyer" class="col-amount" pSortableColumn="spend">Spend <p-sortIcon
+            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="spend">Spend <p-sortIcon
                 field="spend"></p-sortIcon></th>
-            <th *ngIf="!isMediaBuyer" class="col-amount" pSortableColumn="payout">Payout <p-sortIcon
+            <th *ngIf="!isAdmin && !isOpsManager" class="col-amount" pSortableColumn="payout">Payout <p-sortIcon
                 field="payout"></p-sortIcon></th>
-            <th *ngIf="isAdmin || isMediaBuyer" class="col-amount" pSortableColumn="profit">Profit
+            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="profit">Profit
               <p-sortIcon field="profit"></p-sortIcon>
             </th>
           </tr>
@@ -1046,15 +1044,15 @@
             <td *ngIf="isAdmin" class="col-partner">{{ row.partner }}</td>
             <td class="col-orders">{{ row.orders }}</td>
             <td class="col-amount">${{ row.sales | number:'1.2-2' }}</td>
-            <td *ngIf="isAdmin || isMediaBuyer" class="col-amount">${{ row.revenue | number:'1.2-2' }}</td>
-            <td *ngIf="isMediaBuyer" class="col-amount">${{ row.spend | number:'1.2-2' }}</td>
-            <td *ngIf="!isMediaBuyer" class="col-amount">${{ row.payout | number:'1.2-2' }}</td>
-            <td *ngIf="isAdmin || isMediaBuyer" class="col-amount profit-cell">${{ row.profit | number:'1.2-2' }}</td>
+            <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.revenue | number:'1.2-2' }}</td>
+            <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.spend | number:'1.2-2' }}</td>
+            <td *ngIf="!isAdmin && !isOpsManager" class="col-amount">${{ row.payout | number:'1.2-2' }}</td>
+            <td *ngIf="isAdmin || isOpsManager" class="col-amount profit-cell">${{ row.profit | number:'1.2-2' }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td [attr.colspan]="isAdmin ? 9 : (isMediaBuyer ? 9 : 6)" class="text-center">
+            <td [attr.colspan]="isAdmin || isOpsManager ? 9 : 6" class="text-center">
               <div class="empty-message">
                 <i class="pi pi-inbox"></i>
                 <p>No data available</p>
