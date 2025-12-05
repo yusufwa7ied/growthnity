@@ -402,7 +402,7 @@ def media_buyer_spend_view(request):
         if partner_id:
             spends = spends.filter(partner_id=partner_id)
 
-        spends = spends.order_by('-date')[:100]  # Limit to 100 recent records
+        spends = spends.order_by('-date')
 
         data = [{
             'id': s.id,
