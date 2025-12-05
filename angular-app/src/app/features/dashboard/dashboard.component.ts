@@ -166,18 +166,12 @@ export class DashboardComponent implements OnInit {
             this.isMediaBuyer = true;  // Can also see daily spend
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;
-        } else if (this.role === 'OpsManager' && this.user?.department === 'media_buying') {
-            // OpsManager with media_buying department: Full department data + Coupons + Daily Spend
-            this.isAdmin = false;
-            this.isOpsManager = true;
-            this.isMediaBuyer = true;  // CAN access daily spend for media buying ops managers
-            this.isDepartmentRestricted = false;
-            this.canAccessCoupons = true;  // Can access coupons
         } else if (this.role === 'OpsManager' && this.user?.department) {
-            // OpsManager with other departments: Full department data + Coupons only
+            // OpsManager with any department: Full department data + Coupons
+            // All OpsManagers (media_buying, influencer, affiliate) see full KPIs and table columns
             this.isAdmin = false;
             this.isOpsManager = true;
-            this.isMediaBuyer = false;  // NO daily spend for other departments
+            this.isMediaBuyer = (this.user.department === 'media_buying');  // Only MB can access daily spend page
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = true;  // Can access coupons
         } else if (this.role === 'TeamMember' && this.user?.department === 'media_buying') {
