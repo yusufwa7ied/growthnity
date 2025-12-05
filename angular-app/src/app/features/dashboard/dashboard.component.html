@@ -193,7 +193,7 @@
         <div class="kpi-content">
           <i class="pi pi-wallet kpi-icon"></i>
           <div>
-            <h4>COST</h4>
+            <h4>PAYOUT</h4>
             <p class="kpi-value">${{ kpis.total_payout | number:'1.0-0' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.payout_change !== undefined"
               [class.trend-up]="kpis.trends?.payout_change! > 0" [class.trend-down]="kpis.trends?.payout_change! < 0"
