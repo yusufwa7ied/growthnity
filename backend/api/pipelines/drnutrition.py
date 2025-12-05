@@ -319,7 +319,7 @@ def push_drnut_to_performance(date_from, date_to):
         objs = []
         for key, g in groups.items():
 
-            advertiser = Advertiser.objects.filter(
+            adv_obj = Advertiser.objects.filter(
                 name=g["advertiser_name"]
             ).first()
 
@@ -334,7 +334,7 @@ def push_drnut_to_performance(date_from, date_to):
             objs.append(
                 CampaignPerformance(
                     date=g["date"],
-                    advertiser=advertiser,
+                    advertiser=adv_obj,
                     partner=partner,
                     coupon=coupon_obj,
                     geo=g["geo"],

@@ -274,14 +274,14 @@ def push_styli_to_performance(date_from, date_to):
 
         objs = []
         for key, g in groups.items():
-            advertiser = Advertiser.objects.filter(name=g["advertiser_name"]).first()
+            adv_obj = Advertiser.objects.filter(name=g["advertiser_name"]).first()
             partner = Partner.objects.filter(name=g["partner_name"]).first() if g["partner_name"] else None
             coupon_obj = Coupon.objects.filter(code=g["coupon"]).first()
 
             objs.append(
                 CampaignPerformance(
                     date=g["date"],
-                    advertiser=advertiser,
+                    advertiser=adv_obj,
                     partner=partner,
                     coupon=coupon_obj,
                     geo=g["geo"],
