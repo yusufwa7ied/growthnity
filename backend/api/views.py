@@ -1146,8 +1146,76 @@ def advertiser_detail_summary_view(request):
             total_payout=Sum('total_payout')
         )
         
-        # Calculate profit (revenue - payout)
-        total_profit = (kpis['total_revenue'] or 0) - (kpis['total_payout'] or 0)
+        # Calculate MB spend using same logic as main KPI view
+        mb_qs = qs.filter(partner__partner_type="MB")
+        has_mb = mb_qs.exists()
+        
+        if has_mb:
+            # Get the MB spend and calculate proportional allocation
+            spend_keys = mb_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
+            
+            from django.db.models import Q
+            spend_conditions = Q()
+            for date, adv_id, part_id in spend_keys:
+                spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
+            
+            if spend_conditions:
+                # Build spend lookup by (date, advertiser, partner)
+                mb_spend_lookup = {}
+                spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions)
+                for s in spend_qs:
+                    key = (s.date, s.advertiser_id, s.partner_id)
+                    mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
+                
+                # Get filtered MB revenue per key
+                mb_records = mb_qs.values('date', 'advertiser_id', 'partner_id').annotate(
+                    filtered_revenue=Sum('total_revenue')
+                )
+                
+                # Get total revenue per key (across all coupons for that date/advertiser/partner)
+                all_mb_qs = CampaignPerformance.objects.filter(
+                    partner__partner_type="MB",
+                    date__in=[k[0] for k in spend_keys],
+                    advertiser_id__in=[k[1] for k in spend_keys],
+                    partner_id__in=[k[2] for k in spend_keys]
+                )
+                total_revenue_per_key = {}
+                for r in all_mb_qs.values('date', 'advertiser_id', 'partner_id').annotate(
+                    total_rev=Sum('total_revenue')
+                ):
+                    key = (r['date'], r['advertiser_id'], r['partner_id'])
+                    total_revenue_per_key[key] = float(r['total_rev'] or 0)
+                
+                # Calculate proportionally allocated spend
+                mb_spend = 0
+                for r in mb_records:
+                    key = (r['date'], r['advertiser_id'], r['partner_id'])
+                    total_spend_for_key = mb_spend_lookup.get(key, 0)
+                    total_revenue_for_key = total_revenue_per_key.get(key, 1)
+                    filtered_revenue = float(r['filtered_revenue'] or 0)
+                    
+                    if total_revenue_for_key > 0:
+                        # Allocate spend proportionally based on filtered revenue
+                        mb_spend += total_spend_for_key * (filtered_revenue / total_revenue_for_key)
+                    else:
+                        mb_spend += 0
+            else:
+                mb_spend = 0
+        else:
+            mb_spend = 0
+        
+        # Get non-MB payout
+        non_mb_qs = qs.exclude(partner__partner_type="MB")
+        non_mb_agg = non_mb_qs.aggregate(total_payout=Sum("total_payout"))
+        non_mb_payout = float(non_mb_agg["total_payout"] or 0)
+        
+        # Total "payout" = MB spend + non-MB actual payout
+        total_payout = mb_spend + non_mb_payout
+        
+        # Calculate profit (revenue - payout where payout includes MB spend)
+        total_revenue = float(kpis['total_revenue'] or 0)
+        total_profit = total_revenue - total_payout
+        kpis['total_payout'] = total_payout
         kpis['total_profit'] = total_profit
 
         # Determine if user can see profit
