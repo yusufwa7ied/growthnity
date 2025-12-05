@@ -56,7 +56,8 @@
                 </div>
                 <div class="kpi-content">
                     <span class="kpi-label">Total Revenue</span>
-                    <span class="kpi-value" *ngIf="analytics">{{analytics.summary.total_revenue | number:'1.2-2'}}</span>
+                    <span class="kpi-value" *ngIf="analytics">{{analytics.summary.total_revenue |
+                        number:'1.2-2'}}</span>
                     <span class="kpi-value" *ngIf="!analytics">--</span>
                     <span class="kpi-subtext">USD</span>
                 </div>

@@ -265,7 +265,7 @@ export class MediaBuyerSpendComponent implements OnInit {
 
   loadAnalytics() {
     const filters: any = {};
-    
+
     if (this.filterDateRange && this.filterDateRange.length > 0) {
       filters.date_from = this.formatDate(this.filterDateRange[0]);
       if (this.filterDateRange[1]) {
@@ -325,7 +325,7 @@ export class MediaBuyerSpendComponent implements OnInit {
     }
 
     this.spendRecords = filtered;
-    
+
     // Reload analytics with new filters
     this.loadAnalytics();
   }
