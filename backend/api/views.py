@@ -751,6 +751,9 @@ def performance_table_view(request):
                 "net_profit": net_profit,
             })
         
+        # Sort by date descending (most recent first)
+        result.sort(key=lambda x: x['date'], reverse=True)
+        
         # Apply pagination for Admin/OpsManager
         paginator = PerformanceTablePagination()
         paginated_result = paginator.paginate_queryset(result, request)
@@ -877,6 +880,9 @@ def performance_table_view(request):
         
         result.append(row)
 
+    # Sort by date descending (most recent first)
+    result.sort(key=lambda x: x['date'], reverse=True)
+    
     # Apply pagination
     paginator = PerformanceTablePagination()
     paginated_result = paginator.paginate_queryset(result, request)
