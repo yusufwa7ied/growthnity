@@ -259,10 +259,10 @@ export class AdvertisersComponent implements OnInit {
         }
 
         // Separate new and existing rates
-        const newRates = this.cancellationRates.filter(r => 
+        const newRates = this.cancellationRates.filter(r =>
             r.start_date && r.cancellation_rate !== null && !r.id
         );
-        const existingRates = this.cancellationRates.filter(r => 
+        const existingRates = this.cancellationRates.filter(r =>
             r.start_date && r.cancellation_rate !== null && r.id
         );
 

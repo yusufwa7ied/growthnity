@@ -23,6 +23,27 @@ from datetime import datetime, date, timedelta
 from calendar import monthrange
 
 
+# Helper function to get cancellation rate for a specific advertiser and date
+def get_cancellation_rate_for_date(advertiser_id, target_date):
+    """
+    Get the applicable cancellation rate for an advertiser on a specific date.
+    Returns the cancellation rate as a Decimal, or 0 if no rate is found.
+    """
+    from .models import AdvertiserCancellationRate
+    
+    # Find rates where start_date <= target_date AND (end_date >= target_date OR end_date is NULL)
+    rate = AdvertiserCancellationRate.objects.filter(
+        advertiser_id=advertiser_id,
+        start_date__lte=target_date
+    ).filter(
+        Q(end_date__gte=target_date) | Q(end_date__isnull=True)
+    ).order_by('-start_date').first()
+    
+    if rate:
+        return rate.cancellation_rate
+    return Decimal('0')
+
+
 # Helper function to format advertiser name with geo for Noon
 def format_advertiser_name(advertiser_name, geo=None):
     """
@@ -671,6 +692,11 @@ def performance_table_view(request):
             # Now profit = revenue - payout works for all types
             profit = revenue - payout
             
+            # Calculate net payout (apply cancellation rate)
+            cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
+            net_payout = payout * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            net_profit = revenue - float(net_payout)
+            
             # Format advertiser name with geo for Noon
             campaign_display = format_advertiser_name(r["campaign"], r.get("geo"))
             
@@ -688,8 +714,11 @@ def performance_table_view(request):
                 "sales": float(r["total_sales"] or 0),
                 "revenue": revenue,
                 "payout": payout,
+                "net_payout": float(net_payout),
+                "cancellation_rate": float(cancellation_rate),
                 "spend": payout,  # Spend = cost for all types (MB spend or AFF/INF payout)
                 "profit": profit,
+                "net_profit": net_profit,
             })
         
         # Apply pagination for Admin/OpsManager
@@ -764,6 +793,10 @@ def performance_table_view(request):
             else:
                 allocated_spend = 0
             
+            # Calculate net payout
+            cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
+            net_payout = allocated_spend * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
             row = {
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
@@ -774,11 +807,18 @@ def performance_table_view(request):
                 "sales": float(r["total_sales"] or 0),
                 "revenue": company_revenue,
                 "payout": allocated_spend,
+                "net_payout": float(net_payout),
+                "cancellation_rate": float(cancellation_rate),
                 "spend": allocated_spend,
                 "profit": company_revenue - allocated_spend,
+                "net_profit": company_revenue - float(net_payout),
             }
         else:
             # For affiliates/influencers, show their payout (what they earn)
+            # Calculate net payout
+            cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
+            net_payout = partner_payout * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
             row = {
                 "date": r["date"],
                 "advertiser_id": r["advertiser_id"],
@@ -788,6 +828,8 @@ def performance_table_view(request):
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "payout": partner_payout,
+                "net_payout": float(net_payout),
+                "cancellation_rate": float(cancellation_rate),
                 "spend": partner_payout,  # Show their commission as spend (cost to company)
             }
         

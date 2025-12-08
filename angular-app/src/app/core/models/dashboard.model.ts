@@ -45,7 +45,9 @@ export interface KPIData {
   total_sales: number;
   total_revenue: number;
   total_payout: number;
+  total_net_payout?: number;
   total_profit: number;
+  total_net_profit?: number;
   records_count: number;
   trends?: {
     orders_change?: number;
@@ -53,6 +55,8 @@ export interface KPIData {
     revenue_change?: number;
     payout_change?: number;
     profit_change?: number;
+    net_payout_change?: number;
+    net_profit_change?: number;
   };
 }
 
@@ -76,7 +80,10 @@ export interface TableRow {
   revenue?: number;
   spend?: number;
   payout: number;
+  net_payout?: number;
+  cancellation_rate?: number;
   profit?: number;
+  net_profit?: number;
 }
 
 export interface PaginatedTableResponse {
