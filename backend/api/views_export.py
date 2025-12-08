@@ -113,7 +113,10 @@ def export_performance_report(request):
     # Apply other filters
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
-        applied_filters.append(f"Advertisers: {len(advertiser_ids)} selected")
+        # Get advertiser names
+        advertisers = Advertiser.objects.filter(id__in=advertiser_ids).values_list('name', flat=True)
+        advertiser_names = ', '.join(advertisers)
+        applied_filters.append(f"Advertisers: {advertiser_names}")
     
     if geos:
         qs = qs.filter(geo__in=geos)
@@ -262,11 +265,6 @@ def write_summary_section(writer, stats, filters, user, role, can_see_profit):
         
         writer.writerow(['Total Cost:', f"${stats.get('total_cost', 0):,.2f}"])
         writer.writerow(['Total Profit:', f"${stats.get('total_profit', 0):,.2f}"])
-        
-        revenue = float(stats['total_revenue'] or 0)
-        if revenue > 0:
-            margin = (stats.get('total_profit', 0) / revenue) * 100
-            writer.writerow(['Profit Margin:', f"{margin:.1f}%"])
     
     writer.writerow([])
     writer.writerow([])
