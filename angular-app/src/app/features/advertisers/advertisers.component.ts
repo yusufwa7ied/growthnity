@@ -227,11 +227,28 @@ export class AdvertisersComponent implements OnInit {
     removeCancellationRate(index: number) {
         const rate = this.cancellationRates[index];
         if (rate.id) {
-            this.error = 'Cannot delete existing rates. You can only add new ones.';
-            setTimeout(() => this.error = '', 3000);
-            return;
+            // Delete existing rate from database
+            if (confirm('Are you sure you want to delete this cancellation rate?')) {
+                this.loading = true;
+                this.advertiserService.deleteCancellationRate(rate.id).subscribe({
+                    next: () => {
+                        this.cancellationRates.splice(index, 1);
+                        this.loading = false;
+                        this.successMessage = 'Cancellation rate deleted successfully!';
+                        setTimeout(() => this.successMessage = '', 3000);
+                    },
+                    error: (err) => {
+                        this.error = 'Failed to delete cancellation rate.';
+                        this.loading = false;
+                        setTimeout(() => this.error = '', 3000);
+                        console.error(err);
+                    }
+                });
+            }
+        } else {
+            // Remove unsaved rate from UI
+            this.cancellationRates.splice(index, 1);
         }
-        this.cancellationRates.splice(index, 1);
     }
 
     saveCancellationRates() {
@@ -241,40 +258,63 @@ export class AdvertisersComponent implements OnInit {
             return;
         }
 
-        // Only save NEW rates (without id)
+        // Separate new and existing rates
         const newRates = this.cancellationRates.filter(r => 
             r.start_date && r.cancellation_rate !== null && !r.id
         );
+        const existingRates = this.cancellationRates.filter(r => 
+            r.start_date && r.cancellation_rate !== null && r.id
+        );
 
-        if (newRates.length === 0) {
-            this.error = 'No new cancellation rates to save. Existing rates are already saved and displayed above.';
-            setTimeout(() => this.error = '', 5000);
+        if (newRates.length === 0 && existingRates.length === 0) {
+            this.error = 'Please add at least one cancellation rate with valid data.';
+            setTimeout(() => this.error = '', 3000);
             return;
         }
 
         this.loading = true;
         this.error = '';
 
-        // Save each rate individually
         let completed = 0;
-        const total = newRates.length;
+        const total = newRates.length + existingRates.length;
 
+        // Create new rates
         newRates.forEach(rate => {
             this.advertiserService.createCancellationRate(this.editingId!, rate).subscribe({
                 next: () => {
                     completed++;
                     if (completed === total) {
                         this.loading = false;
-                        this.successMessage = `${total} cancellation rate(s) saved successfully!`;
+                        this.successMessage = `Cancellation rates saved successfully!`;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         setTimeout(() => this.successMessage = '', 3000);
-                        
-                        // Reload rates
                         this.loadCancellationRates(this.editingId!);
                     }
                 },
                 error: (err) => {
-                    this.error = 'Failed to save one or more cancellation rates. Please try again.';
+                    this.error = 'Failed to save cancellation rates.';
+                    this.loading = false;
+                    setTimeout(() => this.error = '', 3000);
+                    console.error(err);
+                }
+            });
+        });
+
+        // Update existing rates
+        existingRates.forEach(rate => {
+            this.advertiserService.updateCancellationRate(rate.id, rate).subscribe({
+                next: () => {
+                    completed++;
+                    if (completed === total) {
+                        this.loading = false;
+                        this.successMessage = `Cancellation rates saved successfully!`;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setTimeout(() => this.successMessage = '', 3000);
+                        this.loadCancellationRates(this.editingId!);
+                    }
+                },
+                error: (err) => {
+                    this.error = 'Failed to update cancellation rates.';
                     this.loading = false;
                     setTimeout(() => this.error = '', 3000);
                     console.error(err);

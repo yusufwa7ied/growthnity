@@ -103,4 +103,12 @@ export class AdvertiserService {
     createCancellationRate(advertiserId: number, rate: any): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}${advertiserId}/cancellation-rates/create/`, rate);
     }
+
+    updateCancellationRate(rateId: number, rate: any): Observable<any> {
+        return this.http.put<any>(`${environment.apiUrl}/admin/cancellation-rates/${rateId}/`, rate);
+    }
+
+    deleteCancellationRate(rateId: number): Observable<any> {
+        return this.http.delete<any>(`${environment.apiUrl}/admin/cancellation-rates/${rateId}/delete/`);
+    }
 }

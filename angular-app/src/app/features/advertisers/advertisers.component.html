@@ -255,37 +255,33 @@
                                 <h5>
                                     Rate Period #{{i + 1}}
                                     <span *ngIf="rate.id" class="saved-badge">✓ Saved</span>
+                                    <span *ngIf="!rate.id" class="new-badge">New</span>
                                 </h5>
                                 <button type="button" class="remove-btn" (click)="removeCancellationRate(i)"
-                                    title="Remove" [disabled]="rate.id">
+                                    [title]="rate.id ? 'Delete from database' : 'Remove from form'">
                                     <i class="pi pi-times"></i>
                                 </button>
                             </div>
                             <div class="rate-fields">
                                 <div class="rate-field">
                                     <label>Start Date <span class="required">*</span></label>
-                                    <input type="date" [(ngModel)]="rate.start_date" class="p-inputtext" 
-                                        [disabled]="rate.id" />
+                                    <input type="date" [(ngModel)]="rate.start_date" class="p-inputtext" />
                                 </div>
                                 <div class="rate-field">
                                     <label>End Date</label>
-                                    <input type="date" [(ngModel)]="rate.end_date" class="p-inputtext" 
-                                        [disabled]="rate.id" />
+                                    <input type="date" [(ngModel)]="rate.end_date" class="p-inputtext" />
                                     <small class="field-hint">Leave empty for ongoing</small>
                                 </div>
                                 <div class="rate-field">
                                     <label>Cancellation Rate (%) <span class="required">*</span></label>
                                     <input type="number" [(ngModel)]="rate.cancellation_rate" class="p-inputtext" 
-                                        step="0.01" min="0" max="100" placeholder="e.g., 15.5" 
-                                        [disabled]="rate.id" />
+                                        step="0.01" min="0" max="100" placeholder="e.g., 15.5" />
                                     <small class="field-hint">Net = Gross × (1 - rate/100)</small>
                                 </div>
                                 <div class="rate-field">
                                     <label>Notes</label>
                                     <input type="text" [(ngModel)]="rate.notes" class="p-inputtext" 
-                                        placeholder="Reason for rate change" 
-                                        [disabled]="rate.id" />
-                                    <small class="field-hint" *ngIf="rate.id">Existing rates are read-only</small>
+                                        placeholder="Reason for rate change" />
                                 </div>
                             </div>
                         </div>
