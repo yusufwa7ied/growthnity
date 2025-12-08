@@ -215,9 +215,6 @@
                         <td>{{ spend.amount_spent | number:'1.2-2' }}</td>
                         <td>{{ spend.currency }}</td>
                         <td class="actions">
-                            <button class="action-btn edit-btn" (click)="editSpendRecord(spend)">
-                                <i class="pi pi-pencil"></i>
-                            </button>
                             <button class="action-btn delete-btn" (click)="deleteSpendRecord(spend.id)">
                                 <i class="pi pi-trash"></i>
                             </button>
