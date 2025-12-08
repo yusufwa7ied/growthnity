@@ -985,34 +985,32 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
-    # Get team members from partners in the data, using AccountAssignments
-    # Extract unique partner IDs from the coupons that have data
+    # Get ALL team members (TeamMember role only, exclude OpsManagers)
+    # Filter by department if OpsManager has a department, otherwise show all
     team_members_list = []
-    partner_ids_with_data = set(partners_map.keys())
     
-    print(f"DEBUG dashboard_filter_options: Found {len(partner_ids_with_data)} partners with data")
+    # Start with all TeamMembers
+    team_members_query = CompanyUser.objects.filter(
+        role__name="TeamMember"
+    ).select_related('role', 'user').exclude(user__isnull=True)
     
-    if partner_ids_with_data:
-        # Get ALL company users who have assignments to these partners
-        # This includes everyone who works with influencer partners (for influencer dept OpsManager)
-        assignments = AccountAssignment.objects.filter(
-            partners__id__in=partner_ids_with_data
-        ).select_related("company_user__user", "company_user__role").distinct()
-        
-        seen_ids = set()
-        for assignment in assignments:
-            cu = assignment.company_user
-            if cu and cu.user and cu.id not in seen_ids:
-                # Only include TeamMember role users, exclude OpsManagers
-                if cu.role and cu.role.name == "TeamMember":
-                    seen_ids.add(cu.id)
-                    team_members_list.append({
-                        "company_user_id": cu.id,
-                        "username": cu.user.username,
-                        "role": cu.role.name
-                    })
-        
-        print(f"DEBUG dashboard_filter_options: Found {len(team_members_list)} TeamMembers with assignments")
+    # If OpsManager WITH department, filter by department
+    if company_user and department and role == "OpsManager":
+        team_members_query = team_members_query.filter(department=department)
+        print(f"DEBUG dashboard_filter_options: OpsManager with dept={department}, filtering TeamMembers")
+    else:
+        print(f"DEBUG dashboard_filter_options: Admin or OpsManager no-dept, showing all TeamMembers")
+    
+    team_members_count = team_members_query.count()
+    print(f"DEBUG dashboard_filter_options: Found {team_members_count} TeamMembers")
+    
+    # Build the list
+    for cu in team_members_query:
+        team_members_list.append({
+            "company_user_id": cu.id,
+            "username": cu.user.username,
+            "role": cu.role.name
+        })
     
     print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members")
 
