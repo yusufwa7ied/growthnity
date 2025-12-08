@@ -216,9 +216,14 @@ def run(date_from: date, date_to: date):
     
     # 4. Clean and normalize
     clean_df = clean_noon_gcc(raw_df)
+    print(f"✅ Cleaned {len(clean_df)} rows")
+    print(f"   Rows with valid created_at: {clean_df['created_at'].notna().sum()}")
+    print(f"   Rows with NA created_at: {clean_df['created_at'].isna().sum()}")
     
     # 5. Enrich with partner/coupon mapping
     enriched_df = enrich_df(clean_df, advertiser=advertiser)
+    print(f"   After enrich - Rows with valid created_at: {enriched_df['created_at'].notna().sum()}")
+    print(f"   After enrich - Rows with NA created_at: {enriched_df['created_at'].isna().sum()}")
     
     # 6. Split by date and apply appropriate logic
     old_rows = []
