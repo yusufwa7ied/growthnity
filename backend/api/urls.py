@@ -23,6 +23,7 @@ from .views import (
     token_refresh_view,
     team_members_list,
 )
+from .views_export import export_performance_report
 from . import views_tracking
 from .views_admin import (
     high_level_dashboard_view,
@@ -48,6 +49,7 @@ urlpatterns = [
     path("dashboard/graph-data/", graph_data_view),
     path("dashboard/high-level/", high_level_dashboard_view),
     path("dashboard/performance-table/", performance_table_view),
+    path("dashboard/export-report/", export_performance_report, name="export-performance-report"),
     path("dashboard/filter-options/", dashboard_filter_options_view),
     path("dashboard/pie-chart-data/", dashboard_pie_chart_data_view),
     path("dashboard/advertiser-detail-summary/", advertiser_detail_summary_view),

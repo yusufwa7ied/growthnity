@@ -996,10 +996,14 @@
               </button>
             </div>
             <div class="export-buttons">
+              <button pButton type="button" icon="pi pi-download" label="Detailed Report" 
+                (click)="exportDetailedReport()"
+                class="p-button-sm p-button-outlined p-button-primary" 
+                pTooltip="Export detailed performance report with summary"></button>
               <button pButton type="button" icon="pi pi-file" label="CSV" (click)="exportToCSV()"
-                class="p-button-sm p-button-outlined" pTooltip="Export to CSV"></button>
+                class="p-button-sm p-button-outlined" pTooltip="Export current table to CSV"></button>
               <button pButton type="button" icon="pi pi-file-excel" label="Excel" (click)="exportToExcel()"
-                class="p-button-sm p-button-outlined p-button-success" pTooltip="Export to Excel"></button>
+                class="p-button-sm p-button-outlined p-button-success" pTooltip="Export current table to Excel"></button>
             </div>
           </div>
         </div>

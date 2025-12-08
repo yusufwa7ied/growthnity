@@ -1298,6 +1298,11 @@ export class DashboardComponent implements OnInit {
         this.router.navigate(['/media-buyer-spend']);
     }
 
+    exportDetailedReport(): void {
+        // Export detailed performance report with summary statistics
+        this.dashboardService.exportPerformanceReport(this.filters);
+    }
+
     refreshDashboard(): void {
         window.location.reload();
     }

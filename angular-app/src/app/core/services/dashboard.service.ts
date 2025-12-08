@@ -271,6 +271,15 @@ export class DashboardService {
     return params;
   }
 
+  // Export detailed performance report as CSV
+  exportPerformanceReport(filters: DashboardFilters): void {
+    const params = this.buildParams(filters);
+    const url = `${this.API_BASE_URL}/dashboard/export-report/?${params.toString()}`;
+    
+    // Open in new window to trigger download
+    window.open(url, '_blank');
+  }
+
   // Helper to build cache key from endpoint and filters
   private buildCacheKey(endpoint: string, filters: DashboardFilters): string {
     const filterParts = [
