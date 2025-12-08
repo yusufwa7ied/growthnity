@@ -199,8 +199,12 @@ def run(date_from: date, date_to: date):
     # 1. Fetch raw data
     raw_df = fetch_raw_data()
     
-    # 2. Filter to Noon orders only
-    raw_df = raw_df[raw_df["Advertiser"].astype(str).str.strip() == ADVERTISER_NAME]
+    # 2. Filter to Noon orders only (case-insensitive)
+    if "ADVERTISER" in raw_df.columns:
+        raw_df = raw_df[raw_df["ADVERTISER"].astype(str).str.strip().str.lower() == "noon"]
+    elif "Advertiser" in raw_df.columns:
+        raw_df = raw_df[raw_df["Advertiser"].astype(str).str.strip().str.lower() == "noon"]
+    
     print(f"📊 Filtered to {len(raw_df)} Noon GCC rows")
     
     if raw_df.empty:
@@ -277,18 +281,18 @@ def fetch_raw_data() -> pd.DataFrame:
 def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
     """Clean and normalize Noon GCC data."""
     df = df.rename(columns={
-        "Order Date": "created_at",
-        "Advertiser": "advertiser_name",
-        "Country": "country",
-        "Coupon Code": "coupon",
-        "Total orders": "total_orders",
-        "NON-PAYABLE Orders": "nonpayable_orders",
-        "Total Order Value": "total_value",
-        "FTU Orders": "ftu_orders_src",
-        "FTU Order Values": "ftu_value",
-        "RTU Orders": "rtu_orders_src",
-        "RTU Order Value": "rtu_value",
-        "Platform": "platform",
+        "ORDER DATE": "created_at",
+        "ADVERTISER": "advertiser_name",
+        "COUNTRY": "country",
+        "COUPON CODE": "coupon",
+        "TOTAL ORDERS": "total_orders",
+        "NON-PAYABLE ORDERS": "nonpayable_orders",
+        "TOTAL VALUE": "total_value",
+        "FTU ORDERS": "ftu_orders_src",
+        "FTU ORDER VALUE": "ftu_value",
+        "RTU ORDERS": "rtu_orders_src",
+        "RTU ORDER VALUE": "rtu_value",
+        "PLATFORM": "platform",
     })
 
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
