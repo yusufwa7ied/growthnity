@@ -40,10 +40,10 @@ class Command(BaseCommand):
     
     # Tab configuration: tab_name → (s3_key, pipeline_command)
     TAB_CONFIG = {
-        'noon_gcc': ('pipeline-data/noon_gcc.csv', 'run_noon'),
-        'noon_egypt': ('pipeline-data/noon_egypt.csv', 'run_noon'),
+        'noon_gcc': ('pipeline-data/noon_gcc.csv', 'run_noon_gcc'),
+        'noon_egypt': ('pipeline-data/noon_egypt.csv', 'run_noon_egypt'),
         'styli': ('pipeline-data/styli.csv', 'run_styli'),
-        'namshi': ('pipeline-data/namshi.csv', 'run_nn'),
+        'namshi': ('pipeline-data/namshi.csv', 'run_namshi'),
         'daham': ('pipeline-data/daham.csv', 'run_daham'),
         'reef': ('pipeline-data/reef.csv', 'run_reef'),
         'el_esaei_kids': ('pipeline-data/el_esaei_kids.csv', 'run_el_esaei'),
