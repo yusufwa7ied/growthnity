@@ -254,22 +254,31 @@ export class AdvertisersComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.advertiserService.saveCancellationRates(this.editingId, validRates).subscribe({
-            next: () => {
-                this.loading = false;
-                this.successMessage = 'Cancellation rates saved successfully!';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setTimeout(() => this.successMessage = '', 3000);
-                
-                // Reload rates
-                this.loadCancellationRates(this.editingId!);
-            },
-            error: (err) => {
-                this.error = 'Failed to save cancellation rates. Please try again.';
-                this.loading = false;
-                setTimeout(() => this.error = '', 3000);
-                console.error(err);
-            }
+        // Save each rate individually
+        let completed = 0;
+        const total = validRates.length;
+
+        validRates.forEach(rate => {
+            this.advertiserService.createCancellationRate(this.editingId!, rate).subscribe({
+                next: () => {
+                    completed++;
+                    if (completed === total) {
+                        this.loading = false;
+                        this.successMessage = 'Cancellation rates saved successfully!';
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setTimeout(() => this.successMessage = '', 3000);
+                        
+                        // Reload rates
+                        this.loadCancellationRates(this.editingId!);
+                    }
+                },
+                error: (err) => {
+                    this.error = 'Failed to save one or more cancellation rates. Please try again.';
+                    this.loading = false;
+                    setTimeout(() => this.error = '', 3000);
+                    console.error(err);
+                }
+            });
         });
     }
 

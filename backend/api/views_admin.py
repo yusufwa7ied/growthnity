@@ -356,6 +356,33 @@ def delete_advertiser_view(request, pk):
     return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_cancellation_rates_view(request, advertiser_id):
+    """Get all cancellation rates for an advertiser"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    if company_user.role.name not in ["Admin", "OpsManager"]:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        advertiser = Advertiser.objects.get(pk=advertiser_id)
+    except Advertiser.DoesNotExist:
+        return Response({"detail": "Advertiser not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    from .models import AdvertiserCancellationRate
+    from .serializers import AdvertiserCancellationRateSerializer
+    
+    rates = AdvertiserCancellationRate.objects.filter(advertiser=advertiser).order_by('-start_date')
+    serializer = AdvertiserCancellationRateSerializer(rates, many=True)
+    
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_cancellation_rate_view(request, advertiser_id):

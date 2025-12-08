@@ -100,7 +100,7 @@ export class AdvertiserService {
         return this.http.get<any[]>(`${this.apiUrl}${advertiserId}/cancellation-rates/`);
     }
 
-    saveCancellationRates(advertiserId: number, rates: any[]): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}${advertiserId}/cancellation-rates/`, { rates });
+    createCancellationRate(advertiserId: number, rate: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}${advertiserId}/cancellation-rates/create/`, rate);
     }
 }
