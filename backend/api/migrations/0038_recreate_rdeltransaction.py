@@ -8,7 +8,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0036_drop_rdeltransaction'),
+        ('api', '0037_advertisercancellationrate'),
     ]
 
     operations = [
