@@ -36,6 +36,9 @@ S3_EGYPT_KEY = settings.S3_PIPELINE_FILES["noon_egypt"]
 # Date cutoff for bracket-based logic
 BRACKET_START_DATE = datetime(2025, 11, 18).date()
 
+# Exchange rate for AED to USD
+AED_TO_USD = 0.27
+
 # Egypt Default Payouts (Bracket-based)
 EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 1": 0.20,   # $4.75 - $14.25
