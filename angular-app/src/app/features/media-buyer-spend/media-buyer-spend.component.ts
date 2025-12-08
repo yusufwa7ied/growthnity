@@ -321,7 +321,7 @@ export class MediaBuyerSpendComponent implements OnInit {
     const count = this.selectedRecords.length;
     if (confirm(`Are you sure you want to delete ${count} selected record(s)?`)) {
       this.deleting = true;
-      const ids = this.selectedRecords.map(r => r.id);
+      const ids = this.selectedRecords.map(r => r.id).filter((id): id is number => id !== undefined);
       
       this.spendService.bulkDeleteSpendRecords(ids).subscribe({
         next: () => {
