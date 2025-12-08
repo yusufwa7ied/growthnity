@@ -917,6 +917,18 @@
     gap: 1rem;
 }
 
+.saved-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    vertical-align: middle;
+}
+
 /* Bracket Badge Styling */
 .bracket-badge {
     display: inline-block;

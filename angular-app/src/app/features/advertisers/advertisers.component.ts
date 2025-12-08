@@ -241,13 +241,14 @@ export class AdvertisersComponent implements OnInit {
             return;
         }
 
-        const validRates = this.cancellationRates.filter(r => 
+        // Only save NEW rates (without id)
+        const newRates = this.cancellationRates.filter(r => 
             r.start_date && r.cancellation_rate !== null && !r.id
         );
 
-        if (validRates.length === 0) {
-            this.error = 'Please add at least one valid cancellation rate';
-            setTimeout(() => this.error = '', 3000);
+        if (newRates.length === 0) {
+            this.error = 'No new cancellation rates to save. Existing rates are already saved and displayed above.';
+            setTimeout(() => this.error = '', 5000);
             return;
         }
 
@@ -256,15 +257,15 @@ export class AdvertisersComponent implements OnInit {
 
         // Save each rate individually
         let completed = 0;
-        const total = validRates.length;
+        const total = newRates.length;
 
-        validRates.forEach(rate => {
+        newRates.forEach(rate => {
             this.advertiserService.createCancellationRate(this.editingId!, rate).subscribe({
                 next: () => {
                     completed++;
                     if (completed === total) {
                         this.loading = false;
-                        this.successMessage = 'Cancellation rates saved successfully!';
+                        this.successMessage = `${total} cancellation rate(s) saved successfully!`;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         setTimeout(() => this.successMessage = '', 3000);
                         
