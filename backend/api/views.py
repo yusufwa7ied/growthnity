@@ -1982,15 +1982,18 @@ def team_members_list(request):
                 "influencer": "INF"
             }
             partner_type = dept_to_partner_type.get(filter_dept)
+            print(f"DEBUG team_members_list: filter_dept={filter_dept}, partner_type={partner_type}")
             
             if partner_type:
                 # Get all partners of this type
-                partner_ids = Partner.objects.filter(partner_type=partner_type).values_list("id", flat=True)
+                partner_ids = list(Partner.objects.filter(partner_type=partner_type).values_list("id", flat=True))
+                print(f"DEBUG team_members_list: Found {len(partner_ids)} partners with type {partner_type}")
                 
                 # Get all AccountAssignments for these partners
                 assignments = AccountAssignment.objects.filter(
                     partners__id__in=partner_ids
                 ).select_related("company_user__user").distinct()
+                print(f"DEBUG team_members_list: Found {assignments.count()} assignments")
                 
                 # Extract unique company_users from assignments
                 team_members = []
@@ -2005,6 +2008,7 @@ def team_members_list(request):
                             "user__first_name": cu.user.first_name,
                             "user__last_name": cu.user.last_name
                         })
+                print(f"DEBUG team_members_list: Returning {len(team_members)} unique team members")
             else:
                 # Fallback to department-based filtering
                 team_members = CompanyUser.objects.filter(
