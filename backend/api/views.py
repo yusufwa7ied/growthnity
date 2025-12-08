@@ -328,10 +328,9 @@ def kpis_view(request):
     mb_qs = qs.filter(partner__partner_type="MB")
     has_mb = mb_qs.exists()
     
-    # Get MB spend if there are any MB records
+    # Get ACTUAL MB spend from MediaBuyerDailySpend table (no proportional allocation)
     if has_mb:
-        # Get the MB spend and calculate proportional allocation
-        # if filters include specific coupons (same logic as table view)
+        # Get unique date/advertiser/partner combinations from filtered CampaignPerformance
         spend_keys = mb_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
         
         from django.db.models import Q
@@ -340,49 +339,24 @@ def kpis_view(request):
             spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
         
         if spend_conditions:
-            # Build spend lookup by (date, advertiser, partner)
+            # Get total actual spend for these keys (no allocation)
+            mb_spend_agg = MediaBuyerDailySpend.objects.filter(spend_conditions).aggregate(
+                total=Sum('amount_spent')
+            )
+            mb_spend = float(mb_spend_agg['total'] or 0)
+            
+            # Also build lookup for net payout calculation later
             mb_spend_lookup = {}
             spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions)
             for s in spend_qs:
                 key = (s.date, s.advertiser_id, s.partner_id)
                 mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
-            
-            # Get filtered MB revenue per key
-            mb_records = mb_qs.values('date', 'advertiser_id', 'partner_id').annotate(
-                filtered_revenue=Sum('total_revenue')
-            )
-            
-            # Get total revenue per key (across all coupons for that date/advertiser/partner)
-            all_mb_qs = CampaignPerformance.objects.filter(
-                partner__partner_type="MB",
-                date__in=[k[0] for k in spend_keys],
-                advertiser_id__in=[k[1] for k in spend_keys],
-                partner_id__in=[k[2] for k in spend_keys]
-            )
-            total_revenue_per_key = {}
-            for r in all_mb_qs.values('date', 'advertiser_id', 'partner_id').annotate(
-                total_rev=Sum('total_revenue')
-            ):
-                key = (r['date'], r['advertiser_id'], r['partner_id'])
-                total_revenue_per_key[key] = float(r['total_rev'] or 0)
-            
-            # Calculate proportionally allocated spend
-            mb_spend = 0
-            for r in mb_records:
-                key = (r['date'], r['advertiser_id'], r['partner_id'])
-                total_spend_for_key = mb_spend_lookup.get(key, 0)
-                total_revenue_for_key = total_revenue_per_key.get(key, 1)
-                filtered_revenue = float(r['filtered_revenue'] or 0)
-                
-                if total_revenue_for_key > 0:
-                    # Allocate spend proportionally based on filtered revenue
-                    mb_spend += total_spend_for_key * (filtered_revenue / total_revenue_for_key)
-                else:
-                    mb_spend += 0
         else:
             mb_spend = 0
+            mb_spend_lookup = {}
     else:
         mb_spend = 0
+        mb_spend_lookup = {}
     
     # Get non-MB payout
     non_mb_qs = qs.exclude(partner__partner_type="MB")
@@ -395,24 +369,30 @@ def kpis_view(request):
     # Profit = revenue - payout (where payout includes MB spend)
     total_profit = float(total_revenue) - total_payout
     
-    # Calculate net payout by applying cancellation rates to each record
+    # Calculate net payout by applying cancellation rates
+    # For MB: use actual spend from lookup (divide equally if multiple coupons share same key)
+    # For AFF/INF: use actual payout from CampaignPerformance
     total_net_payout = Decimal('0')
-    for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout', 'total_revenue'):
+    
+    # Get unique keys and count how many records share each key for MB
+    mb_key_counts = {}
+    if has_mb:
+        for record in mb_qs.values('date', 'advertiser_id', 'partner_id'):
+            key = (record['date'], record['advertiser_id'], record['partner_id'])
+            mb_key_counts[key] = mb_key_counts.get(key, 0) + 1
+    
+    for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout'):
         # Get cancellation rate for this record
         cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
         
         # Determine the payout for this record
         if record['partner__partner_type'] == 'MB':
-            # For MB, need to get allocated spend
+            # For MB, use actual spend divided by number of records sharing this key
             key = (record['date'], record['advertiser_id'], record['partner_id'])
             if has_mb and key in mb_spend_lookup:
                 total_spend_for_key = mb_spend_lookup.get(key, 0)
-                total_revenue_for_key = total_revenue_per_key.get(key, 1)
-                record_revenue = float(record['total_revenue'] or 0)
-                if total_revenue_for_key > 0:
-                    record_payout = total_spend_for_key * (record_revenue / total_revenue_for_key)
-                else:
-                    record_payout = 0
+                num_records = mb_key_counts.get(key, 1)
+                record_payout = total_spend_for_key / num_records
             else:
                 record_payout = 0
         else:
