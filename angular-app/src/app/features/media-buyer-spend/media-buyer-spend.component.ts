@@ -361,8 +361,9 @@ export class MediaBuyerSpendComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('logged_user');
     this.router.navigate(['/login']);
   }
 

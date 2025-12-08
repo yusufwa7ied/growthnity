@@ -274,7 +274,7 @@ export class DashboardService {
   // Export detailed performance report as CSV
   exportPerformanceReport(filters: DashboardFilters): void {
     const params = this.buildParams(filters);
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('auth_token');
     const url = `${this.API_BASE_URL}/dashboard/export-report/?${params.toString()}`;
     
     // Create a temporary link with auth header via fetch and blob
