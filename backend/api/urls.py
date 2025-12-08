@@ -31,6 +31,9 @@ from .views_admin import (
     create_advertiser_view,
     update_advertiser_view,
     delete_advertiser_view,
+    create_cancellation_rate_view,
+    update_cancellation_rate_view,
+    delete_cancellation_rate_view,
     media_buyer_spend_view,
     delete_media_buyer_spend_view,
     media_buyer_spend_analytics_view,
@@ -67,6 +70,11 @@ urlpatterns = [
     path("admin/advertisers/create/", create_advertiser_view, name="admin-advertisers-create"),
     path("admin/advertisers/<int:pk>/", update_advertiser_view, name="admin-advertisers-update"),
     path("admin/advertisers/<int:pk>/delete/", delete_advertiser_view, name="admin-advertisers-delete"),
+    
+    # Cancellation rate endpoints
+    path("admin/advertisers/<int:advertiser_id>/cancellation-rates/", create_cancellation_rate_view, name="create-cancellation-rate"),
+    path("admin/cancellation-rates/<int:pk>/", update_cancellation_rate_view, name="update-cancellation-rate"),
+    path("admin/cancellation-rates/<int:pk>/delete/", delete_cancellation_rate_view, name="delete-cancellation-rate"),
     
     # Targets management endpoints
     path("targets/", targets_list, name="targets-list"),

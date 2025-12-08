@@ -136,6 +136,45 @@ class Advertiser(models.Model):
     def __str__(self):
         return self.name
 
+
+class AdvertiserCancellationRate(models.Model):
+    """
+    Tracks historical cancellation rates for each advertiser.
+    Used to calculate net payout from gross payout.
+    Net = Gross × (1 - cancellation_rate/100)
+    """
+    advertiser = models.ForeignKey(
+        Advertiser,
+        on_delete=models.CASCADE,
+        related_name="cancellation_rates"
+    )
+    start_date = models.DateField(help_text="Start date when this rate becomes effective")
+    end_date = models.DateField(null=True, blank=True, help_text="End date (null = ongoing)")
+    cancellation_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        help_text="Cancellation percentage (e.g., 15.00 for 15%)"
+    )
+    notes = models.TextField(blank=True, help_text="Reason for rate change or additional info")
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_cancellation_rates"
+    )
+
+    class Meta:
+        ordering = ['-start_date']
+        verbose_name = "Advertiser Cancellation Rate"
+        verbose_name_plural = "Advertiser Cancellation Rates"
+
+    def __str__(self):
+        end = self.end_date.strftime('%Y-%m-%d') if self.end_date else 'Ongoing'
+        return f"{self.advertiser.name}: {self.cancellation_rate}% ({self.start_date} to {end})"
+
+
 class AdvertiserRate(models.Model):
     USER_TYPE_CHOICES = [
         ("FTU", "First Time User"),

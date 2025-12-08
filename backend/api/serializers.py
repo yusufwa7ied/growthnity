@@ -1,6 +1,6 @@
 from rest_framework import serializers # type: ignore
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer # type: ignore
-from .models import Advertiser, Partner, PartnerPayout, DepartmentTarget
+from .models import Advertiser, Partner, PartnerPayout, DepartmentTarget, AdvertiserCancellationRate
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
@@ -16,6 +16,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         # data contains 'access' and 'refresh' tokens
         return data
+
+class AdvertiserCancellationRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdvertiserCancellationRate
+        fields = [
+            "id", "advertiser", "start_date", "end_date", 
+            "cancellation_rate", "notes", "created_at"
+        ]
+        read_only_fields = ["created_at"]
 
 class PartnerPayoutSerializer(serializers.ModelSerializer):
     partner_id = serializers.IntegerField(source='partner.id', read_only=True)
@@ -36,6 +45,7 @@ class AdvertiserSerializer(serializers.ModelSerializer):
 
 class AdvertiserDetailSerializer(serializers.ModelSerializer):
     partner_payouts = PartnerPayoutSerializer(source='payouts', many=True, read_only=True)
+    cancellation_rates = AdvertiserCancellationRateSerializer(many=True, read_only=True)
     
     class Meta:
         model = Advertiser
@@ -45,7 +55,7 @@ class AdvertiserDetailSerializer(serializers.ModelSerializer):
             "currency", "exchange_rate", "default_payout_rate_type",
             "default_ftu_payout", "default_rtu_payout", 
             "default_ftu_fixed_bonus", "default_rtu_fixed_bonus",
-            "partner_payouts"
+            "partner_payouts", "cancellation_rates"
         ]
     
     def update(self, instance, validated_data):

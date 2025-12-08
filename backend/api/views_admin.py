@@ -8,8 +8,8 @@ from rest_framework import status# type: ignore
 from django.db.models import Sum, Count, Q
 from django.db import transaction
 
-from .models import Advertiser, CampaignPerformance, MediaBuyerDailySpend, DepartmentTarget, CompanyUser, Partner, PartnerPayout, Coupon
-from .serializers import AdvertiserDetailSerializer, PartnerSerializer
+from .models import Advertiser, CampaignPerformance, MediaBuyerDailySpend, DepartmentTarget, CompanyUser, Partner, PartnerPayout, Coupon, AdvertiserCancellationRate
+from .serializers import AdvertiserDetailSerializer, PartnerSerializer, AdvertiserCancellationRateSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -353,6 +353,100 @@ def delete_advertiser_view(request, pk):
         return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
     advertiser.delete()
+    return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_cancellation_rate_view(request, advertiser_id):
+    """Create a new cancellation rate for an advertiser"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    if company_user.role.name not in ["Admin", "OpsManager"]:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        advertiser = Advertiser.objects.get(pk=advertiser_id)
+    except Advertiser.DoesNotExist:
+        return Response({"detail": "Advertiser not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    from .models import AdvertiserCancellationRate
+    from .serializers import AdvertiserCancellationRateSerializer
+    
+    data = request.data.copy()
+    data['advertiser'] = advertiser_id
+    
+    serializer = AdvertiserCancellationRateSerializer(data=data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Save with created_by
+    cancellation_rate = serializer.save(created_by=user)
+    
+    return Response(
+        AdvertiserCancellationRateSerializer(cancellation_rate).data,
+        status=status.HTTP_201_CREATED
+    )
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_cancellation_rate_view(request, pk):
+    """Update a cancellation rate"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    if company_user.role.name not in ["Admin", "OpsManager"]:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import AdvertiserCancellationRate
+    from .serializers import AdvertiserCancellationRateSerializer
+    
+    try:
+        cancellation_rate = AdvertiserCancellationRate.objects.get(pk=pk)
+    except AdvertiserCancellationRate.DoesNotExist:
+        return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AdvertiserCancellationRateSerializer(
+        cancellation_rate, 
+        data=request.data, 
+        partial=True
+    )
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer.save()
+    return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_cancellation_rate_view(request, pk):
+    """Delete a cancellation rate"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    if company_user.role.name not in ["Admin", "OpsManager"]:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import AdvertiserCancellationRate
+    
+    try:
+        cancellation_rate = AdvertiserCancellationRate.objects.get(pk=pk)
+    except AdvertiserCancellationRate.DoesNotExist:
+        return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    cancellation_rate.delete()
     return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 

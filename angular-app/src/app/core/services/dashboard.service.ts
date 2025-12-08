@@ -276,7 +276,7 @@ export class DashboardService {
     const params = this.buildParams(filters);
     const token = localStorage.getItem('auth_token');
     const url = `${this.API_BASE_URL}/dashboard/export-report/?${params.toString()}`;
-    
+
     // Create a temporary link with auth header via fetch and blob
     fetch(url, {
       method: 'GET',
@@ -284,21 +284,21 @@ export class DashboardService {
         'Authorization': `Bearer ${token}`
       }
     })
-    .then(response => response.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `performance_report_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    })
-    .catch(error => {
-      console.error('Export failed:', error);
-      alert('Failed to export report. Please try again.');
-    });
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `performance_report_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error('Export failed:', error);
+        alert('Failed to export report. Please try again.');
+      });
   }
 
   // Helper to build cache key from endpoint and filters

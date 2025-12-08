@@ -95,4 +95,12 @@ export class AdvertiserService {
     getCoupons(): Observable<any[]> {
         return this.http.get<any[]>(`${environment.apiUrl}/coupons/`);
     }
+
+    getCancellationRates(advertiserId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}${advertiserId}/cancellation-rates/`);
+    }
+
+    saveCancellationRates(advertiserId: number, rates: any[]): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}${advertiserId}/cancellation-rates/`, { rates });
+    }
 }

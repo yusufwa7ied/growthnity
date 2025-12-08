@@ -852,6 +852,71 @@
     font-size: 0.875rem;
 }
 
+/* Cancellation Rates Section */
+.cancellation-rates-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.add-rate-btn {
+    align-self: flex-start;
+    font-weight: 600;
+}
+
+.cancellation-rate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cancellation-rate-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1.25rem;
+}
+
+.rate-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.rate-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--brand-teal);
+}
+
+.rate-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.rate-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rate-field label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.rate-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
 /* Bracket Badge Styling */
 .bracket-badge {
     display: inline-block;

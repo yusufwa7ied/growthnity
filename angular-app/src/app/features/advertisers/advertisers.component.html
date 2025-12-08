@@ -234,6 +234,62 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="section-divider" *ngIf="editingId"></div>
+
+                <div class="form-section-header full-width" *ngIf="editingId">
+                    <h4><i class="pi pi-percentage"></i> Cancellation Rates</h4>
+                    <p class="section-description">
+                        Configure cancellation rates to calculate net payouts (gross payout × (1 - cancellation rate))
+                    </p>
+                </div>
+
+                <div class="cancellation-rates-section full-width" *ngIf="editingId">
+                    <button type="button" class="p-button p-button-outlined add-rate-btn" (click)="addCancellationRate()">
+                        <i class="pi pi-plus"></i> Add Cancellation Rate
+                    </button>
+
+                    <div class="cancellation-rate-list" *ngIf="cancellationRates.length > 0">
+                        <div class="cancellation-rate-item" *ngFor="let rate of cancellationRates; let i = index">
+                            <div class="rate-header">
+                                <h5>Rate Period #{{i + 1}}</h5>
+                                <button type="button" class="remove-btn" (click)="removeCancellationRate(i)"
+                                    title="Remove" [disabled]="rate.id">
+                                    <i class="pi pi-times"></i>
+                                </button>
+                            </div>
+                            <div class="rate-fields">
+                                <div class="rate-field">
+                                    <label>Start Date <span class="required">*</span></label>
+                                    <input type="date" [(ngModel)]="rate.start_date" class="p-inputtext" />
+                                </div>
+                                <div class="rate-field">
+                                    <label>End Date</label>
+                                    <input type="date" [(ngModel)]="rate.end_date" class="p-inputtext" />
+                                    <small class="field-hint">Leave empty for ongoing</small>
+                                </div>
+                                <div class="rate-field">
+                                    <label>Cancellation Rate (%) <span class="required">*</span></label>
+                                    <input type="number" [(ngModel)]="rate.cancellation_rate" class="p-inputtext" 
+                                        step="0.01" min="0" max="100" placeholder="e.g., 15.5" />
+                                    <small class="field-hint">Net = Gross × (1 - rate/100)</small>
+                                </div>
+                                <div class="rate-field">
+                                    <label>Notes</label>
+                                    <input type="text" [(ngModel)]="rate.notes" class="p-inputtext" 
+                                        placeholder="Reason for rate change" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rate-actions" *ngIf="cancellationRates.length > 0">
+                        <button type="button" class="p-button p-button-success" (click)="saveCancellationRates()"
+                            [disabled]="loading">
+                            <i class="pi pi-save"></i> Save Cancellation Rates
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="form-actions">

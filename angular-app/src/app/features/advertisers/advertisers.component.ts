@@ -48,6 +48,7 @@ export class AdvertisersComponent implements OnInit {
     defaultRtuFixedBonus: number | null = null;
     partnerPayouts: PartnerPayout[] = [];
     selectedAdvertiserForPayouts: number | null = null;
+    cancellationRates: any[] = [];
 
     constructor(
         private advertiserService: AdvertiserService,
@@ -130,6 +131,7 @@ export class AdvertisersComponent implements OnInit {
         this.defaultRtuFixedBonus = null;
         this.partnerPayouts = [];
         this.selectedAdvertiserForPayouts = null;
+        this.cancellationRates = [];
         this.error = '';
     }
 
@@ -209,6 +211,75 @@ export class AdvertisersComponent implements OnInit {
                 this.loading = false;
                 setTimeout(() => this.error = '', 3000);
                 console.error(err);
+            }
+        });
+    }
+
+    addCancellationRate() {
+        this.cancellationRates.push({
+            start_date: '',
+            end_date: '',
+            cancellation_rate: null,
+            notes: ''
+        });
+    }
+
+    removeCancellationRate(index: number) {
+        const rate = this.cancellationRates[index];
+        if (rate.id) {
+            this.error = 'Cannot delete existing rates. You can only add new ones.';
+            setTimeout(() => this.error = '', 3000);
+            return;
+        }
+        this.cancellationRates.splice(index, 1);
+    }
+
+    saveCancellationRates() {
+        if (!this.editingId) {
+            this.error = 'Please save the advertiser first';
+            setTimeout(() => this.error = '', 3000);
+            return;
+        }
+
+        const validRates = this.cancellationRates.filter(r => 
+            r.start_date && r.cancellation_rate !== null && !r.id
+        );
+
+        if (validRates.length === 0) {
+            this.error = 'Please add at least one valid cancellation rate';
+            setTimeout(() => this.error = '', 3000);
+            return;
+        }
+
+        this.loading = true;
+        this.error = '';
+
+        this.advertiserService.saveCancellationRates(this.editingId, validRates).subscribe({
+            next: () => {
+                this.loading = false;
+                this.successMessage = 'Cancellation rates saved successfully!';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => this.successMessage = '', 3000);
+                
+                // Reload rates
+                this.loadCancellationRates(this.editingId!);
+            },
+            error: (err) => {
+                this.error = 'Failed to save cancellation rates. Please try again.';
+                this.loading = false;
+                setTimeout(() => this.error = '', 3000);
+                console.error(err);
+            }
+        });
+    }
+
+    loadCancellationRates(advertiserId: number) {
+        this.advertiserService.getCancellationRates(advertiserId).subscribe({
+            next: (data) => {
+                this.cancellationRates = data;
+            },
+            error: (err) => {
+                console.error('Failed to load cancellation rates', err);
             }
         });
     }
@@ -310,6 +381,9 @@ export class AdvertisersComponent implements OnInit {
         this.defaultRtuFixedBonus = advertiser.default_rtu_fixed_bonus || null;
         this.partnerPayouts = advertiser.partner_payouts ? [...advertiser.partner_payouts] : [];
         this.showAddForm = true;
+
+        // Load cancellation rates
+        this.loadCancellationRates(advertiser.id);
 
         // Scroll to top so user sees the form
         window.scrollTo({ top: 0, behavior: 'smooth' });
