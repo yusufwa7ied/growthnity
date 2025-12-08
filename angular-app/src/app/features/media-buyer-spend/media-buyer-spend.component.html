@@ -69,7 +69,7 @@
             <div class="form-section">
                 <div class="form-header">
                     <h3>
-                        <i [class]="editingRecord ? 'pi pi-pencil' : 'pi pi-plus-circle'"></i> 
+                        <i [class]="editingRecord ? 'pi pi-pencil' : 'pi pi-plus-circle'"></i>
                         {{ editingRecord ? 'Edit Spend Record' : 'Add Daily Spend Record' }}
                     </h3>
                 </div>
@@ -77,9 +77,8 @@
                 <div class="form-grid">
                     <div class="form-field">
                         <label>{{ editingRecord ? 'Date' : 'Date Range' }} <span class="required">*</span></label>
-                        <p-datepicker [(ngModel)]="selectedDateRange" 
-                            [selectionMode]="editingRecord ? 'single' : 'range'" 
-                            dateFormat="yy-mm-dd"
+                        <p-datepicker [(ngModel)]="selectedDateRange"
+                            [selectionMode]="editingRecord ? 'single' : 'range'" dateFormat="yy-mm-dd"
                             [showIcon]="false" [showButtonBar]="true" [readonlyInput]="true">
                         </p-datepicker>
                     </div>
@@ -114,9 +113,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button pButton type="button" [label]="editingRecord ? 'Update' : 'Save Spend'" 
-                        icon="pi pi-check" (click)="saveSpendRecord()"
-                        [disabled]="saving" class="p-button-success"></button>
+                    <button pButton type="button" [label]="editingRecord ? 'Update' : 'Save Spend'" icon="pi pi-check"
+                        (click)="saveSpendRecord()" [disabled]="saving" class="p-button-success"></button>
                     <button pButton type="button" label="Cancel" (click)="resetForm(); showAddForm = false;"
                         class="p-button-secondary p-button-outlined"></button>
                 </div>

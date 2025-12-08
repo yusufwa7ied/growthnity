@@ -198,7 +198,9 @@ AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
 
 # S3 file paths for pipelines
 S3_PIPELINE_FILES = {
-    "noon_namshi": "pipeline-data/namshi.csv",
+    "namshi": "pipeline-data/namshi.csv",
+    "noon_gcc": "pipeline-data/noon_gcc.csv",
+    "noon_egypt": "pipeline-data/noon_egypt.csv",
     "styli": "pipeline-data/styli_raw_data.csv",
 }
 

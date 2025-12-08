@@ -1,4 +1,8 @@
-# backend/api/pipelines/noon_only.py
+# backend/api/pipelines/noon_egypt.py
+"""
+Pipeline for processing Noon EGYPT orders ONLY.
+Uses bracket-based payouts (already working).
+"""
 
 import pandas as pd
 from datetime import date, datetime
@@ -27,43 +31,12 @@ from api.services.s3_service import s3_service
 # ---------------------------------------------------
 
 ADVERTISER_NAME = "Noon"
-S3_GCC_KEY = "pipeline-data/noon_gcc.csv"
-S3_EGYPT_KEY = "pipeline-data/noon_egypt.csv"
+S3_EGYPT_KEY = settings.S3_PIPELINE_FILES["noon_egypt"]
 
 # Date cutoff for bracket-based logic
 BRACKET_START_DATE = datetime(2025, 11, 18).date()
 
-# Exchange rate for AED to USD (for pre-Nov 18 calculations)
-AED_TO_USD = 0.27
-
-# GCC Default Payouts (Post-Nov 18, Bracket-based)
-GCC_DEFAULT_PAYOUTS = {
-    "$1 Tier": 0.8,      # Bracket 1: <100 AED
-    "$2 Tier": 1.6,      # Bracket 2: <150 AED
-    "$3.5 Tier": 2.8,    # Bracket 3: <200 AED
-    "$5 Tier": 4.0,      # Bracket 4: <400 AED
-    "$7.5 Tier": 6.0,    # Bracket 5: >=400 AED
-}
-
-# GCC Special Payouts for Haron Ali & Mahmoud Houtan (Post-Nov 18 only)
-NOON_GCC_SPECIAL_PAYOUTS = {
-    "Haron Ali": {
-        "$1 Tier": 0.95,
-        "$2 Tier": 1.9,
-        "$3.5 Tier": 3.25,
-        "$5 Tier": 4.75,
-        "$7.5 Tier": 7.0,
-    },
-    "Mahmoud Houtan": {
-        "$1 Tier": 0.95,
-        "$2 Tier": 1.9,
-        "$3.5 Tier": 3.25,
-        "$5 Tier": 4.75,
-        "$7.5 Tier": 7.0,
-    }
-}
-
-# Egypt Default Payouts (Post-Nov 18, Bracket-based)
+# Egypt Default Payouts (Bracket-based)
 EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 1": 0.20,   # $4.75 - $14.25
     "Bracket 2": 0.55,   # $14.26 - $23.85
@@ -78,22 +51,6 @@ EGYPT_DEFAULT_PAYOUTS = {
 # ---------------------------------------------------
 # HELPER FUNCTIONS
 # ---------------------------------------------------
-
-def extract_tier_revenue(tier_str):
-    """
-    Extract revenue from GCC tier string.
-    Examples: "$1 Tier" → 1.0, "$3.5 Tier" → 3.5, "$7.5 Tier" → 7.5
-    """
-    if pd.isna(tier_str) or not tier_str:
-        return 0.0
-    
-    try:
-        # Remove "$" and " Tier", convert to float
-        value = tier_str.replace("$", "").replace(" Tier", "").strip()
-        return float(value)
-    except:
-        return 0.0
-
 
 def extract_bracket_number(bracket_str):
     """
@@ -126,127 +83,9 @@ def extract_bracket_revenue(bracket_str):
         return 0.0
 
 
-def get_special_payout(partner_name, tier_str, is_gcc, order_date):
-    """
-    Check if partner gets special payout for this tier.
-    Returns special payout amount or None if no special applies.
-    """
-    # No specials before Nov 18
-    if order_date < BRACKET_START_DATE:
-        return None
-    
-    # No specials for Egypt (currently)
-    if not is_gcc:
-        return None
-    
-    # Check if partner has special rates
-    if partner_name not in NOON_GCC_SPECIAL_PAYOUTS:
-        return None
-    
-    # Get special payout for this tier
-    return NOON_GCC_SPECIAL_PAYOUTS[partner_name].get(tier_str)
-
-
-def calculate_pre_nov18_revenue(ftu_value, rtu_value, currency="AED"):
-    """
-    Calculate revenue for pre-Nov 18 orders (percentage-based).
-    FTU: 3% of sales + 3 AED
-    RTU: 3% of sales
-    """
-    ftu_value = float(ftu_value or 0)
-    rtu_value = float(rtu_value or 0)
-    
-    # Revenue calculation
-    revenue_ftu = (ftu_value * 0.03) + (3 * AED_TO_USD if currency == "AED" else 0)
-    revenue_rtu = rtu_value * 0.03
-    
-    total_revenue = revenue_ftu + revenue_rtu
-    return round(total_revenue, 2)
-
-
-def calculate_pre_nov18_payout(ftu_value, rtu_value, currency="AED"):
-    """
-    Calculate payout for pre-Nov 18 orders (percentage-based).
-    FTU: 57.14% of revenue + 2 AED
-    RTU: 60% of revenue
-    """
-    ftu_value = float(ftu_value or 0)
-    rtu_value = float(rtu_value or 0)
-    
-    # First calculate revenue
-    revenue_ftu = (ftu_value * 0.03) + (3 * AED_TO_USD if currency == "AED" else 0)
-    revenue_rtu = rtu_value * 0.03
-    
-    # Then calculate payout
-    payout_ftu = (revenue_ftu * 0.5714) + (2 * AED_TO_USD if currency == "AED" else 0)
-    payout_rtu = revenue_rtu * 0.60
-    
-    total_payout = payout_ftu + payout_rtu
-    return round(total_payout, 2)
-
-
 # ---------------------------------------------------
 # CLEANING / NORMALIZATION
 # ---------------------------------------------------
-
-def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Clean GCC CSV data.
-    Expected columns: ORDER DATE, ADVERTISER, PLATFORM, COUNTRY, COUPON CODE, 
-                     TIER, TOTAL ORDERS, NON-PAYABLE ORDERS, TOTAL VALUE,
-                     FTU ORDERS, FTU ORDER VALUE, RTU ORDERS, RTU ORDER VALUE
-    """
-    print("🧹 Cleaning Noon GCC data...")
-    
-    df = df.rename(columns={
-        "ORDER DATE": "order_date",
-        "ADVERTISER": "advertiser",
-        "PLATFORM": "platform",
-        "COUNTRY": "country",
-        "COUPON CODE": "coupon_code",
-        "TIER": "tier",
-        "TOTAL ORDERS": "total_orders",
-        "NON-PAYABLE ORDERS": "non_payable_orders",
-        "TOTAL VALUE": "total_value",
-        "FTU ORDERS": "ftu_orders",
-        "FTU ORDER VALUE": "ftu_value",
-        "RTU ORDERS": "rtu_orders",
-        "RTU ORDER VALUE": "rtu_value",
-    })
-    
-    # Parse date
-    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce").dt.date
-    
-    # Numeric conversions
-    df["total_orders"] = pd.to_numeric(df["total_orders"], errors="coerce").fillna(0).astype(int)
-    df["non_payable_orders"] = pd.to_numeric(df["non_payable_orders"], errors="coerce").fillna(0).astype(int)
-    df["payable_orders"] = df["total_orders"] - df["non_payable_orders"]
-    
-    df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
-    df["ftu_orders"] = pd.to_numeric(df["ftu_orders"], errors="coerce").fillna(0).astype(int)
-    df["ftu_value"] = pd.to_numeric(df["ftu_value"], errors="coerce").fillna(0)
-    df["rtu_orders"] = pd.to_numeric(df["rtu_orders"], errors="coerce").fillna(0).astype(int)
-    df["rtu_value"] = pd.to_numeric(df["rtu_value"], errors="coerce").fillna(0)
-    
-    # String fields
-    df["coupon_code"] = df["coupon_code"].astype(str).str.strip()
-    df["tier"] = df["tier"].astype(str).str.strip()
-    df["platform"] = df["platform"].astype(str).str.strip()
-    df["country"] = df["country"].astype(str).str.strip()
-    
-    # Add region flags
-    df["is_gcc"] = True
-    df["region"] = "gcc"
-    
-    # Add created_at for enrichment (use order_date as datetime)
-    df["created_at"] = pd.to_datetime(df["order_date"])
-    
-    # Filter out zero orders
-    df = df[df["payable_orders"] > 0].copy()
-    
-    print(f"✅ Cleaned {len(df)} GCC rows")
-    return df
-
 
 def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -482,59 +321,14 @@ def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date,
 def run(date_from: date, date_to: date):
     """
     Main pipeline execution function.
-    Processes both GCC and Egypt data.
+    Processes ONLY Egypt data.
     """
     advertiser = Advertiser.objects.get(name=ADVERTISER_NAME)
     
-    print(f"🚀 Running Noon pipeline {date_from} → {date_to}")
+    print(f"🚀 Running Noon EGYPT pipeline {date_from} → {date_to}")
     print(f"📅 Bracket logic applies from: {BRACKET_START_DATE}")
     
     total_count = 0
-    
-    # ---------------------------------------------------
-    # PROCESS GCC DATA
-    # ---------------------------------------------------
-    try:
-        print("\n" + "="*60)
-        print("📍 PROCESSING NOON GCC DATA")
-        print("="*60)
-        
-        # Load from S3
-        print(f"📄 Loading GCC CSV from S3: {S3_GCC_KEY}")
-        gcc_df = s3_service.read_csv_to_df(S3_GCC_KEY)
-        print(f"✅ Loaded {len(gcc_df)} GCC rows")
-        
-        # Clean
-        gcc_clean = clean_noon_gcc(gcc_df)
-        
-        # Filter date range
-        gcc_clean = gcc_clean[
-            (gcc_clean["order_date"] >= date_from) & 
-            (gcc_clean["order_date"] <= date_to)
-        ].copy()
-        print(f"📊 Filtered to {len(gcc_clean)} GCC rows in date range")
-        
-        if len(gcc_clean) > 0:
-            # Add coupon column for enrichment (enrich_df expects "coupon")
-            gcc_clean["coupon"] = gcc_clean["coupon_code"]
-            
-            # Enrich with partners
-            gcc_enriched = enrich_df(gcc_clean, advertiser=advertiser)
-            
-            # Calculate financials
-            gcc_final = calculate_financials(gcc_enriched, advertiser)
-            
-            # Save
-            gcc_count = save_transactions(advertiser, gcc_final, date_from, date_to, "gcc")
-            total_count += gcc_count
-            print(f"✅ GCC: {gcc_count} transactions saved")
-        else:
-            print("⚠️  No GCC data in date range")
-    
-    except Exception as e:
-        print(f"⚠️  GCC processing failed: {e}")
-        import traceback
-        traceback.print_exc()
     
     # ---------------------------------------------------
     # PROCESS EGYPT DATA
@@ -590,7 +384,7 @@ def run(date_from: date, date_to: date):
     # SUMMARY
     # ---------------------------------------------------
     print("\n" + "="*60)
-    print(f"✅ Noon pipeline completed: {total_count} total transactions")
+    print(f"✅ Noon EGYPT pipeline completed: {total_count} total transactions")
     print("="*60)
     
     return total_count
