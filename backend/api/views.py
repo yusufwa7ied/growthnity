@@ -985,33 +985,37 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
-    # Get team members from the actual partners in the queryset (not from all possible partners)
-    # This ensures we only show team members who have data to display
+    # Get team members based on department (since AccountAssignments are not fully set up)
     team_members_list = []
     
-    # Extract partner IDs from the queryset data (partners that actually have performance data)
-    partner_ids_in_data = set(partners_map.keys())
-    print(f"DEBUG dashboard_filter_options: Found {len(partner_ids_in_data)} partners with performance data")
+    # Determine which department to filter by
+    if company_user and department and role == "OpsManager":
+        # OpsManager WITH department: get all CompanyUsers in that department
+        dept_filter = department
+        print(f"DEBUG dashboard_filter_options: OpsManager with department={department}")
+    else:
+        # Admin or OpsManager without department: get ALL CompanyUsers
+        dept_filter = None
+        print(f"DEBUG dashboard_filter_options: Admin or OpsManager no-dept, showing all team members")
     
-    if partner_ids_in_data:
-        # Get all AccountAssignments for partners that have data
-        assignments = AccountAssignment.objects.filter(
-            partners__id__in=partner_ids_in_data
-        ).select_related("company_user__user", "company_user__role").distinct()
-        print(f"DEBUG dashboard_filter_options: Found {assignments.count()} assignments for these partners")
-        
-        # Extract unique company_users from assignments
-        seen_ids = set()
-        for assignment in assignments:
-            cu = assignment.company_user
-            if cu.id not in seen_ids and cu.user:
-                seen_ids.add(cu.id)
-                team_members_list.append({
-                    "company_user_id": cu.id,
-                    "username": cu.user.username,
-                    "role": cu.role.name if cu.role else "Unknown"
-                })
-        print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} unique team members")
+    # Get CompanyUsers based on department filter
+    if dept_filter:
+        team_members_query = CompanyUser.objects.filter(department=dept_filter)
+    else:
+        team_members_query = CompanyUser.objects.all()
+    
+    team_members_query = team_members_query.select_related('role', 'user').exclude(user__isnull=True)
+    print(f"DEBUG dashboard_filter_options: Found {team_members_query.count()} CompanyUsers")
+    
+    # Build team members list
+    for cu in team_members_query:
+        team_members_list.append({
+            "company_user_id": cu.id,
+            "username": cu.user.username,
+            "role": cu.role.name if cu.role else "Unknown"
+        })
+    
+    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} unique team members")
 
     result = {
         "advertisers": list(advertisers_map.values()),
