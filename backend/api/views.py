@@ -832,7 +832,14 @@ def performance_table_view(request):
             
             # Calculate net payout
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = Decimal(str(allocated_spend)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
+            # Only calculate net values if there's a cancellation rate
+            if cancellation_rate > 0:
+                net_payout = Decimal(str(allocated_spend)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+                net_profit = company_revenue - float(net_payout)
+            else:
+                net_payout = None
+                net_profit = None
             
             row = {
                 "date": r["date"],
@@ -844,17 +851,22 @@ def performance_table_view(request):
                 "sales": float(r["total_sales"] or 0),
                 "revenue": company_revenue,
                 "payout": allocated_spend,
-                "net_payout": float(net_payout),
+                "net_payout": float(net_payout) if net_payout is not None else None,
                 "cancellation_rate": float(cancellation_rate),
                 "spend": allocated_spend,
                 "profit": company_revenue - allocated_spend,
-                "net_profit": company_revenue - float(net_payout),
+                "net_profit": net_profit,
             }
         else:
             # For affiliates/influencers, show their payout (what they earn)
             # Calculate net payout
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = Decimal(str(partner_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
+            # Only calculate net values if there's a cancellation rate
+            if cancellation_rate > 0:
+                net_payout = Decimal(str(partner_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            else:
+                net_payout = None
             
             row = {
                 "date": r["date"],
@@ -865,7 +877,7 @@ def performance_table_view(request):
                 "orders": int(r["total_orders"] or 0),
                 "sales": float(r["total_sales"] or 0),
                 "payout": partner_payout,
-                "net_payout": float(net_payout),
+                "net_payout": float(net_payout) if net_payout is not None else None,
                 "cancellation_rate": float(cancellation_rate),
                 "spend": partner_payout,  # Show their commission as spend (cost to company)
             }
