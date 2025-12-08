@@ -989,19 +989,15 @@ def dashboard_filter_options_view(request):
     # Get team members in same department (for OpsManager with department)
     team_members_list = []
     if company_user and department and role == "OpsManager":
-        # Get all CompanyUsers in the same department who have AccountAssignments
+        # Get ALL CompanyUsers in the same department (regardless of AccountAssignments)
+        # OpsManager should see all team members to monitor everyone
         team_members = CompanyUser.objects.filter(
             department=department
-        ).select_related('role', 'user').prefetch_related(
-            models.Prefetch(
-                'accountassignment_set',
-                queryset=AccountAssignment.objects.prefetch_related('partners')
-            )
-        )
+        ).select_related('role', 'user')
         
         for tm in team_members:
-            # Only include users who have account assignments
-            if tm.accountassignment_set.exists() and tm.user:
+            # Include all users with a valid user account
+            if tm.user:
                 team_members_list.append({
                     "company_user_id": tm.id,
                     "username": tm.user.username,
