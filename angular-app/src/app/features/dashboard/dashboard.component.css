@@ -2159,9 +2159,17 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.25rem;
   letter-spacing: -0.5px;
   line-height: 1.2;
+}
+
+.kpi-subvalue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.2px;
 }
 
 .kpi-trend {
