@@ -334,11 +334,13 @@ def enrich_df(df: pd.DataFrame, advertiser=None) -> pd.DataFrame:
                         df.at[idx, "partner_name"] = partner.name
                         df.at[idx, "partner_type"] = partner.partner_type
                 except Coupon.DoesNotExist:
-                    # Coupon not found in database, skip this row
-                    continue
-                except Exception:
-                    # Unexpected error during enrichment, skip this row
-                    continue
+                    # Coupon not found in database, but keep the row with current data
+                    # Just leave partner fields as NA
+                    pass
+                except Exception as e:
+                    # Unexpected error during enrichment, log and keep the row
+                    print(f"⚠️  Enrichment error for coupon {coupon_code}: {e}")
+                    pass
     else:
         # ⚠️ FALLBACK: If no date column, use current coupon assignment (old behavior)
         print("⚠️  No 'created_at' column - using current coupon assignments")
