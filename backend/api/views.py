@@ -390,38 +390,25 @@ def kpis_view(request):
     total_profit = float(total_revenue) - total_payout
     
     # Calculate net payout by applying cancellation rates
-    # For MB: use actual spend from lookup (divide equally if multiple coupons share same key)
+    # For MB: apply rates directly to MediaBuyerDailySpend records (no coupon filter)
     # For AFF/INF: use actual payout from CampaignPerformance
     total_net_payout = Decimal('0')
     
-    # Get unique keys and count how many records share each key for MB
-    mb_key_counts = {}
+    # Calculate net for MB spend (use spend_qs which already has correct filters)
     if has_mb:
-        for record in mb_qs.values('date', 'advertiser_id', 'partner_id'):
-            key = (record['date'], record['advertiser_id'], record['partner_id'])
-            mb_key_counts[key] = mb_key_counts.get(key, 0) + 1
+        for record in spend_qs.values('date', 'advertiser_id', 'amount_spent'):
+            cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+            spend_amount = Decimal(str(record['amount_spent'] or 0))
+            net_spend = spend_amount * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            total_net_payout += net_spend
     
-    for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout'):
-        # Get cancellation rate for this record
+    # Calculate net for AFF/INF payouts (from CampaignPerformance)
+    aff_inf_qs = qs.exclude(partner__partner_type='MB')
+    for record in aff_inf_qs.values('date', 'advertiser_id', 'total_payout'):
         cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
-        
-        # Determine the payout for this record
-        if record['partner__partner_type'] == 'MB':
-            # For MB, use actual spend divided by number of records sharing this key
-            key = (record['date'], record['advertiser_id'], record['partner_id'])
-            if has_mb and key in mb_spend_lookup:
-                total_spend_for_key = mb_spend_lookup.get(key, 0)
-                num_records = mb_key_counts.get(key, 1)
-                record_payout = total_spend_for_key / num_records
-            else:
-                record_payout = 0
-        else:
-            # For AFF/INF, use actual payout
-            record_payout = float(record['total_payout'] or 0)
-        
-        # Apply cancellation rate
-        net_payout_for_record = Decimal(str(record_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
-        total_net_payout += net_payout_for_record
+        payout_amount = Decimal(str(record['total_payout'] or 0))
+        net_payout = payout_amount * (Decimal('1') - (cancellation_rate / Decimal('100')))
+        total_net_payout += net_payout
     
     # Net profit = revenue - net payout
     total_net_profit = float(total_revenue) - float(total_net_payout)
