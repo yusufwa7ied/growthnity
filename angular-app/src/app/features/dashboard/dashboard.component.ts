@@ -13,6 +13,8 @@ import { MultiSelect } from 'primeng/multiselect';
 import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow, TeamMember } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
@@ -39,6 +41,8 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         InputText,
         TableModule,
         PaginatorModule,
+        ButtonModule,
+        TooltipModule,
         BaseChartDirective,
         MainHeaderComponent,
         SkeletonLoaderComponent,
