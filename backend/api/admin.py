@@ -13,16 +13,44 @@ from .models import (
     NoonTransaction,
     PayoutRuleHistory,
     RevenueRuleHistory,
+    AdvertiserCancellationRate,
 )
 from .models import StyliTransaction
 from django.utils import timezone
 
 @admin.register(Advertiser)
 class AdvertiserAdmin(ImportExportModelAdmin):
-    list_display = ("id", "name", "attribution")  # or any valid field that exists in your Advertiser model
+    list_display = (
+        "id", "name", "attribution", "rev_rate_type", 
+        "rev_ftu_rate", "rev_rtu_rate", "currency", "exchange_rate",
+        "default_payout_rate_type", "default_ftu_payout", "default_rtu_payout"
+    )
     search_fields = ("name", "attribution")
+    list_filter = ("attribution", "rev_rate_type", "currency", "default_payout_rate_type")
     list_per_page = 50
     ordering = ("name",)
+    readonly_fields = ("id",)
+    
+    fieldsets = (
+        ("Basic Information", {
+            "fields": ("id", "name", "attribution")
+        }),
+        ("Revenue Configuration", {
+            "fields": (
+                "rev_rate_type", "rev_ftu_rate", "rev_rtu_rate",
+                "rev_ftu_fixed_bonus", "rev_rtu_fixed_bonus"
+            )
+        }),
+        ("Currency", {
+            "fields": ("currency", "exchange_rate")
+        }),
+        ("Default Partner Payouts", {
+            "fields": (
+                "default_payout_rate_type", "default_ftu_payout", "default_rtu_payout",
+                "default_ftu_fixed_bonus", "default_rtu_fixed_bonus"
+            )
+        }),
+    )
     
     def save_model(self, request, obj, form, change):
         """Override save to create RevenueRuleHistory record when revenue fields change."""
@@ -42,6 +70,36 @@ class AdvertiserAdmin(ImportExportModelAdmin):
             assigned_by=request.user,
             notes=f"Updated via admin by {request.user.username}"
         )
+
+@admin.register(AdvertiserCancellationRate)
+class AdvertiserCancellationRateAdmin(ImportExportModelAdmin):
+    list_display = (
+        "id", "advertiser", "start_date", "end_date", 
+        "cancellation_rate", "created_by", "created_at"
+    )
+    search_fields = ("advertiser__name", "notes")
+    list_filter = ("advertiser", "start_date", "created_at")
+    list_per_page = 50
+    ordering = ("-start_date",)
+    readonly_fields = ("id", "created_at")
+    
+    fieldsets = (
+        ("Rate Information", {
+            "fields": ("id", "advertiser", "cancellation_rate")
+        }),
+        ("Date Range", {
+            "fields": ("start_date", "end_date")
+        }),
+        ("Additional Info", {
+            "fields": ("notes", "created_by", "created_at")
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        """Set created_by to current user if not set"""
+        if not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 @admin.register(CompanyRole)
 class CompanyRoleAdmin(ImportExportModelAdmin):
