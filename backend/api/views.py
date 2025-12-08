@@ -985,23 +985,41 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
-    # Get team members in same department (for OpsManager with department)
+    # Get team members based on AccountAssignments for OpsManager with department
     team_members_list = []
     if company_user and department and role == "OpsManager":
-        # Get ALL CompanyUsers in the same department (regardless of AccountAssignments)
-        # OpsManager should see all team members to monitor everyone
-        team_members = CompanyUser.objects.filter(
-            department=department
-        ).select_related('role', 'user')
+        # Map department to partner_type
+        dept_to_partner_type = {
+            "media_buying": "MB",
+            "affiliate": "AFF",
+            "influencer": "INF"
+        }
+        partner_type = dept_to_partner_type.get(department)
+        print(f"DEBUG dashboard_filter_options: department={department}, partner_type={partner_type}")
         
-        for tm in team_members:
-            # Include all users with a valid user account
-            if tm.user:
-                team_members_list.append({
-                    "company_user_id": tm.id,
-                    "username": tm.user.username,
-                    "role": tm.role.name if tm.role else "Unknown"
-                })
+        if partner_type:
+            # Get all partners of this type
+            partner_ids = list(Partner.objects.filter(partner_type=partner_type).values_list("id", flat=True))
+            print(f"DEBUG dashboard_filter_options: Found {len(partner_ids)} partners with type {partner_type}")
+            
+            # Get all AccountAssignments for these partners
+            assignments = AccountAssignment.objects.filter(
+                partners__id__in=partner_ids
+            ).select_related("company_user__user", "company_user__role").distinct()
+            print(f"DEBUG dashboard_filter_options: Found {assignments.count()} assignments")
+            
+            # Extract unique company_users from assignments
+            seen_ids = set()
+            for assignment in assignments:
+                cu = assignment.company_user
+                if cu.id not in seen_ids and cu.user:
+                    seen_ids.add(cu.id)
+                    team_members_list.append({
+                        "company_user_id": cu.id,
+                        "username": cu.user.username,
+                        "role": cu.role.name if cu.role else "Unknown"
+                    })
+            print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} unique team members")
 
     result = {
         "advertisers": list(advertisers_map.values()),
