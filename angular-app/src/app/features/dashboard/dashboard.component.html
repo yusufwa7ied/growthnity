@@ -216,7 +216,7 @@
           <div>
             <h4>COST</h4>
             <p class="kpi-value">${{ kpis.total_payout | number:'1.0-0' }}</p>
-            <p class="kpi-subvalue">Net: ${{ kpis.total_net_payout | number:'1.0-0' }}</p>
+            <p class="kpi-subvalue">Net: {{ kpis.total_net_payout !== null && kpis.total_net_payout !== undefined ? ('$' + (kpis.total_net_payout | number:'1.0-0')) : '-' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.payout_change !== undefined"
               [class.trend-down]="kpis.trends?.payout_change! > 0" [class.trend-up]="kpis.trends?.payout_change! < 0"
               [class.trend-neutral]="kpis.trends?.payout_change === 0">
@@ -238,7 +238,7 @@
           <div>
             <h4>PROFIT</h4>
             <p class="kpi-value">${{ kpis.total_profit | number:'1.0-0' }}</p>
-            <p class="kpi-subvalue">Net: ${{ kpis.total_net_profit | number:'1.0-0' }}</p>
+            <p class="kpi-subvalue">Net: {{ kpis.total_net_profit !== null && kpis.total_net_profit !== undefined ? ('$' + (kpis.total_net_profit | number:'1.0-0')) : '-' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.profit_change !== undefined"
               [class.trend-up]="kpis.trends?.profit_change! > 0" [class.trend-down]="kpis.trends?.profit_change! < 0"
               [class.trend-neutral]="kpis.trends?.profit_change === 0">
@@ -1048,11 +1048,11 @@
             <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.revenue | number:'1.2-2' }}</td>
             <td *ngIf="isAdmin || isOpsManager" class="col-amount stacked-cell">
               <div class="main-value">${{ row.spend | number:'1.2-2' }}</div>
-              <div class="sub-value">Net: ${{ row.net_payout | number:'1.2-2' }}</div>
+              <div class="sub-value">Net: {{ row.net_payout !== null && row.net_payout !== undefined ? ('$' + (row.net_payout | number:'1.2-2')) : '-' }}</div>
             </td>
             <td *ngIf="!isAdmin && !isOpsManager" class="col-amount stacked-cell">
               <div class="main-value">${{ row.payout | number:'1.2-2' }}</div>
-              <div class="sub-value">Net: ${{ row.net_payout | number:'1.2-2' }}</div>
+              <div class="sub-value">Net: {{ row.net_payout !== null && row.net_payout !== undefined ? ('$' + (row.net_payout | number:'1.2-2')) : '-' }}</div>
             </td>
             <td *ngIf="isAdmin || isOpsManager" class="col-amount profit-cell">${{ row.profit | number:'1.2-2' }}</td>
           </tr>

@@ -392,12 +392,16 @@ def kpis_view(request):
     # Calculate net payout by applying cancellation rates
     # For MB: apply rates directly to MediaBuyerDailySpend records (no coupon filter)
     # For AFF/INF: use actual payout from CampaignPerformance
+    # Returns None if no cancellation rates exist for any records
     total_net_payout = Decimal('0')
+    has_any_cancellation_rate = False
     
     # Calculate net for MB spend (use spend_qs which already has correct filters)
     if has_mb:
         for record in spend_qs.values('date', 'advertiser_id', 'amount_spent'):
             cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+            if cancellation_rate > 0:
+                has_any_cancellation_rate = True
             spend_amount = Decimal(str(record['amount_spent'] or 0))
             net_spend = spend_amount * (Decimal('1') - (cancellation_rate / Decimal('100')))
             total_net_payout += net_spend
@@ -406,21 +410,28 @@ def kpis_view(request):
     aff_inf_qs = qs.exclude(partner__partner_type='MB')
     for record in aff_inf_qs.values('date', 'advertiser_id', 'total_payout'):
         cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+        if cancellation_rate > 0:
+            has_any_cancellation_rate = True
         payout_amount = Decimal(str(record['total_payout'] or 0))
         net_payout = payout_amount * (Decimal('1') - (cancellation_rate / Decimal('100')))
         total_net_payout += net_payout
     
-    # Net profit = revenue - net payout
-    total_net_profit = float(total_revenue) - float(total_net_payout)
+    # If no cancellation rates exist, return None for net values
+    if not has_any_cancellation_rate:
+        total_net_payout = None
+        total_net_profit = None
+    else:
+        # Net profit = revenue - net payout
+        total_net_profit = float(total_revenue) - float(total_net_payout)
 
     return Response({
         "total_orders": int(total_orders),
         "total_sales": float(total_sales),
         "total_revenue": float(total_revenue),
         "total_payout": float(total_payout),
-        "total_net_payout": float(total_net_payout),
+        "total_net_payout": float(total_net_payout) if total_net_payout is not None else None,
         "total_profit": float(total_profit),
-        "total_net_profit": float(total_net_profit),
+        "total_net_profit": total_net_profit,
         "records_count": qs.count()
     })
 
@@ -714,8 +725,14 @@ def performance_table_view(request):
             
             # Calculate net payout (apply cancellation rate)
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
-            net_profit = revenue - float(net_payout)
+            
+            # Only calculate net values if there's a cancellation rate
+            if cancellation_rate > 0:
+                net_payout = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+                net_profit = revenue - float(net_payout)
+            else:
+                net_payout = None
+                net_profit = None
             
             # Format advertiser name with geo for Noon
             campaign_display = format_advertiser_name(r["campaign"], r.get("geo"))
@@ -734,7 +751,7 @@ def performance_table_view(request):
                 "sales": float(r["total_sales"] or 0),
                 "revenue": revenue,
                 "payout": payout,
-                "net_payout": float(net_payout),
+                "net_payout": float(net_payout) if net_payout is not None else None,
                 "cancellation_rate": float(cancellation_rate),
                 "spend": payout,  # Spend = cost for all types (MB spend or AFF/INF payout)
                 "profit": profit,
