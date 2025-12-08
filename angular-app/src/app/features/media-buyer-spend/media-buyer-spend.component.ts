@@ -8,7 +8,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { Tooltip } from 'primeng/tooltip';
 import { AdvertiserService } from '../../core/services/advertiser.service';
 import { MediaBuyerSpend, MediaBuyerSpendService, Platform } from '../../core/services/media-buyer-spend.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -27,7 +26,6 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
     Select,
     InputNumber,
     Card,
-    Tooltip,
     MainHeaderComponent,
     FooterComponent,
     SkeletonLoaderComponent

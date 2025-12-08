@@ -214,19 +214,13 @@
                         <td>{{ spend.platform || 'N/A' }}</td>
                         <td>{{ spend.amount_spent | number:'1.2-2' }}</td>
                         <td>{{ spend.currency }}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button pButton type="button" icon="pi pi-pencil" 
-                                    class="p-button-rounded p-button-text p-button-sm" 
-                                    (click)="editSpendRecord(spend)"
-                                    pTooltip="Edit" tooltipPosition="top">
-                                </button>
-                                <button pButton type="button" icon="pi pi-trash" 
-                                    class="p-button-rounded p-button-text p-button-danger p-button-sm" 
-                                    (click)="deleteSpendRecord(spend.id)"
-                                    pTooltip="Delete" tooltipPosition="top">
-                                </button>
-                            </div>
+                        <td class="actions">
+                            <button class="action-btn edit-btn" (click)="editSpendRecord(spend)">
+                                <i class="pi pi-pencil"></i>
+                            </button>
+                            <button class="action-btn delete-btn" (click)="deleteSpendRecord(spend.id)">
+                                <i class="pi pi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 </ng-template>
