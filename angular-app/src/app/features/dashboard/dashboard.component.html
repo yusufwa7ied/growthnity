@@ -1054,7 +1054,10 @@
               <div class="main-value">${{ row.payout | number:'1.2-2' }}</div>
               <div class="sub-value">Net: {{ row.net_payout !== null && row.net_payout !== undefined ? ('$' + (row.net_payout | number:'1.2-2')) : '-' }}</div>
             </td>
-            <td *ngIf="isAdmin || isOpsManager" class="col-amount profit-cell">${{ row.profit | number:'1.2-2' }}</td>
+            <td *ngIf="isAdmin || isOpsManager" class="col-amount profit-cell stacked-cell">
+              <div class="main-value">${{ row.profit | number:'1.2-2' }}</div>
+              <div class="sub-value">Net: {{ row.net_profit !== null && row.net_profit !== undefined ? ('$' + (row.net_profit | number:'1.2-2')) : '-' }}</div>
+            </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
