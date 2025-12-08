@@ -595,6 +595,81 @@ def media_buyer_spend_view(request):
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_media_buyer_spend_view(request, pk):
+    """Update a spend entry"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Allow: Admin, OpsManager (any dept or no dept), or TeamMembers in media_buying department
+    role = company_user.role.name if company_user.role else None
+    if role not in ["Admin", "OpsManager"]:
+        if role != "TeamMember" or company_user.department != "media_buying":
+            return Response({"detail": "Access denied. This page is only for media buyers."}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        spend = MediaBuyerDailySpend.objects.get(pk=pk)
+    except MediaBuyerDailySpend.DoesNotExist:
+        return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # If user is TeamMember (media buyer), only allow updating their own spends
+    if role == "TeamMember" and company_user.department == "media_buying":
+        assignment = company_user.accountassignment_set.first()
+        if assignment:
+            user_partners = assignment.partners.filter(partner_type="MB")
+            if spend.partner not in user_partners:
+                return Response({"detail": "You can only update your own records"}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"detail": "You can only update your own records"}, status=status.HTTP_403_FORBIDDEN)
+    # Admin and OpsManager can update any record
+
+    # Update fields
+    date = request.data.get('date')
+    advertiser_id = request.data.get('advertiser_id')
+    partner_id = request.data.get('partner_id')
+    platform = request.data.get('platform')
+    amount_spent = request.data.get('amount_spent')
+    currency = request.data.get('currency')
+
+    if date:
+        spend.date = date
+    if advertiser_id:
+        spend.advertiser_id = advertiser_id
+    if partner_id:
+        # TeamMembers can't change to a different partner
+        if role == "TeamMember" and company_user.department == "media_buying":
+            assignment = company_user.accountassignment_set.first()
+            if assignment:
+                user_partners = assignment.partners.filter(partner_type="MB")
+                if not user_partners.filter(id=partner_id).exists():
+                    return Response({"detail": "You can only assign to your own partner"}, status=status.HTTP_403_FORBIDDEN)
+        spend.partner_id = partner_id
+    if platform:
+        spend.platform = platform
+    if amount_spent is not None:
+        spend.amount_spent = amount_spent
+    if currency:
+        spend.currency = currency
+
+    spend.save()
+
+    return Response({
+        'id': spend.id,
+        'date': spend.date,
+        'advertiser_id': spend.advertiser.id,
+        'advertiser_name': spend.advertiser.name,
+        'partner_id': spend.partner.id if spend.partner else None,
+        'partner_name': spend.partner.name if spend.partner else None,
+        'platform': spend.platform,
+        'amount_spent': float(spend.amount_spent),
+        'currency': spend.currency or 'USD'
+    }, status=status.HTTP_200_OK)
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_media_buyer_spend_view(request, pk):

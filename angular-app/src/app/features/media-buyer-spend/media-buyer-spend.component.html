@@ -68,13 +68,18 @@
         <p-card class="spend-card form-card" *ngIf="showAddForm">
             <div class="form-section">
                 <div class="form-header">
-                    <h3><i class="pi pi-plus-circle"></i> Add Daily Spend Record</h3>
+                    <h3>
+                        <i [class]="editingRecord ? 'pi pi-pencil' : 'pi pi-plus-circle'"></i> 
+                        {{ editingRecord ? 'Edit Spend Record' : 'Add Daily Spend Record' }}
+                    </h3>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-field">
-                        <label>Date Range <span class="required">*</span></label>
-                        <p-datepicker [(ngModel)]="selectedDateRange" selectionMode="range" dateFormat="yy-mm-dd"
+                        <label>{{ editingRecord ? 'Date' : 'Date Range' }} <span class="required">*</span></label>
+                        <p-datepicker [(ngModel)]="selectedDateRange" 
+                            [selectionMode]="editingRecord ? 'single' : 'range'" 
+                            dateFormat="yy-mm-dd"
                             [showIcon]="false" [showButtonBar]="true" [readonlyInput]="true">
                         </p-datepicker>
                     </div>
@@ -109,9 +114,10 @@
                 </div>
 
                 <div class="form-actions">
-                    <button pButton type="button" label="Save Spend" icon="pi pi-check" (click)="saveSpendRecord()"
+                    <button pButton type="button" [label]="editingRecord ? 'Update' : 'Save Spend'" 
+                        icon="pi pi-check" (click)="saveSpendRecord()"
                         [disabled]="saving" class="p-button-success"></button>
-                    <button pButton type="button" label="Reset" (click)="resetForm()"
+                    <button pButton type="button" label="Cancel" (click)="resetForm(); showAddForm = false;"
                         class="p-button-secondary p-button-outlined"></button>
                 </div>
             </div>
@@ -196,6 +202,7 @@
                         <th>Platform</th>
                         <th>Amount Spent</th>
                         <th>Currency</th>
+                        <th>Actions</th>
                     </tr>
                 </ng-template>
 
@@ -207,12 +214,26 @@
                         <td>{{ spend.platform || 'N/A' }}</td>
                         <td>{{ spend.amount_spent | number:'1.2-2' }}</td>
                         <td>{{ spend.currency }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button pButton type="button" icon="pi pi-pencil" 
+                                    class="p-button-rounded p-button-text p-button-sm" 
+                                    (click)="editSpendRecord(spend)"
+                                    pTooltip="Edit" tooltipPosition="top">
+                                </button>
+                                <button pButton type="button" icon="pi pi-trash" 
+                                    class="p-button-rounded p-button-text p-button-danger p-button-sm" 
+                                    (click)="deleteSpendRecord(spend.id)"
+                                    pTooltip="Delete" tooltipPosition="top">
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 </ng-template>
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="6" class="empty-message">
+                        <td colspan="7" class="empty-message">
                             <i class="pi pi-inbox"></i>
                             <p>No spend records found</p>
                             <span>Add your first daily spend entry using the button above</span>

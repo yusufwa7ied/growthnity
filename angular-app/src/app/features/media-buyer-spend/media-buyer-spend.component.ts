@@ -8,6 +8,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { Tooltip } from 'primeng/tooltip';
 import { AdvertiserService } from '../../core/services/advertiser.service';
 import { MediaBuyerSpend, MediaBuyerSpendService, Platform } from '../../core/services/media-buyer-spend.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
@@ -26,6 +27,7 @@ import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader
     Select,
     InputNumber,
     Card,
+    Tooltip,
     MainHeaderComponent,
     FooterComponent,
     SkeletonLoaderComponent
@@ -76,6 +78,7 @@ export class MediaBuyerSpendComponent implements OnInit {
   saving = false;
   showSkeletons = true;
   showAddForm = false;
+  editingRecord: MediaBuyerSpend | null = null;
   private skeletonMinDuration = 500; // Minimum ms to show skeleton
 
   constructor(
@@ -156,8 +159,24 @@ export class MediaBuyerSpendComponent implements OnInit {
     });
   }
 
+  editSpendRecord(spend: MediaBuyerSpend) {
+    this.editingRecord = spend;
+    this.showAddForm = true;
+
+    // Populate form with existing data
+    this.selectedDateRange = [new Date(spend.date)];
+    this.selectedAdvertiser = this.allAdvertisers.find(a => a.value.id === spend.advertiser_id) || null;
+    this.selectedPartner = this.partners.find(p => p.value.id === spend.partner_id) || null;
+    this.selectedPlatform = this.platformOptions.find(p => p.value === spend.platform) || this.platformOptions[0];
+    this.amountSpent = spend.amount_spent;
+    this.selectedCurrency = spend.currency || 'USD';
+
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   saveSpendRecord() {
-    if (!this.selectedDateRange || !this.selectedDateRange[0] || !this.selectedAdvertiser || !this.amountSpent) {
+    if (!this.selectedAdvertiser || !this.amountSpent) {
       alert('Please fill all required fields (Date, Advertiser, Amount)');
       return;
     }
@@ -173,6 +192,45 @@ export class MediaBuyerSpendComponent implements OnInit {
 
     if (!this.selectedPlatform) {
       alert('Please select a platform');
+      return;
+    }
+
+    // Edit mode - single record update
+    if (this.editingRecord) {
+      if (!this.selectedDateRange || !this.selectedDateRange[0]) {
+        alert('Please select a date');
+        return;
+      }
+
+      this.saving = true;
+      const updateData: Partial<MediaBuyerSpend> = {
+        date: this.formatDate(this.selectedDateRange[0]),
+        advertiser_id: this.selectedAdvertiser.value.id,
+        partner_id: this.selectedPartner.value.id,
+        platform: this.selectedPlatform.value,
+        amount_spent: this.amountSpent,
+        currency: this.selectedCurrency
+      };
+
+      this.spendService.updateSpendRecord(this.editingRecord.id!, updateData).subscribe({
+        next: () => {
+          this.saving = false;
+          alert('Spend record updated successfully');
+          this.resetForm();
+          this.loadSpendRecords();
+        },
+        error: (err) => {
+          this.saving = false;
+          console.error('Error updating spend record:', err);
+          alert('Error updating spend record: ' + (err.error?.detail || 'Unknown error'));
+        }
+      });
+      return;
+    }
+
+    // Create mode - date range with multiple records
+    if (!this.selectedDateRange || !this.selectedDateRange[0]) {
+      alert('Please fill all required fields (Date, Advertiser, Amount)');
       return;
     }
 
@@ -261,6 +319,7 @@ export class MediaBuyerSpendComponent implements OnInit {
     // Keep partner as it's auto-selected from user
     this.amountSpent = 0;
     this.selectedCurrency = 'USD';
+    this.editingRecord = null;
   }
 
   loadAnalytics() {

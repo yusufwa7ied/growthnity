@@ -55,6 +55,10 @@ export class MediaBuyerSpendService {
         return this.http.post<MediaBuyerSpend>(this.apiUrl, data);
     }
 
+    updateSpendRecord(id: number, data: Partial<MediaBuyerSpend>): Observable<MediaBuyerSpend> {
+        return this.http.put<MediaBuyerSpend>(`${this.apiUrl}${id}/update/`, data);
+    }
+
     deleteSpendRecord(id: number): Observable<any> {
         return this.http.delete(`${this.apiUrl}${id}/delete/`);
     }
