@@ -985,34 +985,31 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
-    # Get ALL team members (TeamMember role only, exclude OpsManagers)
-    # Filter by department if OpsManager has a department, otherwise show all
+    # Get ALL CompanyUsers (no filtering by role or department initially)
     team_members_list = []
     
-    # Start with all TeamMembers
-    team_members_query = CompanyUser.objects.filter(
-        role__name="TeamMember"
-    ).select_related('role', 'user').exclude(user__isnull=True)
+    # Get ALL CompanyUsers with valid user accounts
+    all_users = CompanyUser.objects.select_related('role', 'user').exclude(user__isnull=True)
     
-    # If OpsManager WITH department, filter by department
+    # Apply department filter ONLY if OpsManager with department
     if company_user and department and role == "OpsManager":
-        team_members_query = team_members_query.filter(department=department)
-        print(f"DEBUG dashboard_filter_options: OpsManager with dept={department}, filtering TeamMembers")
+        all_users = all_users.filter(department=department)
+        print(f"DEBUG dashboard_filter_options: OpsManager with dept={department}")
     else:
-        print(f"DEBUG dashboard_filter_options: Admin or OpsManager no-dept, showing all TeamMembers")
+        print(f"DEBUG dashboard_filter_options: Admin or OpsManager no-dept, showing all users")
     
-    team_members_count = team_members_query.count()
-    print(f"DEBUG dashboard_filter_options: Found {team_members_count} TeamMembers")
+    print(f"DEBUG dashboard_filter_options: Found {all_users.count()} total CompanyUsers")
     
-    # Build the list
-    for cu in team_members_query:
-        team_members_list.append({
-            "company_user_id": cu.id,
-            "username": cu.user.username,
-            "role": cu.role.name
-        })
+    # Build the list - exclude only Admin and OpsManager roles
+    for cu in all_users:
+        if cu.role and cu.role.name not in ["Admin", "OpsManager"]:
+            team_members_list.append({
+                "company_user_id": cu.id,
+                "username": cu.user.username,
+                "role": cu.role.name
+            })
     
-    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members")
+    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members (excluded Admin/OpsManager)")
 
     result = {
         "advertisers": list(advertisers_map.values()),
