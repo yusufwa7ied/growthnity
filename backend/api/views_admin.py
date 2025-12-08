@@ -706,6 +706,44 @@ def delete_media_buyer_spend_view(request, pk):
     return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def bulk_delete_media_buyer_spend_view(request):
+    """Bulk delete spend entries"""
+    user = request.user
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
+    # Allow: Admin, OpsManager (any dept or no dept), or TeamMembers in media_buying department
+    role = company_user.role.name if company_user.role else None
+    if role not in ["Admin", "OpsManager"]:
+        if role != "TeamMember" or company_user.department != "media_buying":
+            return Response({"detail": "Access denied. This page is only for media buyers."}, status=status.HTTP_403_FORBIDDEN)
+
+    ids = request.data.get('ids', [])
+    if not ids:
+        return Response({"detail": "No IDs provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get all records to delete
+    spends = MediaBuyerDailySpend.objects.filter(pk__in=ids)
+    
+    # If user is TeamMember (media buyer), only allow deleting their own spends
+    if role == "TeamMember" and company_user.department == "media_buying":
+        assignment = company_user.accountassignment_set.first()
+        if assignment:
+            user_partners = assignment.partners.filter(partner_type="MB")
+            # Filter to only their records
+            spends = spends.filter(partner__in=user_partners)
+        else:
+            return Response({"detail": "You can only delete your own records"}, status=status.HTTP_403_FORBIDDEN)
+    
+    deleted_count = spends.count()
+    spends.delete()
+    return Response({"detail": f"Deleted {deleted_count} records successfully"}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def media_buyer_spend_analytics_view(request):

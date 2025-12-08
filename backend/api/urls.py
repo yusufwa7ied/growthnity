@@ -38,6 +38,7 @@ from .views_admin import (
     media_buyer_spend_view,
     update_media_buyer_spend_view,
     delete_media_buyer_spend_view,
+    bulk_delete_media_buyer_spend_view,
     media_buyer_spend_analytics_view,
     partners_view,
     partner_detail_view,
@@ -90,6 +91,7 @@ urlpatterns = [
     path("media-buyer-spend/", media_buyer_spend_view, name="media-buyer-spend"),
     path("media-buyer-spend/<int:pk>/update/", update_media_buyer_spend_view, name="media-buyer-spend-update"),
     path("media-buyer-spend/<int:pk>/delete/", delete_media_buyer_spend_view, name="media-buyer-spend-delete"),
+    path("media-buyer-spend/bulk-delete/", bulk_delete_media_buyer_spend_view, name="media-buyer-spend-bulk-delete"),
     path("media-buyer-spend/analytics/", media_buyer_spend_analytics_view, name="media-buyer-spend-analytics"),
     
     # Partner management endpoints

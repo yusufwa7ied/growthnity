@@ -63,6 +63,10 @@ export class MediaBuyerSpendService {
         return this.http.delete(`${this.apiUrl}${id}/delete/`);
     }
 
+    bulkDeleteSpendRecords(ids: number[]): Observable<any> {
+        return this.http.post(`${this.apiUrl}bulk-delete/`, { ids });
+    }
+
     getSpendAnalytics(filters?: SpendFilters): Observable<any> {
         let params = new HttpParams();
 

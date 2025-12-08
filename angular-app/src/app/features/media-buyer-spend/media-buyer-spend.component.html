@@ -187,13 +187,24 @@
                 <app-skeleton-loader type="table-row"></app-skeleton-loader>
             </div>
 
-            <p-table *ngIf="!loading" [value]="spendRecords" [loading]="loading" [paginator]="true" [rows]="10"
+            <div *ngIf="selectedRecords.length > 0" class="bulk-actions-bar">
+                <span>{{ selectedRecords.length }} record(s) selected</span>
+                <button class="bulk-delete-btn" (click)="bulkDeleteRecords()" [disabled]="deleting">
+                    <i class="pi pi-trash"></i> Delete Selected
+                </button>
+            </div>
+
+            <p-table *ngIf="!loading" [value]="spendRecords" [loading]="loading" [(selection)]="selectedRecords" 
+                [paginator]="true" [rows]="25" [rowsPerPageOptions]="[10, 25, 50, 100]"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                styleClass="spend-table">
+                styleClass="spend-table" dataKey="id">
 
                 <ng-template pTemplate="header">
                     <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                        </th>
                         <th>Date</th>
                         <th>Advertiser</th>
                         <th>Partner</th>
@@ -206,6 +217,9 @@
 
                 <ng-template pTemplate="body" let-spend>
                     <tr>
+                        <td>
+                            <p-tableCheckbox [value]="spend"></p-tableCheckbox>
+                        </td>
                         <td>{{ spend.date }}</td>
                         <td>{{ spend.advertiser_name }}</td>
                         <td>{{ spend.partner_name }}</td>

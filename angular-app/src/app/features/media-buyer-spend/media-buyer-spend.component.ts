@@ -39,6 +39,7 @@ export class MediaBuyerSpendComponent implements OnInit {
 
   allSpendRecords: MediaBuyerSpend[] = [];
   spendRecords: MediaBuyerSpend[] = [];
+  selectedRecords: MediaBuyerSpend[] = [];
   allAdvertisers: any[] = []; // All advertisers for form
   advertisers: any[] = []; // Filtered advertisers for filter dropdown
   partners: any[] = [];
@@ -74,6 +75,7 @@ export class MediaBuyerSpendComponent implements OnInit {
 
   loading = false;
   saving = false;
+  deleting = false;
   showSkeletons = true;
   showAddForm = false;
   editingRecord: MediaBuyerSpend | null = null;
@@ -305,6 +307,33 @@ export class MediaBuyerSpendComponent implements OnInit {
         error: (err) => {
           console.error('Error deleting spend record:', err);
           alert('Error deleting spend record');
+        }
+      });
+    }
+  }
+
+  bulkDeleteRecords() {
+    if (this.selectedRecords.length === 0) {
+      alert('No records selected');
+      return;
+    }
+
+    const count = this.selectedRecords.length;
+    if (confirm(`Are you sure you want to delete ${count} selected record(s)?`)) {
+      this.deleting = true;
+      const ids = this.selectedRecords.map(r => r.id);
+      
+      this.spendService.bulkDeleteSpendRecords(ids).subscribe({
+        next: () => {
+          this.deleting = false;
+          this.selectedRecords = [];
+          alert(`Successfully deleted ${count} record(s)`);
+          this.loadSpendRecords();
+        },
+        error: (err) => {
+          this.deleting = false;
+          console.error('Error deleting records:', err);
+          alert('Error deleting records: ' + (err.error?.detail || 'Unknown error'));
         }
       });
     }
