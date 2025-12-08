@@ -694,7 +694,7 @@ def performance_table_view(request):
             
             # Calculate net payout (apply cancellation rate)
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = payout * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            net_payout = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
             net_profit = revenue - float(net_payout)
             
             # Format advertiser name with geo for Noon
@@ -795,7 +795,7 @@ def performance_table_view(request):
             
             # Calculate net payout
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = allocated_spend * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            net_payout = Decimal(str(allocated_spend)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
             
             row = {
                 "date": r["date"],
@@ -817,7 +817,7 @@ def performance_table_view(request):
             # For affiliates/influencers, show their payout (what they earn)
             # Calculate net payout
             cancellation_rate = get_cancellation_rate_for_date(r["advertiser_id"], r["date"])
-            net_payout = partner_payout * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            net_payout = Decimal(str(partner_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
             
             row = {
                 "date": r["date"],
