@@ -986,46 +986,22 @@ def dashboard_filter_options_view(request):
             }
 
     # Get team members from the Partners table (partners ARE the team members)
-    # Extract partner IDs and names from the performance data
+    # Use partner_id as company_user_id and partner name as username
     team_members_list = []
     
     print(f"DEBUG dashboard_filter_options: Found {len(partners_map)} partners with data")
     
-    # Partners in the data ARE the team members - convert partner data to team member format
+    # Convert all partners in the data to team member format
     for partner_id, partner_data in partners_map.items():
-        # Try to find a matching CompanyUser for this partner (by name)
         partner_name = partner_data['partner']
         
-        # Try to find CompanyUser by matching username to partner name
-        matching_user = CompanyUser.objects.filter(
-            user__username__icontains=partner_name.replace(' ', '_').lower()
-        ).select_related('user', 'role').first()
-        
-        if not matching_user:
-            # Try without underscore replacement
-            matching_user = CompanyUser.objects.filter(
-                user__username__icontains=partner_name.replace(' ', '.').lower()
-            ).select_related('user', 'role').first()
-        
-        if not matching_user:
-            # Try first name only
-            first_name = partner_name.split()[0] if partner_name else ''
-            if first_name:
-                matching_user = CompanyUser.objects.filter(
-                    user__username__icontains=first_name.lower()
-                ).select_related('user', 'role').first()
-        
-        if matching_user and matching_user.user:
-            team_members_list.append({
-                "company_user_id": matching_user.id,
-                "username": matching_user.user.username,
-                "role": matching_user.role.name if matching_user.role else "Partner"
-            })
-            print(f"DEBUG: Matched partner '{partner_name}' to user '{matching_user.user.username}'")
-        else:
-            print(f"DEBUG: No CompanyUser match for partner '{partner_name}'")
+        team_members_list.append({
+            "company_user_id": partner_id,  # Use partner_id as the identifier
+            "username": partner_name,        # Use partner name directly
+            "role": "Partner"                 # Role is "Partner"
+        })
     
-    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members")
+    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members (all partners)")
 
     result = {
         "advertisers": list(advertisers_map.values()),
