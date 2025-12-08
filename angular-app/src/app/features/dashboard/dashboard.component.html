@@ -1028,14 +1028,10 @@
             <th class="col-amount" pSortableColumn="sales">Sales <p-sortIcon field="sales"></p-sortIcon></th>
             <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="revenue">Revenue <p-sortIcon
                 field="revenue"></p-sortIcon></th>
-            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="spend">Gross Payout <p-sortIcon
+            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="spend">Payout <p-sortIcon
                 field="spend"></p-sortIcon></th>
-            <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="net_payout">Net Payout <p-sortIcon
-                field="net_payout"></p-sortIcon></th>
-            <th *ngIf="!isAdmin && !isOpsManager" class="col-amount" pSortableColumn="payout">Gross Payout <p-sortIcon
+            <th *ngIf="!isAdmin && !isOpsManager" class="col-amount" pSortableColumn="payout">Payout <p-sortIcon
                 field="payout"></p-sortIcon></th>
-            <th *ngIf="!isAdmin && !isOpsManager" class="col-amount" pSortableColumn="net_payout">Net Payout <p-sortIcon
-                field="net_payout"></p-sortIcon></th>
             <th *ngIf="isAdmin || isOpsManager" class="col-amount" pSortableColumn="profit">Profit
               <p-sortIcon field="profit"></p-sortIcon>
             </th>
@@ -1050,16 +1046,20 @@
             <td class="col-orders">{{ row.orders }}</td>
             <td class="col-amount">${{ row.sales | number:'1.2-2' }}</td>
             <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.revenue | number:'1.2-2' }}</td>
-            <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.spend | number:'1.2-2' }}</td>
-            <td *ngIf="isAdmin || isOpsManager" class="col-amount">${{ row.net_payout | number:'1.2-2' }}</td>
-            <td *ngIf="!isAdmin && !isOpsManager" class="col-amount">${{ row.payout | number:'1.2-2' }}</td>
-            <td *ngIf="!isAdmin && !isOpsManager" class="col-amount">${{ row.net_payout | number:'1.2-2' }}</td>
+            <td *ngIf="isAdmin || isOpsManager" class="col-amount stacked-cell">
+              <div class="main-value">${{ row.spend | number:'1.2-2' }}</div>
+              <div class="sub-value">Net: ${{ row.net_payout | number:'1.2-2' }}</div>
+            </td>
+            <td *ngIf="!isAdmin && !isOpsManager" class="col-amount stacked-cell">
+              <div class="main-value">${{ row.payout | number:'1.2-2' }}</div>
+              <div class="sub-value">Net: ${{ row.net_payout | number:'1.2-2' }}</div>
+            </td>
             <td *ngIf="isAdmin || isOpsManager" class="col-amount profit-cell">${{ row.profit | number:'1.2-2' }}</td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td [attr.colspan]="isAdmin || isOpsManager ? 10 : 7" class="text-center">
+            <td [attr.colspan]="isAdmin || isOpsManager ? 9 : 6" class="text-center">
               <div class="empty-message">
                 <i class="pi pi-inbox"></i>
                 <p>No data available</p>

@@ -2172,6 +2172,24 @@
   letter-spacing: -0.2px;
 }
 
+/* Stacked cell styles for table columns */
+.stacked-cell {
+  padding: 0.75rem !important;
+}
+
+.stacked-cell .main-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #101010;
+  margin-bottom: 0.25rem;
+}
+
+.stacked-cell .sub-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
 .kpi-trend {
   display: flex;
   align-items: center;
