@@ -195,6 +195,7 @@
           <div>
             <h4>PAYOUT</h4>
             <p class="kpi-value">${{ kpis.total_payout | number:'1.0-0' }}</p>
+            <p class="kpi-subvalue">Net: {{ kpis.total_net_payout !== null && kpis.total_net_payout !== undefined ? ('$' + (kpis.total_net_payout | number:'1.0-0')) : '-' }}</p>
             <div class="kpi-trend" *ngIf="kpis.trends?.payout_change !== undefined"
               [class.trend-up]="kpis.trends?.payout_change! > 0" [class.trend-down]="kpis.trends?.payout_change! < 0"
               [class.trend-neutral]="kpis.trends?.payout_change === 0">
