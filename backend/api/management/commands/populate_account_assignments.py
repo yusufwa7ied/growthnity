@@ -36,11 +36,22 @@ class Command(BaseCommand):
                 self.stdout.write(f"  → AccountAssignment already exists")
                 updated_count += 1
             
-            # Add all partners
-            partners_before = assignment.partners.count()
-            assignment.partners.set(all_partners)
-            partners_after = assignment.partners.count()
-            self.stdout.write(f"  → Partners: {partners_before} → {partners_after}")
+            # Find partner with matching name (case-insensitive)
+            username = team_member.user.username.lower().replace('.', ' ').replace('_', ' ')
+            matching_partners = Partner.objects.filter(name__icontains=username)
+            
+            if not matching_partners.exists():
+                # Try with just first name or last name
+                name_parts = username.split()
+                if name_parts:
+                    matching_partners = Partner.objects.filter(name__icontains=name_parts[0])
+            
+            if matching_partners.exists():
+                assignment.partners.set(matching_partners)
+                self.stdout.write(f"  → Partners: Assigned to {matching_partners.count()} matching partners: {[p.name for p in matching_partners]}")
+            else:
+                self.stdout.write(f"  → Partners: No matching partner found for '{team_member.user.username}'")
+                assignment.partners.clear()
             
             # Add all advertisers
             advertisers_before = assignment.advertisers.count()
