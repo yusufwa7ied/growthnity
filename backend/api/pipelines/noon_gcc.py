@@ -345,16 +345,16 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
     """Save to NoonTransaction table."""
     if df.empty:
         NoonTransaction.objects.filter(
-            created_date__gte=date_from,
-            created_date__lte=date_to,
+            order_date__gte=date_from,
+            order_date__lte=date_to,
             country__in=GCC_COUNTRIES
         ).delete()
         return 0
 
     with transaction.atomic():
         NoonTransaction.objects.filter(
-            created_date__gte=date_from,
-            created_date__lte=date_to,
+            order_date__gte=date_from,
+            order_date__lte=date_to,
             country__in=GCC_COUNTRIES
         ).delete()
 
@@ -365,31 +365,37 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
             if partner_id and not pd.isna(partner_id):
                 partner = Partner.objects.filter(id=int(partner_id)).first()
 
+            # Create order_id from date and coupon
+            order_date_val = r.get("created_at")
+            if hasattr(order_date_val, 'date'):
+                order_date_val = order_date_val.date()
+            
             objs.append(
                 NoonTransaction(
-                    order_id=0,
-                    created_date=r.get("created_at"),
-                    delivery_status="delivered",
+                    order_id=f"noon_gcc_{order_date_val}_{r.get('coupon')}_{len(objs)}",
+                    order_date=order_date_val,
+                    advertiser_name="Noon",
+                    is_gcc=True,
+                    region="gcc",
+                    platform=r.get("platform", ""),
                     country=r.get("country"),
-                    coupon=r.get("coupon"),
-                    user_type=r.get("user_type"),
+                    coupon_code=r.get("coupon"),
+                    tier_bracket="",
+                    total_orders=nz(r.get("orders")),
+                    non_payable_orders=0,
+                    payable_orders=nz(r.get("orders")),
+                    total_value=nf(r.get("sales")),
+                    ftu_orders=nz(r.get("ftu_orders")),
+                    ftu_value=nf(r.get("sales")) if r.get("user_type") == "FTU" else 0,
+                    rtu_orders=nz(r.get("rtu_orders")),
+                    rtu_value=nf(r.get("sales")) if r.get("user_type") == "RTU" else 0,
                     partner=partner,
                     partner_name=r.get("partner_name"),
-                    partner_type=r.get("partner_type"),
-                    currency="AED",
-                    rate_type="fixed",
-                    sales=nf(r.get("sales")),
-                    commission=nf(r.get("commission", 0)),
-                    our_rev=nf(r.get("our_rev", 0)),
-                    ftu_orders=nz(r.get("ftu_orders")),
-                    rtu_orders=nz(r.get("rtu_orders")),
-                    orders=nz(r.get("orders")),
-                    ftu_rate=nf(r.get("ftu_rate")),
-                    rtu_rate=nf(r.get("rtu_rate")),
-                    payout=nf(r.get("payout")),
-                    profit=nf(r.get("profit")),
-                    payout_usd=nf(r.get("payout_usd")),
-                    profit_usd=nf(r.get("profit_usd")),
+                    revenue_usd=nf(r.get("our_rev", 0)),
+                    payout_usd=nf(r.get("payout")),
+                    our_rev_usd=nf(r.get("our_rev", 0)),
+                    profit_usd=nf(r.get("profit")),
+                    user_type=r.get("user_type", ""),
                 )
             )
 
@@ -401,8 +407,8 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
 def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     """Aggregate to CampaignPerformance."""
     qs = NoonTransaction.objects.filter(
-        created_date__date__gte=date_from,
-        created_date__date__lte=date_to,
+        order_date__gte=date_from,
+        order_date__lte=date_to,
         country__in=GCC_COUNTRIES
     )
     
@@ -413,13 +419,13 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     groups = {}
     
     for r in qs:
-        key = (r.created_date.date(), r.partner_name, r.coupon, r.country)
+        key = (r.order_date, r.partner_name, r.coupon_code, r.country)
         
         if key not in groups:
             groups[key] = {
-                "date": r.created_date.date(),
+                "date": r.order_date,
                 "partner_name": r.partner_name,
-                "coupon": r.coupon,
+                "coupon": r.coupon_code,
                 "geo": r.country,
                 "ftu_orders": 0,
                 "rtu_orders": 0,
@@ -434,7 +440,7 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
         g = groups[key]
         
         # Check if order date is before or after bracket start
-        order_date = r.created_date.date() if hasattr(r.created_date, 'date') else r.created_date
+        order_date = r.order_date
         is_new_bracket = order_date >= BRACKET_START_DATE
         
         # For new brackets, values already in USD
@@ -442,15 +448,15 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
         exchange_rate = 0.27 if not is_new_bracket else 1.0
         
         if r.user_type == "FTU":
-            g["ftu_orders"] += r.orders
-            g["ftu_sales"] += float(r.sales) * 0.27  # Sales always in AED, convert to USD
-            g["ftu_revenue"] += float(r.our_rev) * exchange_rate
-            g["ftu_payout"] += float(r.payout) * exchange_rate
+            g["ftu_orders"] += r.ftu_orders
+            g["ftu_sales"] += float(r.ftu_value) * 0.27  # Sales always in AED, convert to USD
+            g["ftu_revenue"] += float(r.revenue_usd) * exchange_rate
+            g["ftu_payout"] += float(r.payout_usd) * exchange_rate
         elif r.user_type == "RTU":
-            g["rtu_orders"] += r.orders
-            g["rtu_sales"] += float(r.sales) * 0.27
-            g["rtu_revenue"] += float(r.our_rev) * exchange_rate
-            g["rtu_payout"] += float(r.payout) * exchange_rate
+            g["rtu_orders"] += r.rtu_orders
+            g["rtu_sales"] += float(r.rtu_value) * 0.27
+            g["rtu_revenue"] += float(r.revenue_usd) * exchange_rate
+            g["rtu_payout"] += float(r.payout_usd) * exchange_rate
 
     with transaction.atomic():
         CampaignPerformance.objects.filter(
