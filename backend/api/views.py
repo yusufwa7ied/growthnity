@@ -1973,22 +1973,66 @@ def team_members_list(request):
             # Admin with no department - return all
             filter_dept = None
         
-        # Get team members
+        # Get team members based on AccountAssignments to partners of the department's partner_type
         if filter_dept:
-            team_members = CompanyUser.objects.filter(
-                department=filter_dept
-            ).select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
+            # Map department to partner_type
+            dept_to_partner_type = {
+                "media_buying": "MB",
+                "affiliate": "AFF",
+                "influencer": "INF"
+            }
+            partner_type = dept_to_partner_type.get(filter_dept)
+            
+            if partner_type:
+                # Get all partners of this type
+                partner_ids = Partner.objects.filter(partner_type=partner_type).values_list("id", flat=True)
+                
+                # Get all AccountAssignments for these partners
+                assignments = AccountAssignment.objects.filter(
+                    partners__id__in=partner_ids
+                ).select_related("company_user__user").distinct()
+                
+                # Extract unique company_users from assignments
+                team_members = []
+                seen_ids = set()
+                for assignment in assignments:
+                    cu = assignment.company_user
+                    if cu.id not in seen_ids and cu.user:
+                        seen_ids.add(cu.id)
+                        team_members.append({
+                            "id": cu.id,
+                            "user__username": cu.user.username,
+                            "user__first_name": cu.user.first_name,
+                            "user__last_name": cu.user.last_name
+                        })
+            else:
+                # Fallback to department-based filtering
+                team_members = CompanyUser.objects.filter(
+                    department=filter_dept
+                ).select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
         else:
             # Return all company users (for admin)
             team_members = CompanyUser.objects.select_related("user").values("id", "user__username", "user__first_name", "user__last_name")
         
         members_list = []
         for member in team_members:
-            full_name = f"{member['user__first_name']} {member['user__last_name']}".strip()
+            # Handle both dict and QuerySet values format
+            if isinstance(member, dict):
+                member_id = member.get('id')
+                username = member.get('user__username')
+                first_name = member.get('user__first_name', '')
+                last_name = member.get('user__last_name', '')
+            else:
+                member_id = member['id']
+                username = member['user__username']
+                first_name = member.get('user__first_name', '')
+                last_name = member.get('user__last_name', '')
+            
+            full_name = f"{first_name} {last_name}".strip()
             members_list.append({
-                "id": member['id'],
-                "username": member['user__username'],
-                "name": full_name or member['user__username']
+                "id": member_id,
+                "username": username,
+                "name": full_name or username
             })
         
         return Response(members_list, status=200)
