@@ -61,25 +61,19 @@ def format_advertiser_name(advertiser_name, geo=None):
 # Helper function to apply team member filter
 def apply_team_member_filter(qs, team_member_ids):
     """
-    Translate team_member_id filter to partner_ids based on AccountAssignment.
+    Filter queryset by team_member_ids.
+    Since team members ARE partners, team_member_ids are actually partner_ids.
     Returns filtered queryset.
     """
     if team_member_ids:
-        print(f"DEBUG apply_team_member_filter: team_member_ids = {team_member_ids}")
-        team_partner_ids = set()
-        for tm_id in team_member_ids:
-            assignments = AccountAssignment.objects.filter(company_user_id=tm_id).prefetch_related('partners')
-            print(f"DEBUG: User {tm_id} has {assignments.count()} assignments")
-            for assignment in assignments:
-                partner_ids = list(assignment.partners.values_list('id', flat=True))
-                print(f"DEBUG: Assignment has partners: {partner_ids}")
-                team_partner_ids.update(partner_ids)
+        print(f"DEBUG apply_team_member_filter: team_member_ids (partner_ids) = {team_member_ids}")
         
-        print(f"DEBUG: Final partner_ids to filter: {team_partner_ids}")
-        if team_partner_ids:
-            return qs.filter(partner_id__in=team_partner_ids)
-        else:
-            return qs.none()
+        # Convert to integers
+        partner_ids = [int(tm_id) for tm_id in team_member_ids]
+        
+        print(f"DEBUG: Filtering by partner_ids: {partner_ids}")
+        return qs.filter(partner_id__in=partner_ids)
+    
     return qs
 
 # Pagination class for performance table
