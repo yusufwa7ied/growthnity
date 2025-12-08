@@ -3001,6 +3001,22 @@
   gap: 0.5rem;
 }
 
+.export-buttons ::ng-deep .export-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.export-buttons ::ng-deep .export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
 @media (max-width: 768px) {
   .table-controls {
     flex-direction: column;

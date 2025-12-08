@@ -13,8 +13,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { PaginatorModule } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
+import { Button } from 'primeng/button';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Advertiser, AdvertiserDetailSummary, Coupon, DashboardFilters, GraphData, KPIData, Partner, TableRow, TeamMember } from '../../core/models/dashboard.model';
 import { User } from '../../core/models/user.model';
@@ -41,8 +40,7 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         InputText,
         TableModule,
         PaginatorModule,
-        ButtonModule,
-        TooltipModule,
+        Button,
         BaseChartDirective,
         MainHeaderComponent,
         SkeletonLoaderComponent,
@@ -125,6 +123,7 @@ export class DashboardComponent implements OnInit {
     tableSearchTerm: string = '';
     showFilterModal: boolean = false;
     selectedMonth: Date = new Date(); // Current month for analytics
+    exportLoading: boolean = false;
 
     // Pagination
     currentPage: number = 1;
@@ -1304,7 +1303,12 @@ export class DashboardComponent implements OnInit {
 
     exportDetailedReport(): void {
         // Export detailed performance report with summary statistics
+        this.exportLoading = true;
         this.dashboardService.exportPerformanceReport(this.filters);
+        // Reset loading state after 2 seconds
+        setTimeout(() => {
+            this.exportLoading = false;
+        }, 2000);
     }
 
     refreshDashboard(): void {
