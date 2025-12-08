@@ -394,13 +394,46 @@ def kpis_view(request):
     
     # Profit = revenue - payout (where payout includes MB spend)
     total_profit = float(total_revenue) - total_payout
+    
+    # Calculate net payout by applying cancellation rates to each record
+    total_net_payout = Decimal('0')
+    for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout', 'total_revenue'):
+        # Get cancellation rate for this record
+        cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+        
+        # Determine the payout for this record
+        if record['partner__partner_type'] == 'MB':
+            # For MB, need to get allocated spend
+            key = (record['date'], record['advertiser_id'], record['partner_id'])
+            if has_mb and key in mb_spend_lookup:
+                total_spend_for_key = mb_spend_lookup.get(key, 0)
+                total_revenue_for_key = total_revenue_per_key.get(key, 1)
+                record_revenue = float(record['total_revenue'] or 0)
+                if total_revenue_for_key > 0:
+                    record_payout = total_spend_for_key * (record_revenue / total_revenue_for_key)
+                else:
+                    record_payout = 0
+            else:
+                record_payout = 0
+        else:
+            # For AFF/INF, use actual payout
+            record_payout = float(record['total_payout'] or 0)
+        
+        # Apply cancellation rate
+        net_payout_for_record = Decimal(str(record_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+        total_net_payout += net_payout_for_record
+    
+    # Net profit = revenue - net payout
+    total_net_profit = float(total_revenue) - float(total_net_payout)
 
     return Response({
         "total_orders": int(total_orders),
         "total_sales": float(total_sales),
         "total_revenue": float(total_revenue),
         "total_payout": float(total_payout),
+        "total_net_payout": float(total_net_payout),
         "total_profit": float(total_profit),
+        "total_net_profit": float(total_net_profit),
         "records_count": qs.count()
     })
 
