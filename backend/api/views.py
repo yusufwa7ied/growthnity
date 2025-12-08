@@ -328,32 +328,52 @@ def kpis_view(request):
     mb_qs = qs.filter(partner__partner_type="MB")
     has_mb = mb_qs.exists()
     
-    # Get ACTUAL MB spend from MediaBuyerDailySpend table (no proportional allocation)
+    # Get ACTUAL MB spend from MediaBuyerDailySpend table
+    # Apply the SAME filters (date, advertiser, partner) but ignore coupon filter
     if has_mb:
-        # Get unique date/advertiser/partner combinations from filtered CampaignPerformance
-        spend_keys = mb_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
+        # Build spend queryset with same filters as CampaignPerformance (except coupon)
+        spend_qs = MediaBuyerDailySpend.objects.all()
         
-        from django.db.models import Q
-        spend_conditions = Q()
-        for date, adv_id, part_id in spend_keys:
-            spend_conditions |= Q(date=date, advertiser_id=adv_id, partner_id=part_id)
+        # Apply date filters
+        if date_from:
+            d = parse_date(date_from)
+            if d:
+                spend_qs = spend_qs.filter(date__gte=d)
+        if date_to:
+            d = parse_date(date_to)
+            if d:
+                spend_qs = spend_qs.filter(date__lte=d)
         
-        if spend_conditions:
-            # Get total actual spend for these keys (no allocation)
-            mb_spend_agg = MediaBuyerDailySpend.objects.filter(spend_conditions).aggregate(
-                total=Sum('amount_spent')
-            )
-            mb_spend = float(mb_spend_agg['total'] or 0)
-            
-            # Also build lookup for net payout calculation later
-            mb_spend_lookup = {}
-            spend_qs = MediaBuyerDailySpend.objects.filter(spend_conditions)
-            for s in spend_qs:
-                key = (s.date, s.advertiser_id, s.partner_id)
-                mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
-        else:
-            mb_spend = 0
-            mb_spend_lookup = {}
+        # Apply advertiser filter
+        if advertiser_ids:
+            spend_qs = spend_qs.filter(advertiser_id__in=advertiser_ids)
+        
+        # Apply partner filter
+        if partner_ids:
+            spend_qs = spend_qs.filter(partner_id__in=partner_ids)
+        
+        # Apply team member filter (translate to partner_ids)
+        if team_member_ids:
+            team_partner_ids = set()
+            for tm_id in team_member_ids:
+                assignments = AccountAssignment.objects.filter(company_user_id=tm_id).prefetch_related('partners')
+                for assignment in assignments:
+                    partner_ids_list = list(assignment.partners.filter(partner_type="MB").values_list('id', flat=True))
+                    team_partner_ids.update(partner_ids_list)
+            if team_partner_ids:
+                spend_qs = spend_qs.filter(partner_id__in=team_partner_ids)
+            else:
+                spend_qs = spend_qs.none()
+        
+        # Get total actual spend (no coupon filter applied!)
+        mb_spend_agg = spend_qs.aggregate(total=Sum('amount_spent'))
+        mb_spend = float(mb_spend_agg['total'] or 0)
+        
+        # Build lookup for net payout calculation later
+        mb_spend_lookup = {}
+        for s in spend_qs:
+            key = (s.date, s.advertiser_id, s.partner_id)
+            mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
     else:
         mb_spend = 0
         mb_spend_lookup = {}
