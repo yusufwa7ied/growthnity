@@ -231,12 +231,11 @@ def kpis_view(request):
     date_to = request.GET.get("date_to")
 
     # -------------------------------
-    # Department scoping (ALWAYS apply for OpsManager with department)
-    # This ensures OpsManager only sees their department's data
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # TeamMembers will be filtered by AccountAssignment later
+    # Department scoping for OpsManager WITH a department
+    # OpsManager with department: sees ONLY their department
+    # OpsManager without department: sees ALL departments
     # -------------------------------
-    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
+    if company_user and company_user.department and company_user.role.name == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -454,10 +453,10 @@ def graph_data_view(request):
     partner_type = request.GET.get("partner_type")
     geos = request.GET.getlist("geo")
 
-    # Department scope: MB, AFF, INF (ALWAYS apply for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # TeamMembers will be filtered by AccountAssignment later
-    if company_user and company_user.department and company_user.role.name == "OpsManager" and not partner_type:
+    # Department scope for OpsManager WITH a department
+    # OpsManager with department: sees ONLY their department
+    # OpsManager without department: sees ALL departments
+    if company_user and company_user.department and company_user.role.name == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -576,11 +575,11 @@ def performance_table_view(request):
     date_to = request.GET.get("date_to")
 
     # -------------------------------
-    # Department scoping (ALWAYS apply for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # TeamMembers will be filtered by AccountAssignment later
+    # Department scoping for OpsManager WITH a department
+    # OpsManager with department: sees ONLY their department
+    # OpsManager without department: sees ALL departments
     # -------------------------------
-    if company_user and company_user.department and role == "OpsManager" and not partner_type:
+    if company_user and company_user.department and role == "OpsManager":
         dept = company_user.department
         if dept == "media_buying":
             qs = qs.filter(partner__partner_type="MB")
@@ -911,10 +910,10 @@ def dashboard_filter_options_view(request):
     partner_type = request.GET.get("partner_type")
     team_member_ids = request.GET.getlist("team_member_id")
 
-    # Department scoping (ALWAYS apply for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
-    if company_user and department and role == "OpsManager" and not partner_type:
+    # Department scoping for OpsManager WITH a department
+    # OpsManager with department: sees ONLY their department
+    # OpsManager without department: sees ALL departments
+    if company_user and department and role == "OpsManager":
         if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
         elif department == "influencer":
@@ -1041,11 +1040,11 @@ def dashboard_pie_chart_data_view(request):
 
     qs = CampaignPerformance.objects.all()
 
-    # Department scoping (ALWAYS apply for OpsManager with department)
-    # BUT: Skip if explicit partner_type filter is provided (user's choice takes precedence)
-    # ViewOnly with department and TeamMembers will be filtered by AccountAssignment later
+    # Department scoping for OpsManager WITH a department
+    # OpsManager with department: sees ONLY their department
+    # OpsManager without department: sees ALL departments
     department = company_user.department if company_user else None
-    if company_user and department and role == "OpsManager" and not partner_type:
+    if company_user and department and role == "OpsManager":
         if department == "affiliate":
             qs = qs.filter(partner__partner_type="AFF")
         elif department == "influencer":
@@ -1189,7 +1188,9 @@ def advertiser_detail_summary_view(request):
             except:
                 pass
 
-        # Department scoping (for OpsManager with department)
+        # Department scoping for OpsManager WITH a department
+        # OpsManager with department: sees ONLY their department
+        # OpsManager without department: sees ALL departments
         if company_user and department and role == "OpsManager":
             if department == "media_buying":
                 qs = qs.filter(partner__partner_type="MB")
