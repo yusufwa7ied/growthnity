@@ -306,7 +306,7 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
         "PLATFORM": "platform",
     })
 
-    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
+    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce", format="mixed")
     df["advertiser_name"] = df["advertiser_name"].astype(str).str.strip()
     df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
     df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
