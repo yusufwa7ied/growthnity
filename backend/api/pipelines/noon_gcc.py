@@ -223,10 +223,12 @@ def run(date_from: date, date_to: date):
     # 6. Split by date and apply appropriate logic
     old_rows = []
     new_rows = []
+    skipped_no_date = 0
     
     for idx, row in enriched_df.iterrows():
         order_date = row.get("created_at")
         if pd.isna(order_date):
+            skipped_no_date += 1
             continue
         
         if isinstance(order_date, str):
@@ -239,12 +241,15 @@ def run(date_from: date, date_to: date):
         else:
             new_rows.append(row)
     
+    print(f"📊 Date split: {len(old_rows)} OLD (before Nov 1), {len(new_rows)} NEW (from Nov 1), {skipped_no_date} skipped (no date)")
+    
     # Process old logic rows
     final_rows = []
     if old_rows:
         old_df = pd.DataFrame(old_rows)
         print(f"📊 Processing {len(old_df)} rows with OLD logic (before Nov 1)")
         old_final = calculate_old_logic(old_df, advertiser)
+        print(f"✅ OLD logic produced {len(old_final)} final rows")
         final_rows.append(old_final)
     
     # Process new bracket rows
@@ -252,6 +257,7 @@ def run(date_from: date, date_to: date):
         new_df = pd.DataFrame(new_rows)
         print(f"📊 Processing {len(new_df)} rows with NEW bracket logic (from Nov 1)")
         new_final = calculate_new_brackets(new_df, advertiser)
+        print(f"✅ NEW bracket logic produced {len(new_final)} final rows")
         final_rows.append(new_final)
     
     if not final_rows:
