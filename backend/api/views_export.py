@@ -187,6 +187,9 @@ def export_performance_report(request):
 
 def calculate_summary_statistics(qs, has_full_access):
     """Calculate summary statistics from queryset"""
+    from .views import get_cancellation_rate_for_date
+    from decimal import Decimal
+    
     stats = qs.aggregate(
         total_orders=Sum('total_orders'),
         ftu_orders=Sum('ftu_orders'),
@@ -205,6 +208,9 @@ def calculate_summary_statistics(qs, has_full_access):
     # Calculate MB spend if needed
     if has_full_access:
         mb_qs = qs.filter(partner__partner_type="MB")
+        mb_spend_lookup = {}
+        total_revenue_per_key = {}
+        
         if mb_qs.exists():
             spend_keys = mb_qs.values_list('date', 'advertiser_id', 'partner_id').distinct()
             spend_conditions = Q()
@@ -216,6 +222,24 @@ def calculate_summary_statistics(qs, has_full_access):
                     total=Sum('amount_spent')
                 )
                 mb_spend = float(mb_spend_agg['total'] or 0)
+                
+                # Build spend lookup for net payout calculation
+                for s in MediaBuyerDailySpend.objects.filter(spend_conditions):
+                    key = (s.date, s.advertiser_id, s.partner_id)
+                    mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
+                
+                # Build revenue lookup
+                all_mb_qs = CampaignPerformance.objects.filter(
+                    partner__partner_type="MB",
+                    date__in=[k[0] for k in spend_keys],
+                    advertiser_id__in=[k[1] for k in spend_keys],
+                    partner_id__in=[k[2] for k in spend_keys]
+                )
+                for r in all_mb_qs.values('date', 'advertiser_id', 'partner_id').annotate(
+                    total_rev=Sum('total_revenue')
+                ):
+                    key = (r['date'], r['advertiser_id'], r['partner_id'])
+                    total_revenue_per_key[key] = float(r['total_rev'] or 0)
             else:
                 mb_spend = 0
         else:
@@ -229,6 +253,32 @@ def calculate_summary_statistics(qs, has_full_access):
         
         stats['total_cost'] = mb_spend + non_mb_payout
         stats['total_profit'] = float(stats['total_revenue'] or 0) - stats['total_cost']
+        
+        # Calculate net payout with cancellation rates
+        total_net_payout = Decimal('0')
+        for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout', 'total_revenue'):
+            cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+            
+            if record['partner__partner_type'] == 'MB':
+                key = (record['date'], record['advertiser_id'], record['partner_id'])
+                if key in mb_spend_lookup:
+                    total_spend_for_key = mb_spend_lookup.get(key, 0)
+                    total_revenue_for_key = total_revenue_per_key.get(key, 1)
+                    record_revenue = float(record['total_revenue'] or 0)
+                    if total_revenue_for_key > 0:
+                        record_payout = total_spend_for_key * (record_revenue / total_revenue_for_key)
+                    else:
+                        record_payout = 0
+                else:
+                    record_payout = 0
+            else:
+                record_payout = float(record['total_payout'] or 0)
+            
+            net_payout_for_record = Decimal(str(record_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            total_net_payout += net_payout_for_record
+        
+        stats['total_net_cost'] = float(total_net_payout)
+        stats['total_net_profit'] = float(stats['total_revenue'] or 0) - float(total_net_payout)
     
     return stats
 
@@ -263,8 +313,12 @@ def write_summary_section(writer, stats, filters, user, role, can_see_profit):
         writer.writerow(['', f"RTU Revenue: ${stats['rtu_revenue'] or 0:,.2f}"])
         writer.writerow([])
         
-        writer.writerow(['Total Cost:', f"${stats.get('total_cost', 0):,.2f}"])
-        writer.writerow(['Total Profit:', f"${stats.get('total_profit', 0):,.2f}"])
+        writer.writerow(['Total Gross Cost:', f"${stats.get('total_cost', 0):,.2f}"])
+        writer.writerow(['Total Net Cost:', f"${stats.get('total_net_cost', 0):,.2f}"])
+        writer.writerow([])
+        
+        writer.writerow(['Total Gross Profit:', f"${stats.get('total_profit', 0):,.2f}"])
+        writer.writerow(['Total Net Profit:', f"${stats.get('total_net_profit', 0):,.2f}"])
     
     writer.writerow([])
     writer.writerow([])
@@ -274,6 +328,9 @@ def write_summary_section(writer, stats, filters, user, role, can_see_profit):
 
 def write_detailed_data(writer, data, has_full_access, can_see_profit):
     """Write detailed performance data rows"""
+    from .views import get_cancellation_rate_for_date
+    from decimal import Decimal
+    
     # Write header
     headers = [
         'Date', 'Campaign', 'Geo', 'Coupon', 'Partner', 'Partner Type',
@@ -284,10 +341,11 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
     if has_full_access or can_see_profit:
         headers.extend([
             'Total Revenue', 'FTU Revenue', 'RTU Revenue',
-            'Total Cost', 'FTU Payout', 'RTU Payout',
+            'Gross Cost', 'Net Cost', 'Cancellation %',
+            'FTU Payout', 'RTU Payout',
         ])
         if can_see_profit:
-            headers.append('Profit')
+            headers.extend(['Gross Profit', 'Net Profit'])
     else:
         headers.append('Payout')
     
@@ -319,18 +377,25 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
             revenue = float(record.total_revenue)
             payout = float(record.total_payout)
             
+            # Calculate net payout with cancellation rate
+            cancellation_rate = get_cancellation_rate_for_date(record.advertiser_id, record.date)
+            net_payout = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
             row.extend([
                 f"{float(record.total_revenue):.2f}",
                 f"{float(record.ftu_revenue):.2f}",
                 f"{float(record.rtu_revenue):.2f}",
                 f"{payout:.2f}",
+                f"{float(net_payout):.2f}",
+                f"{float(cancellation_rate):.1f}",
                 f"{float(record.ftu_payout):.2f}",
                 f"{float(record.rtu_payout):.2f}",
             ])
             
             if can_see_profit:
                 profit = revenue - payout
-                row.append(f"{profit:.2f}")
+                net_profit = revenue - float(net_payout)
+                row.extend([f"{profit:.2f}", f"{net_profit:.2f}"])
         else:
             row.append(f"{float(record.total_payout):.2f}")
         
