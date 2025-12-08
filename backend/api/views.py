@@ -985,38 +985,47 @@ def dashboard_filter_options_view(request):
                 "partner_type": cp.partner.partner_type if cp.partner else None
             }
 
-    # Get team members from AccountAssignments for the partners that have data
+    # Get team members from the Partners table (partners ARE the team members)
+    # Extract partner IDs and names from the performance data
     team_members_list = []
     
-    # Extract partner IDs from the performance data
-    partner_ids_in_data = set(partners_map.keys())
-    print(f"DEBUG dashboard_filter_options: Found {len(partner_ids_in_data)} partners with data")
+    print(f"DEBUG dashboard_filter_options: Found {len(partners_map)} partners with data")
     
-    if partner_ids_in_data:
-        # Get AccountAssignments for these specific partners
-        assignments = AccountAssignment.objects.filter(
-            partners__id__in=partner_ids_in_data
-        ).select_related("company_user__user", "company_user__role").distinct()
+    # Partners in the data ARE the team members - convert partner data to team member format
+    for partner_id, partner_data in partners_map.items():
+        # Try to find a matching CompanyUser for this partner (by name)
+        partner_name = partner_data['partner']
         
-        print(f"DEBUG dashboard_filter_options: Found {assignments.count()} account assignments for these partners")
+        # Try to find CompanyUser by matching username to partner name
+        matching_user = CompanyUser.objects.filter(
+            user__username__icontains=partner_name.replace(' ', '_').lower()
+        ).select_related('user', 'role').first()
         
-        # Extract unique team members (exclude Admin and OpsManager)
-        seen_ids = set()
-        for assignment in assignments:
-            cu = assignment.company_user
-            if cu and cu.user and cu.id not in seen_ids:
-                # Exclude Admin and OpsManager roles
-                if cu.role and cu.role.name not in ["Admin", "OpsManager"]:
-                    seen_ids.add(cu.id)
-                    team_members_list.append({
-                        "company_user_id": cu.id,
-                        "username": cu.user.username,
-                        "role": cu.role.name
-                    })
+        if not matching_user:
+            # Try without underscore replacement
+            matching_user = CompanyUser.objects.filter(
+                user__username__icontains=partner_name.replace(' ', '.').lower()
+            ).select_related('user', 'role').first()
         
-        print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members")
-    else:
-        print(f"DEBUG dashboard_filter_options: No partners with data, returning empty team members list")
+        if not matching_user:
+            # Try first name only
+            first_name = partner_name.split()[0] if partner_name else ''
+            if first_name:
+                matching_user = CompanyUser.objects.filter(
+                    user__username__icontains=first_name.lower()
+                ).select_related('user', 'role').first()
+        
+        if matching_user and matching_user.user:
+            team_members_list.append({
+                "company_user_id": matching_user.id,
+                "username": matching_user.user.username,
+                "role": matching_user.role.name if matching_user.role else "Partner"
+            })
+            print(f"DEBUG: Matched partner '{partner_name}' to user '{matching_user.user.username}'")
+        else:
+            print(f"DEBUG: No CompanyUser match for partner '{partner_name}'")
+    
+    print(f"DEBUG dashboard_filter_options: Returning {len(team_members_list)} team members")
 
     result = {
         "advertisers": list(advertisers_map.values()),
