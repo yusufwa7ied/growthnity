@@ -26,4 +26,4 @@ class Command(BaseCommand):
 
         count = run(date_from, date_to)
 
-        self.stdout.write(f"✅ Done. Inserted {count} rows into RDELTransaction.")
+        self.stdout.write(f"✅ Done. Inserted {count} rows into ElNahdiTransaction.")

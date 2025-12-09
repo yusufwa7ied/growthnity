@@ -80,7 +80,7 @@ def run(date_from: date, date_to: date):
     print("🔍 FINAL DF HEAD:")
     print(final_df.head(10))
 
-    # 7. SAVE INTO RDELTransaction (reusing same model for now)
+    # 7. SAVE INTO DahamTransaction
     count = save_final_rows(advertiser, final_df, date_from, date_to)
 
     # 8. PUSH TO CAMPAIGN PERFORMANCE

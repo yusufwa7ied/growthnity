@@ -414,58 +414,7 @@ class StyliTransaction(models.Model):
         return f"{self.order_id} | {self.created_date} | {self.coupon}"
 
 
-class RDELTransaction(models.Model):
-    """Reef, Daham, El_Esaei_Kids aggregated transactions"""
-    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    # 1) Identifiers
-    order_id = models.CharField(max_length=200)  # Synthetic ID from date+coupon+country
-    created_date = models.DateTimeField()
-
-    # 2) Core metadata
-    country = models.CharField(max_length=10)  # KSA, UAE, KWT, QA, BAH, OMA
-    coupon = models.CharField(max_length=50)
-    user_type = models.CharField(max_length=10, default="RTU")  # FTU or RTU
-
-    # 3) Partner & Advertiser
-    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noonnamshi_transactions")
-    partner_name = models.CharField(max_length=150, null=True, blank=True)
-    advertiser = models.ForeignKey("Advertiser", on_delete=models.CASCADE)
-    advertiser_name = models.CharField(max_length=150)
-
-    # 4) Order count (since data is aggregated)
-    order_count = models.IntegerField(default=1)
-
-    # 5) Currency & rates
-    currency = models.CharField(max_length=10, default="SAR")
-    rate_type = models.CharField(max_length=20, default="percent")
-
-    # 6) Money (SAR)
-    sales = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    commission = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    our_rev = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-
-    # 7) Payout rule rates
-    ftu_rate = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    rtu_rate = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    ftu_fixed_bonus = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    rtu_fixed_bonus = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-
-    # 8) Calculated payout & profit
-    payout = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-
-    # 9) USD conversions
-    our_rev_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    payout_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-    profit_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
-
-    class Meta:
-        ordering = ["-created_date"]
-
-    def __str__(self):
-        return f"{self.advertiser_name} | {self.order_id} | {self.created_date}"
-
-    
 class SpringRoseTransaction(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 

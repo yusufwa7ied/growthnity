@@ -28,7 +28,7 @@ from api.pipelines.helpers import (
 )
 from api.services.s3_service import s3_service
 
-ADVERTISER_NAME = "Noon"
+ADVERTISER_NAME = "Noon_GCC"
 S3_CSV_KEY = settings.S3_PIPELINE_FILES["noon_gcc"]
 
 # Date cutoff for new bracket logic
@@ -385,7 +385,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                 NoonGCCTransaction(
                     order_id=f"noon_gcc_{order_date_val}_{r.get('coupon')}_{len(objs)}",
                     order_date=order_date_val,
-                    advertiser_name="Noon",
+                    advertiser_name="Noon_GCC",
                     is_gcc=True,
                     region="gcc",
                     platform=r.get("platform", ""),

@@ -30,7 +30,7 @@ from api.services.s3_service import s3_service
 # CONFIG
 # ---------------------------------------------------
 
-ADVERTISER_NAME = "Noon"
+ADVERTISER_NAME = "Noon_Egypt"
 S3_EGYPT_KEY = settings.S3_PIPELINE_FILES["noon_egypt"]
 
 # Date cutoff for bracket-based logic
