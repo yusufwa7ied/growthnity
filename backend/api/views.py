@@ -461,11 +461,12 @@ def kpis_view(request):
 @permission_classes([IsAuthenticated])
 def graph_data_view(request):
     print("🔴 GRAPH_DATA_VIEW CALLED")
-    user = request.user
-    company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
+    try:
+        user = request.user
+        company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
 
-    # base queryset
-    qs = CampaignPerformance.objects.all()
+        # base queryset
+        qs = CampaignPerformance.objects.all()
 
     # Optional filters - SUPPORT MULTIPLE VALUES
     date_from = request.GET.get("date_from")
@@ -629,8 +630,13 @@ def graph_data_view(request):
             "daily_cost": [float(e["total_cost"]) for e in daily_data],
         }
 
-    print(f"🔴 RETURNING GRAPH DATA: {len(result.get('dates', []))} dates, keys: {list(result.keys())}")
-    return Response(result)
+        print(f"🔴 RETURNING GRAPH DATA: {len(result.get('dates', []))} dates, keys: {list(result.keys())}")
+        return Response(result)
+    except Exception as e:
+        import traceback
+        print(f"🔴🔴🔴 ERROR IN GRAPH_DATA_VIEW: {str(e)}")
+        print(f"🔴🔴🔴 TRACEBACK: {traceback.format_exc()}")
+        return Response({"error": str(e)}, status=500)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
