@@ -987,9 +987,13 @@ def dashboard_filter_options_view(request):
     coupons_map = {}
 
     for cp in qs.select_related('advertiser', 'partner', 'coupon'):
+        # Skip records with null advertiser
+        if not cp.advertiser:
+            continue
+            
         # Advertisers - format Noon with geo
         advertiser_display_name = format_advertiser_name(
-            cp.advertiser.name if cp.advertiser else "Unknown",
+            cp.advertiser.name,
             cp.geo
         )
         
