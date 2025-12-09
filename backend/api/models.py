@@ -691,7 +691,9 @@ class CampaignPerformance(models.Model):
         pass
 
     def __str__(self):
-        return f"{self.date} | {self.advertiser.name} | {self.partner.name if self.partner else 'No Partner'}" # type: ignore
+        advertiser_name = self.advertiser.name if self.advertiser else 'No Advertiser'
+        partner_name = self.partner.name if self.partner else 'No Partner'
+        return f"{self.date} | {advertiser_name} | {partner_name}"
 
 class CouponAssignmentHistory(models.Model):
     coupon = models.ForeignKey("Coupon", on_delete=models.CASCADE, related_name="history")
