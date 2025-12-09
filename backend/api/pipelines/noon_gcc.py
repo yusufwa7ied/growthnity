@@ -441,13 +441,16 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
             # Skip if not a valid GCC country after normalization
             continue
             
-        key = (r.order_date, r.partner_name, r.coupon_code, country_normalized)
+        # Clean coupon code - strip whitespace and convert None to empty string
+        coupon_code = str(r.coupon_code).strip() if r.coupon_code else ""
+        
+        key = (r.order_date, r.partner_name, coupon_code, country_normalized)
         
         if key not in groups:
             groups[key] = {
                 "date": r.order_date,
                 "partner_name": r.partner_name,
-                "coupon": r.coupon_code,
+                "coupon": coupon_code,
                 "geo": country_normalized,
                 "ftu_orders": 0,
                 "rtu_orders": 0,
@@ -491,7 +494,11 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
         objs = []
         for _, g in groups.items():
             partner = Partner.objects.filter(name=g["partner_name"]).first() if g["partner_name"] else None
-            coupon_obj = Coupon.objects.filter(code=g["coupon"]).first()
+            coupon_obj = Coupon.objects.filter(code=g["coupon"]).first() if g["coupon"] else None
+            
+            # Skip records with blank coupon
+            if not coupon_obj:
+                continue
 
             objs.append(
                 CampaignPerformance(
