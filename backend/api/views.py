@@ -460,6 +460,7 @@ def kpis_view(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def graph_data_view(request):
+    print("🔴 GRAPH_DATA_VIEW CALLED")
     user = request.user
     company_user = CompanyUser.objects.select_related("role").filter(user=user).first()
 
@@ -628,6 +629,7 @@ def graph_data_view(request):
             "daily_cost": [float(e["total_cost"]) for e in daily_data],
         }
 
+    print(f"🔴 RETURNING GRAPH DATA: {len(result.get('dates', []))} dates, keys: {list(result.keys())}")
     return Response(result)
 
 @api_view(["GET"])
