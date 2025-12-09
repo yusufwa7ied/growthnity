@@ -13,7 +13,7 @@ from django.conf import settings
 
 from api.models import (
     Advertiser,
-    NoonTransaction,
+    NoonGCCTransaction,
     CampaignPerformance,
     Partner,
     Coupon,
@@ -353,9 +353,9 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
-    """Save to NoonTransaction table."""
+    """Save to NoonGCCTransaction table."""
     if df.empty:
-        NoonTransaction.objects.filter(
+        NoonGCCTransaction.objects.filter(
             order_date__gte=date_from,
             order_date__lte=date_to,
             country__in=GCC_COUNTRIES
@@ -363,7 +363,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
         return 0
 
     with transaction.atomic():
-        NoonTransaction.objects.filter(
+        NoonGCCTransaction.objects.filter(
             order_date__gte=date_from,
             order_date__lte=date_to,
             country__in=GCC_COUNTRIES
@@ -382,7 +382,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                 order_date_val = order_date_val.date()
             
             objs.append(
-                NoonTransaction(
+                NoonGCCTransaction(
                     order_id=f"noon_gcc_{order_date_val}_{r.get('coupon')}_{len(objs)}",
                     order_date=order_date_val,
                     advertiser_name="Noon",
@@ -410,9 +410,9 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                 )
             )
 
-        NoonTransaction.objects.bulk_create(objs, batch_size=2000)
+        NoonGCCTransaction.objects.bulk_create(objs, batch_size=2000)
 
-    return len(df)
+    return len(objs)
 
 
 def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
@@ -420,7 +420,7 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     # Include both uppercase and lowercase country codes for backwards compatibility
     gcc_countries_all = GCC_COUNTRIES + [c.lower() for c in GCC_COUNTRIES] + ["sa", "ae"]
     
-    qs = NoonTransaction.objects.filter(
+    qs = NoonGCCTransaction.objects.filter(
         order_date__gte=date_from,
         order_date__lte=date_to,
         country__in=gcc_countries_all

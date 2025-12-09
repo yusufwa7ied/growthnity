@@ -10,7 +10,8 @@ from .models import (
     RawAdvertiserRecord,
     SpringRoseTransaction,
     NoonNamshiTransaction,
-    NoonTransaction,
+    NoonGCCTransaction,
+    NoonEgyptTransaction,
     PayoutRuleHistory,
     RevenueRuleHistory,
     AdvertiserCancellationRate,
@@ -453,8 +454,8 @@ class NoonNamshiTransactionAdmin(ImportExportModelAdmin):
     search_fields = ("coupon", "partner_name", "advertiser_name", "country")
     list_filter = ("advertiser_name", "country", "user_type", "partner_type", "currency", "rate_type")
 
-@admin.register(NoonTransaction)
-class NoonTransactionAdmin(ImportExportModelAdmin):
+@admin.register(NoonGCCTransaction)
+class NoonGCCTransactionAdmin(ImportExportModelAdmin):
     list_display = (
         "order_date",
         "region",
@@ -476,4 +477,26 @@ class NoonTransactionAdmin(ImportExportModelAdmin):
     ordering = ("-order_date",)
     date_hierarchy = "order_date"
     readonly_fields = ("order_id", "created_at", "updated_at")
+
+
+@admin.register(NoonEgyptTransaction)
+class NoonEgyptTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "coupon_code",
+        "partner_name",
+        "user_type",
+        "bracket",
+        "bracket_payout_usd",
+        "order_value_usd",
+        "revenue_usd",
+        "payout_usd",
+        "profit_usd",
+    )
+    search_fields = ("coupon_code", "partner_name", "order_hash", "bracket")
+    list_filter = ("order_date", "user_type", "bracket")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("record_id", "order_hash", "created_at", "updated_at")
 

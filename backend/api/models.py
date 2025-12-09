@@ -824,10 +824,10 @@ class RevenueRuleHistory(models.Model):
         return f"{self.advertiser.name} | FTU: {self.rev_ftu_rate}% / RTU: {self.rev_rtu_rate}% (from {self.effective_date.date()})"
 
 
-class NoonTransaction(models.Model):
+class NoonGCCTransaction(models.Model):
     """
-    Stores Noon transaction data from GCC and Egypt regions.
-    Handles both pre-Nov 18 (percentage-based) and post-Nov 18 (bracket-based) logic.
+    Stores Noon GCC transaction data (SAU, ARE, QAT, KWT, OMN, BHR).
+    Handles both pre-Nov 1 (percentage-based) and post-Nov 1 (bracket-based) logic.
     """
     
     # Unique identifier
@@ -888,11 +888,65 @@ class NoonTransaction(models.Model):
             models.Index(fields=["coupon_code", "order_date"]),
             models.Index(fields=["partner", "order_date"]),
         ]
-        verbose_name = "Noon Transaction"
-        verbose_name_plural = "Noon Transactions"
+        verbose_name = "Noon GCC Transaction"
+        verbose_name_plural = "Noon GCC Transactions"
+        db_table = "api_noongcctransaction"
     
     def __str__(self):
-        return f"Noon {self.region.upper()} | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
+        return f"Noon GCC | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
+
+
+class NoonEgyptTransaction(models.Model):
+    """
+    Stores Noon Egypt transaction data with bracket-based payouts.
+    Uses order hash IDs and bracket structure from Noon Egypt sheet.
+    """
+    
+    # Identifiers
+    record_id = models.CharField(max_length=255, help_text="ID from sheet (e.g., 36865)")
+    order_hash = models.CharField(max_length=255, db_index=True, help_text="Hashed order ID")
+    
+    # Date
+    order_date = models.DateField(db_index=True)
+    
+    # Coupon and partner
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_egypt_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_egypt_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    
+    # User type
+    user_type = models.CharField(max_length=10, help_text="ftu or rtu")
+    
+    # Bracket information
+    bracket = models.CharField(max_length=50, help_text="Bracket string (e.g., 'Bracket 1_$0.27')")
+    bracket_payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Payout amount from bracket")
+    
+    # Order value in USD
+    order_value_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="GMV in USD")
+    
+    # Calculated fields
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Our revenue from this order")
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="What we pay partner")
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="revenue - payout")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+            models.Index(fields=["partner", "order_date"]),
+            models.Index(fields=["order_hash"]),
+        ]
+        verbose_name = "Noon Egypt Transaction"
+        verbose_name_plural = "Noon Egypt Transactions"
+    
+    def __str__(self):
+        return f"Noon Egypt | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
 
 
 class SheetSyncStatus(models.Model):
