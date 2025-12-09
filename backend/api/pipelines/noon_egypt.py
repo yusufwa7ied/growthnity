@@ -39,6 +39,17 @@ BRACKET_START_DATE = datetime(2025, 11, 18).date()
 # Exchange rate for AED to USD
 AED_TO_USD = 0.27
 
+# Egypt Revenue (Our Rev) - Bracket-based
+EGYPT_REVENUE = {
+    "Bracket 1": 0.30,   # $4.75 - $14.25
+    "Bracket 2": 0.75,   # $14.26 - $23.85
+    "Bracket 3": 1.30,   # $23.86 - $37.24
+    "Bracket 4": 2.20,   # $37.25 - $59.40
+    "Bracket 5": 3.25,   # $59.41 - $72.00
+    "Bracket 6": 4.25,   # $72.01 - $110.00
+    "Bracket 7": 7.00,   # $110.01 & above
+}
+
 # Egypt Default Payouts (Bracket-based)
 EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 1": 0.20,   # $4.75 - $14.25
@@ -48,6 +59,17 @@ EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 5": 2.50,   # $59.41 - $72.00
     "Bracket 6": 3.25,   # $72.01 - $110.00
     "Bracket 7": 5.50,   # $110.01 & above
+}
+
+# Egypt Special Payouts (for special partners)
+EGYPT_SPECIAL_PAYOUTS = {
+    "Bracket 1": 0.25,   # $4.75 - $14.25
+    "Bracket 2": 0.65,   # $14.26 - $23.85
+    "Bracket 3": 1.10,   # $23.86 - $37.24
+    "Bracket 4": 2.00,   # $37.25 - $59.40
+    "Bracket 5": 2.80,   # $59.41 - $72.00
+    "Bracket 6": 3.00,   # $72.01 - $110.00
+    "Bracket 7": 6.25,   # $110.01 & above
 }
 
 
@@ -122,10 +144,14 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     # Filter out rows with invalid dates
     df = df[df["order_date"].notna()].copy()
     
-    # Calculate revenue (we get 15% of GMV)
-    df["revenue_usd"] = df["order_value_usd"] * 0.15
+    # Extract bracket number (e.g., "Bracket 1_$0.27" → "Bracket 1")
+    df["bracket_name"] = df["bracket"].apply(extract_bracket_number)
+    
+    # Get revenue from bracket (our rev from Noon)
+    df["revenue_usd"] = df["bracket_name"].map(EGYPT_REVENUE).fillna(0.0)
     
     # Extract payout from bracket string (e.g., "Bracket 1_$0.27" → 0.27)
+    # This is what's IN the Excel - could be default or special payout
     df["payout_usd"] = df["bracket"].apply(extract_bracket_revenue)
     
     # Calculate profit
