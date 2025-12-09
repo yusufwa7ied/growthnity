@@ -201,7 +201,7 @@ S3_PIPELINE_FILES = {
     "namshi": "pipeline-data/namshi.csv",
     "noon_gcc": "pipeline-data/noon_gcc.csv",
     "noon_egypt": "pipeline-data/noon_egypt.csv",
-    "styli": "pipeline-data/styli_raw_data.csv",
+    "styli": "pipeline-data/styli.csv",
 }
 
 # Django Jazzmin Admin Configuration
