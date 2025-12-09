@@ -610,22 +610,22 @@ def graph_data_view(request):
         if hasattr(entry["date"], "isoformat"):
             entry["date"] = entry["date"].isoformat()
 
-    # Build response
+    # Build response (convert Decimal to float for JSON serialization)
     if user_is_admin:
         result = {
             "dates": [e["date"] for e in daily_data],
-            "daily_sales": [e["total_sales"] for e in daily_data],
-            "daily_revenue": [e["total_revenue"] for e in daily_data],
-            "daily_cost": [e["total_cost"] for e in daily_data],
-            "daily_profit": [e["total_profit"] for e in daily_data],
+            "daily_sales": [float(e["total_sales"] or 0) for e in daily_data],
+            "daily_revenue": [float(e["total_revenue"] or 0) for e in daily_data],
+            "daily_cost": [float(e["total_cost"]) for e in daily_data],
+            "daily_profit": [float(e["total_profit"]) for e in daily_data],
         }
     else:
         # Team members see sales, revenue, and cost (no profit)
         result = {
             "dates": [e["date"] for e in daily_data],
-            "daily_sales": [e["total_sales"] for e in daily_data],
-            "daily_revenue": [e["total_revenue"] for e in daily_data],
-            "daily_cost": [e["total_cost"] for e in daily_data],
+            "daily_sales": [float(e["total_sales"] or 0) for e in daily_data],
+            "daily_revenue": [float(e["total_revenue"] or 0) for e in daily_data],
+            "daily_cost": [float(e["total_cost"]) for e in daily_data],
         }
 
     return Response(result)
