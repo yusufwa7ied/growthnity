@@ -64,7 +64,7 @@ export interface GraphData {
   dates: string[];
   daily_sales: number[];
   daily_revenue?: number[];
-  daily_payout: number[];
+  daily_cost: number[];
   daily_profit?: number[];
 }
 

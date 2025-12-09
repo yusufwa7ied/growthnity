@@ -671,7 +671,7 @@ export class DashboardComponent implements OnInit {
 
         const datasets: any[] = [];
 
-        // For Admin/OpsManager: Show Revenue and Payout
+        // For Admin/OpsManager: Show Revenue and Cost
         if (this.isAdmin || this.isOpsManager) {
             datasets.push({
                 label: 'Revenue',
@@ -682,18 +682,18 @@ export class DashboardComponent implements OnInit {
                 fill: true
             });
             datasets.push({
-                label: 'Payout',
-                data: data.daily_payout,
+                label: 'Cost',
+                data: data.daily_cost,
                 borderColor: '#ff6b6b',
                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
                 tension: 0.4,
                 fill: true
             });
         } else {
-            // For TeamMembers: Show only Payout (their earnings)
+            // For TeamMembers: Show only Cost (their earnings)
             datasets.push({
-                label: 'Payout',
-                data: data.daily_payout,
+                label: 'Cost',
+                data: data.daily_cost,
                 borderColor: '#009292',
                 backgroundColor: 'rgba(0, 146, 146, 0.1)',
                 tension: 0.4,

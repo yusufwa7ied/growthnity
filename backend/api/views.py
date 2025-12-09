@@ -553,27 +553,75 @@ def graph_data_view(request):
         total_payout=Sum("total_payout"),
     ).order_by("date")
 
-    # calculate profit (only for admin roles)
-    if user_is_admin:
-        for entry in daily_data:
-            rev = entry["total_revenue"] or 0
-            payout = entry["total_payout"] or 0
-            entry["total_profit"] = rev - payout
+    # Get MB spend per day to calculate daily_cost (same as KPI logic)
+    mb_qs = qs.filter(partner__partner_type="MB")
+    has_mb = mb_qs.exists()
+    
+    daily_mb_spend = {}
+    if has_mb:
+        # Build spend queryset with same filters
+        spend_qs = MediaBuyerDailySpend.objects.all()
+        
+        if date_from:
+            d = parse_date(date_from)
+            if d:
+                spend_qs = spend_qs.filter(date__gte=d)
+        if date_to:
+            d = parse_date(date_to)
+            if d:
+                spend_qs = spend_qs.filter(date__lte=d)
+        if advertiser_ids:
+            spend_qs = spend_qs.filter(advertiser_id__in=advertiser_ids)
+        if partner_ids:
+            spend_qs = spend_qs.filter(partner_id__in=partner_ids)
+        if team_member_ids:
+            team_partner_ids = set()
+            for tm_id in team_member_ids:
+                assignments = AccountAssignment.objects.filter(company_user_id=tm_id).prefetch_related('partners')
+                for assignment in assignments:
+                    partner_ids_list = list(assignment.partners.filter(partner_type="MB").values_list('id', flat=True))
+                    team_partner_ids.update(partner_ids_list)
+            if team_partner_ids:
+                spend_qs = spend_qs.filter(partner_id__in=team_partner_ids)
+            else:
+                spend_qs = spend_qs.none()
+        
+        # Aggregate MB spend by date
+        daily_mb_data = spend_qs.values("date").annotate(total_mb_spend=Sum('amount_spent')).order_by("date")
+        for entry in daily_mb_data:
+            daily_mb_spend[entry["date"]] = float(entry["total_mb_spend"] or 0)
 
+    # Calculate daily cost and profit
+    for entry in daily_data:
+        date_key = entry["date"]
+        mb_spend = daily_mb_spend.get(date_key, 0)
+        
+        # Non-MB payout from CampaignPerformance
+        non_mb_payout = float(entry["total_payout"] or 0)
+        
+        # daily_cost = MB spend + non-MB payout (matches KPI logic)
+        entry["total_cost"] = mb_spend + non_mb_payout
+        
+        if user_is_admin:
+            rev = entry["total_revenue"] or 0
+            entry["total_profit"] = rev - entry["total_cost"]
+
+    # Build response
+    if user_is_admin:
         result = {
             "dates": [e["date"] for e in daily_data],
             "daily_sales": [e["total_sales"] for e in daily_data],
             "daily_revenue": [e["total_revenue"] for e in daily_data],
-            "daily_payout": [e["total_payout"] for e in daily_data],
+            "daily_cost": [e["total_cost"] for e in daily_data],
             "daily_profit": [e["total_profit"] for e in daily_data],
         }
     else:
-        # Team members see sales, revenue, and payout (no profit)
+        # Team members see sales, revenue, and cost (no profit)
         result = {
             "dates": [e["date"] for e in daily_data],
             "daily_sales": [e["total_sales"] for e in daily_data],
             "daily_revenue": [e["total_revenue"] for e in daily_data],
-            "daily_payout": [e["total_payout"] for e in daily_data],
+            "daily_cost": [e["total_cost"] for e in daily_data],
         }
 
     return Response(result)
