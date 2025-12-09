@@ -255,26 +255,21 @@ def calculate_summary_statistics(qs, has_full_access):
         stats['total_profit'] = float(stats['total_revenue'] or 0) - stats['total_cost']
         
         # Calculate net payout with cancellation rates
+        # Use actual MB spend (not proportional) to match dashboard
         total_net_payout = Decimal('0')
-        for record in qs.values('date', 'advertiser_id', 'partner_id', 'partner__partner_type', 'total_payout', 'total_revenue'):
+        
+        # Process MB spend with cancellation rates
+        for key, spend_amount in mb_spend_lookup.items():
+            date, advertiser_id, partner_id = key
+            cancellation_rate = get_cancellation_rate_for_date(advertiser_id, date)
+            net_spend = Decimal(str(spend_amount)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            total_net_payout += net_spend
+        
+        # Process non-MB payout with cancellation rates
+        for record in qs.exclude(partner__partner_type='MB').values('date', 'advertiser_id', 'total_payout'):
             cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
-            
-            if record['partner__partner_type'] == 'MB':
-                key = (record['date'], record['advertiser_id'], record['partner_id'])
-                if key in mb_spend_lookup:
-                    total_spend_for_key = mb_spend_lookup.get(key, 0)
-                    total_revenue_for_key = total_revenue_per_key.get(key, 1)
-                    record_revenue = float(record['total_revenue'] or 0)
-                    if total_revenue_for_key > 0:
-                        record_payout = total_spend_for_key * (record_revenue / total_revenue_for_key)
-                    else:
-                        record_payout = 0
-                else:
-                    record_payout = 0
-            else:
-                record_payout = float(record['total_payout'] or 0)
-            
-            net_payout_for_record = Decimal(str(record_payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            payout = float(record['total_payout'] or 0)
+            net_payout_for_record = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
             total_net_payout += net_payout_for_record
         
         stats['total_net_cost'] = float(total_net_payout)
@@ -331,6 +326,23 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
     from .views import get_cancellation_rate_for_date
     from decimal import Decimal
     
+    # Build MB spend lookup for accurate cost calculation
+    mb_spend_lookup = {}
+    if has_full_access or can_see_profit:
+        # Get all MB records from the data
+        mb_records = [r for r in data if r.partner and r.partner.partner_type == "MB"]
+        if mb_records:
+            # Get actual MB spend from MediaBuyerDailySpend
+            spend_conditions = Q()
+            for r in mb_records:
+                spend_conditions |= Q(date=r.date, advertiser_id=r.advertiser_id, partner_id=r.partner_id)
+            
+            if spend_conditions:
+                mb_spends = MediaBuyerDailySpend.objects.filter(spend_conditions)
+                for s in mb_spends:
+                    key = (s.date, s.advertiser_id, s.partner_id)
+                    mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
+    
     # Write header
     headers = [
         'Date', 'Campaign', 'Geo', 'Coupon', 'Partner', 'Partner Type',
@@ -375,11 +387,26 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
         
         if has_full_access or can_see_profit:
             revenue = float(record.total_revenue)
-            payout = float(record.total_payout)
+            
+            # Use actual MB spend for MB partners, stored payout for others
+            if record.partner and record.partner.partner_type == "MB":
+                key = (record.date, record.advertiser_id, record.partner_id)
+                payout = mb_spend_lookup.get(key, 0)
+            else:
+                payout = float(record.total_payout)
             
             # Calculate net payout with cancellation rate
             cancellation_rate = get_cancellation_rate_for_date(record.advertiser_id, record.date)
             net_payout = Decimal(str(payout)) * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            
+            # For FTU/RTU breakdown, use proportional allocation for MB
+            if record.partner and record.partner.partner_type == "MB":
+                total_rev = float(record.total_revenue) if record.total_revenue else 0
+                ftu_payout = (payout * (float(record.ftu_revenue) / total_rev)) if total_rev > 0 else 0
+                rtu_payout = (payout * (float(record.rtu_revenue) / total_rev)) if total_rev > 0 else 0
+            else:
+                ftu_payout = float(record.ftu_payout)
+                rtu_payout = float(record.rtu_payout)
             
             row.extend([
                 f"{float(record.total_revenue):.2f}",
@@ -388,8 +415,8 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
                 f"{payout:.2f}",
                 f"{float(net_payout):.2f}",
                 f"{float(cancellation_rate):.1f}",
-                f"{float(record.ftu_payout):.2f}",
-                f"{float(record.rtu_payout):.2f}",
+                f"{ftu_payout:.2f}",
+                f"{rtu_payout:.2f}",
             ])
             
             if can_see_profit:
