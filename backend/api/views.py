@@ -51,10 +51,17 @@ def format_advertiser_name(advertiser_name, geo=None):
     Returns "Noon GCC" or "Noon Egypt" for Noon, otherwise returns advertiser name as-is.
     """
     if advertiser_name == "Noon" and geo:
-        if geo.lower() == "gcc":
+        geo_upper = geo.upper()
+        
+        # GCC countries should display as "Noon GCC"
+        gcc_countries = ["SAU", "ARE", "QAT", "KWT", "OMN", "BHR", "SA", "AE"]
+        if geo_upper in gcc_countries or geo.lower() == "gcc":
             return "Noon GCC"
-        elif geo.lower() == "egypt":
+        
+        # Egypt should display as "Noon Egypt"
+        if geo_upper in ["EGY", "EGYPT", "EG"]:
             return "Noon Egypt"
+    
     return advertiser_name
 
 
