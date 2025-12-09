@@ -386,7 +386,11 @@ export class CouponsComponent implements OnInit {
             if (this.showUnassignedOnly && c.partner_id !== null) return false;
             if (this.filterAdvertiser && c.advertiser_id !== this.filterAdvertiser) return false;
             if (this.filterPartner && c.partner_id !== this.filterPartner) return false;
-            if (this.filterCoupon && c.code !== this.filterCoupon) return false;
+            if (this.filterCoupon) {
+                // Extract code from compound key (code|advertiser_id)
+                const filterCode = this.filterCoupon.includes('|') ? this.filterCoupon.split('|')[0] : this.filterCoupon;
+                if (c.code !== filterCode) return false;
+            }
             return true;
         });
     }
