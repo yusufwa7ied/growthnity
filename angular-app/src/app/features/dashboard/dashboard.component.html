@@ -1136,9 +1136,7 @@
         <div class="kpi-content">
           <span class="kpi-label">Payout</span>
           <span class="kpi-value">${{ advertiserDetailData.kpis.payout | number:'1.2-2' }}</span>
-          <span class="kpi-subvalue" *ngIf="advertiserDetailData.kpis.net_payout !== null && advertiserDetailData.kpis.net_payout !== undefined">
-            Net: ${{ advertiserDetailData.kpis.net_payout | number:'1.2-2' }}
-          </span>
+          <span class="kpi-subvalue">Net: {{ advertiserDetailData.kpis.net_payout !== null && advertiserDetailData.kpis.net_payout !== undefined ? ('$' + (advertiserDetailData.kpis.net_payout | number:'1.0-0')) : '-' }}</span>
         </div>
       </div>
       <div class="kpi-card" *ngIf="advertiserDetailData.can_see_profit">
@@ -1146,9 +1144,7 @@
         <div class="kpi-content">
           <span class="kpi-label">Profit</span>
           <span class="kpi-value">${{ advertiserDetailData.kpis.profit | number:'1.2-2' }}</span>
-          <span class="kpi-subvalue" *ngIf="advertiserDetailData.kpis.net_profit !== null && advertiserDetailData.kpis.net_profit !== undefined">
-            Net: ${{ advertiserDetailData.kpis.net_profit | number:'1.2-2' }}
-          </span>
+          <span class="kpi-subvalue">Net: {{ advertiserDetailData.kpis.net_profit !== null && advertiserDetailData.kpis.net_profit !== undefined ? ('$' + (advertiserDetailData.kpis.net_profit | number:'1.0-0')) : '-' }}</span>
         </div>
       </div>
       <div class="kpi-card">
