@@ -12,7 +12,7 @@ from django.conf import settings
 
 from api.models import (
     Advertiser,
-    NoonTransaction,
+    NoonEgyptTransaction,
     CampaignPerformance,
     Partner,
     Coupon,
@@ -97,55 +97,42 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     """
     print("🧹 Cleaning Noon Egypt data...")
     
-    # Rename standard columns
+    # Rename columns to match our model
     df = df.rename(columns={
+        "ID": "record_id",
         "Date": "order_date",
+        "Tag": "tag",
         "Coupon Code": "coupon_code",
-        "#order": "order_hash",  # This is order ID, not count
-        "Bracket": "tier",
-        "order_value_gmv_usd": "total_value",
-        "Tag": "platform",
+        "#order": "order_hash",
+        "Bracket": "bracket",
+        "order_value_gmv_usd": "order_value_usd",
     })
     
-    # Parse date (format: "Nov 24, 2025")
-    df["order_date"] = pd.to_datetime(df["order_date"], format="%b %d, %Y", errors="coerce").dt.date
+    # Parse date
+    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce")
     
-    # Egypt data has 1 row per order, so total_orders = 1 for each row
-    df["total_orders"] = 1
-    df["non_payable_orders"] = 0
-    df["payable_orders"] = 1
+    # Clean data types
+    df["record_id"] = df["record_id"].astype(str)
+    df["order_hash"] = df["order_hash"].astype(str)
+    df["coupon_code"] = df["coupon_code"].astype(str).str.strip().str.upper()
+    df["tag"] = df["tag"].astype(str).str.lower().str.strip()
+    df["bracket"] = df["bracket"].astype(str).str.strip()
+    df["order_value_usd"] = pd.to_numeric(df["order_value_usd"], errors="coerce").fillna(0.0)
     
-    # Numeric conversions
-    df["total_value"] = pd.to_numeric(df["total_value"], errors="coerce").fillna(0)
+    # Filter out rows with invalid dates
+    df = df[df["order_date"].notna()].copy()
     
-    # Egypt doesn't have FTU/RTU breakdown
-    df["ftu_orders"] = 0
-    df["ftu_value"] = 0
-    df["rtu_orders"] = 0
-    df["rtu_value"] = 0
+    # Calculate revenue (we get 15% of GMV)
+    df["revenue_usd"] = df["order_value_usd"] * 0.15
     
-    # String fields
-    df["coupon_code"] = df["coupon_code"].astype(str).str.strip()
+    # Extract payout from bracket string (e.g., "Bracket 1_$0.27" → 0.27)
+    df["payout_usd"] = df["bracket"].apply(extract_bracket_revenue)
     
-    if "platform" in df.columns:
-        df["platform"] = df["platform"].astype(str).str.strip()
-    else:
-        df["platform"] = ""
-        
-    if "country" in df.columns:
-        df["country"] = df["country"].astype(str).str.strip().str.upper()
-    else:
-        df["country"] = "EGY"
-    
-    # Add region flags
-    df["is_gcc"] = False
-    df["region"] = "egypt"
+    # Calculate profit
+    df["profit_usd"] = df["revenue_usd"] - df["payout_usd"]
     
     # Add created_at for enrichment (use order_date as datetime)
-    df["created_at"] = pd.to_datetime(df["order_date"])
-    
-    # Filter out zero orders
-    df = df[df["payable_orders"] > 0].copy()
+    df["created_at"] = df["order_date"]
     
     print(f"✅ Cleaned {len(df)} Egypt rows")
     return df
@@ -234,19 +221,18 @@ def calculate_financials(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFra
 
 def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date, region: str) -> int:
     """
-    Save processed transactions to NoonTransaction table for specific region.
+    Save processed transactions to NoonEgyptTransaction table.
     """
-    print(f"💾 Saving Noon {region.upper()} transactions...")
+    print(f"💾 Saving Noon Egypt transactions...")
     
-    # Delete existing records in date range for this region only
-    deleted_count, _ = NoonTransaction.objects.filter(
+    # Delete existing records in date range
+    deleted_count, _ = NoonEgyptTransaction.objects.filter(
         order_date__gte=date_from,
         order_date__lte=date_to,
-        region=region,
     ).delete()
     
     if deleted_count > 0:
-        print(f"🗑️  Deleted {deleted_count} existing {region.upper()} records")
+        print(f"🗑️  Deleted {deleted_count} existing Egypt records")
     
     # Prepare records for bulk insert
     records = []
@@ -269,50 +255,36 @@ def save_transactions(advertiser: Advertiser, df: pd.DataFrame, date_from: date,
             except (Partner.DoesNotExist, ValueError, TypeError):
                 pass
         
-        # Determine user type
-        ftu_orders = int(row.get("ftu_orders", 0))
-        rtu_orders = int(row.get("rtu_orders", 0))
-        if ftu_orders > 0 and rtu_orders > 0:
-            user_type = "MIXED"
-        elif ftu_orders > 0:
-            user_type = "FTU"
-        elif rtu_orders > 0:
-            user_type = "RTU"
-        else:
-            user_type = ""
+        # Determine user type from the Tag field
+        user_type = str(row.get("tag", "")).lower().strip()
+        if user_type not in ["ftu", "rtu"]:
+            user_type = "rtu"  # Default to rtu
         
-        record = NoonTransaction(
-            order_id=f"noon_{row['region']}_{row['order_date']}_{row['coupon_code']}_{idx}",
+        # Extract bracket payout
+        bracket_str = str(row.get("bracket", ""))
+        bracket_payout = extract_bracket_revenue(bracket_str)
+        
+        record = NoonEgyptTransaction(
+            record_id=str(row.get("record_id", "")),
+            order_hash=str(row.get("order_hash", "")),
             order_date=row["order_date"],
-            advertiser_name="Noon",
-            is_gcc=row["is_gcc"],
-            region=row["region"],
-            platform=row.get("platform", ""),
-            country=row.get("country", ""),
             coupon=coupon,
             coupon_code=row["coupon_code"],
-            tier_bracket=row.get("tier", ""),
-            total_orders=int(row.get("total_orders", 0)),
-            non_payable_orders=int(row.get("non_payable_orders", 0)),
-            payable_orders=int(row.get("payable_orders", 0)),
-            total_value=Decimal(str(row.get("total_value", 0))),
-            ftu_orders=ftu_orders,
-            ftu_value=Decimal(str(row.get("ftu_value", 0))),
-            rtu_orders=rtu_orders,
-            rtu_value=Decimal(str(row.get("rtu_value", 0))),
             partner=partner,
             partner_name=row.get("partner_name", ""),
+            user_type=user_type,
+            bracket=bracket_str,
+            bracket_payout_usd=Decimal(str(bracket_payout)),
+            order_value_usd=Decimal(str(row.get("order_value_usd", 0))),
             revenue_usd=Decimal(str(row.get("revenue_usd", 0))),
             payout_usd=Decimal(str(row.get("payout_usd", 0))),
-            our_rev_usd=Decimal(str(row.get("our_rev_usd", 0))),
             profit_usd=Decimal(str(row.get("profit_usd", 0))),
-            user_type=user_type,
         )
         records.append(record)
     
     # Bulk insert
-    NoonTransaction.objects.bulk_create(records, batch_size=500)
-    print(f"✅ Saved {len(records)} Noon transactions")
+    NoonEgyptTransaction.objects.bulk_create(records, batch_size=500)
+    print(f"✅ Saved {len(records)} Noon Egypt transactions")
     
     return len(records)
 
@@ -363,11 +335,8 @@ def run(date_from: date, date_to: date):
             # Enrich with partners
             egypt_enriched = enrich_df(egypt_clean, advertiser=advertiser)
             
-            # Calculate financials
-            egypt_final = calculate_financials(egypt_enriched, advertiser)
-            
-            # Save
-            egypt_count = save_transactions(advertiser, egypt_final, date_from, date_to, "egypt")
+            # Save (financials already calculated in clean_noon_egypt)
+            egypt_count = save_transactions(advertiser, egypt_enriched, date_from, date_to, "egypt")
             total_count += egypt_count
             print(f"✅ Egypt: {egypt_count} transactions saved")
         else:
@@ -408,40 +377,29 @@ def push_noon_to_performance(date_from: date, date_to: date):
         print("⚠️  Noon advertiser not found")
         return 0
     
-    qs = NoonTransaction.objects.filter(
+    qs = NoonEgyptTransaction.objects.filter(
         order_date__gte=date_from,
         order_date__lte=date_to
     )
     
     if not qs.exists():
-        print("⚠️ No NoonTransaction rows found")
+        print("⚠️ No NoonEgyptTransaction rows found")
         return 0
     
-    # Group by date, partner, coupon, region
+    # Group by date, partner, coupon
     groups = {}
     
     for r in qs:
-        # Get coupon object
-        coupon_obj = r.coupon
-        
-        key = (
-            r.order_date,
-            r.partner_name,
-            coupon_obj.code if coupon_obj else r.coupon_code,
-            r.region,
-        )
+        key = (r.order_date, r.partner_name, r.coupon_code)
         
         if key not in groups:
-            # Normalize region to proper country code (egypt → EGY)
-            geo_normalized = "EGY" if r.region.lower() == "egypt" else r.country
-            
             groups[key] = {
                 "date": r.order_date,
                 "partner": r.partner,
                 "partner_name": r.partner_name,
-                "coupon": coupon_obj,
+                "coupon": r.coupon,
                 "coupon_code": r.coupon_code,
-                "geo": geo_normalized,
+                "geo": "EGY",
                 "ftu_orders": 0,
                 "rtu_orders": 0,
                 "ftu_sales": 0,
@@ -454,44 +412,34 @@ def push_noon_to_performance(date_from: date, date_to: date):
         
         g = groups[key]
         
-        # Calculate sales in USD (total_value already in USD or converted)
-        sales_usd = float(r.total_value) if r.is_gcc else float(r.total_value)
-        if r.is_gcc:
-            # Convert AED to USD
-            sales_usd = sales_usd * AED_TO_USD
-        
         # Aggregate by user type
-        if r.ftu_orders > 0:
-            g["ftu_orders"] += r.ftu_orders
-            g["ftu_sales"] += sales_usd
+        if r.user_type == "ftu":
+            g["ftu_orders"] += 1
+            g["ftu_sales"] += float(r.order_value_usd)
             g["ftu_revenue"] += float(r.revenue_usd)
             g["ftu_payout"] += float(r.payout_usd)
-        
-        if r.rtu_orders > 0:
-            g["rtu_orders"] += r.rtu_orders
-            g["rtu_sales"] += sales_usd
-            g["rtu_revenue"] += float(r.revenue_usd)
-            g["rtu_payout"] += float(r.payout_usd)
-        
-        # If no FTU/RTU breakdown, count as total
-        if r.ftu_orders == 0 and r.rtu_orders == 0:
-            # Egypt data has no FTU/RTU breakdown
-            g["rtu_orders"] += r.payable_orders
-            g["rtu_sales"] += sales_usd
+        elif r.user_type == "rtu":
+            g["rtu_orders"] += 1
+            g["rtu_sales"] += float(r.order_value_usd)
             g["rtu_revenue"] += float(r.revenue_usd)
             g["rtu_payout"] += float(r.payout_usd)
     
-    # Delete existing performance records
+    # Delete existing performance records for Egypt
     deleted = CampaignPerformance.objects.filter(
         advertiser=advertiser,
         date__gte=date_from,
-        date__lte=date_to
+        date__lte=date_to,
+        geo="EGY"
     ).delete()
-    print(f"🗑️  Deleted {deleted[0]} existing CampaignPerformance rows for Noon")
+    print(f"🗑️  Deleted {deleted[0]} existing CampaignPerformance rows for Noon Egypt")
     
     # Create new performance records
     records = []
     for key, g in groups.items():
+        # Skip records with blank coupon
+        if not g["coupon"]:
+            continue
+            
         total_orders = g["ftu_orders"] + g["rtu_orders"]
         total_sales = g["ftu_sales"] + g["rtu_sales"]
         total_revenue = g["ftu_revenue"] + g["rtu_revenue"]

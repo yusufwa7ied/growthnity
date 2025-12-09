@@ -195,9 +195,8 @@
             </div>
 
             <p-table *ngIf="!loading" [value]="spendRecords" [loading]="loading" [(selection)]="selectedRecords"
-                [paginator]="true" [rows]="25" [showCurrentPageReport]="false"
-                styleClass="spend-table"
-                dataKey="id" selectionMode="multiple">
+                [paginator]="true" [rows]="25" [showCurrentPageReport]="false" styleClass="spend-table" dataKey="id"
+                selectionMode="multiple">
 
                 <ng-template pTemplate="header">
                     <tr>

@@ -513,7 +513,7 @@ class SpringRoseTransaction(models.Model):
     def __str__(self):
         return f"{self.order_id} | {self.created_date} | {self.coupon}"
 
-class NoonNamshiTransaction(models.Model):
+class NamshiTransaction(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # 1) Identifiers (aggregated source → no per-order ID; store 0)
@@ -528,7 +528,7 @@ class NoonNamshiTransaction(models.Model):
     coupon = models.CharField(max_length=50)
     user_type = models.CharField(max_length=10)  # FTU / RTU
 
-    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="noon_namshi_transactions")
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="namshi_transactions")
     partner_name = models.CharField(max_length=150, null=True, blank=True)
     partner_type = models.CharField(max_length=20, null=True, blank=True)
 
@@ -557,6 +557,11 @@ class NoonNamshiTransaction(models.Model):
     # 8) USD conversions
     payout_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
     profit_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+
+    class Meta:
+        db_table = "api_noonnamshitransaction"
+        verbose_name = "Namshi Transaction"
+        verbose_name_plural = "Namshi Transactions"
 
     def __str__(self):
         return f"{self.advertiser_name} | {self.created_date} | {self.coupon} | {self.user_type}"
@@ -947,6 +952,122 @@ class NoonEgyptTransaction(models.Model):
     
     def __str__(self):
         return f"Noon Egypt | {self.order_date} | {self.coupon_code} | ${self.revenue_usd:.2f}"
+
+
+class DahamTransaction(models.Model):
+    """Stores Daham advertiser transaction data."""
+    order_date = models.DateField(db_index=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="daham_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    country = models.CharField(max_length=10)
+    orders = models.IntegerField(default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="daham_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+        ]
+        verbose_name = "Daham Transaction"
+        verbose_name_plural = "Daham Transactions"
+    
+    def __str__(self):
+        return f"Daham | {self.order_date} | {self.coupon_code} | {self.orders} orders"
+
+
+class ElEsaeiKidsTransaction(models.Model):
+    """Stores El Esaei Kids advertiser transaction data."""
+    order_date = models.DateField(db_index=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="el_esaei_kids_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    country = models.CharField(max_length=10)
+    orders = models.IntegerField(default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="el_esaei_kids_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+        ]
+        verbose_name = "El Esaei Kids Transaction"
+        verbose_name_plural = "El Esaei Kids Transactions"
+    
+    def __str__(self):
+        return f"El Esaei Kids | {self.order_date} | {self.coupon_code} | {self.orders} orders"
+
+
+class ReefTransaction(models.Model):
+    """Stores Reef advertiser transaction data."""
+    order_date = models.DateField(db_index=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="reef_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    country = models.CharField(max_length=10)
+    orders = models.IntegerField(default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="reef_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+        ]
+        verbose_name = "Reef Transaction"
+        verbose_name_plural = "Reef Transactions"
+    
+    def __str__(self):
+        return f"Reef | {self.order_date} | {self.coupon_code} | {self.orders} orders"
+
+
+class ElNahdiTransaction(models.Model):
+    """Stores ElNahdi advertiser transaction data."""
+    order_date = models.DateField(db_index=True)
+    coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="elnahdi_transactions")
+    coupon_code = models.CharField(max_length=100, db_index=True)
+    country = models.CharField(max_length=10)
+    orders = models.IntegerField(default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="elnahdi_transactions")
+    partner_name = models.CharField(max_length=255, blank=True)
+    revenue_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payout_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    profit_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date"]),
+            models.Index(fields=["coupon_code", "order_date"]),
+        ]
+        verbose_name = "ElNahdi Transaction"
+        verbose_name_plural = "ElNahdi Transactions"
+    
+    def __str__(self):
+        return f"ElNahdi | {self.order_date} | {self.coupon_code} | {self.orders} orders"
 
 
 class SheetSyncStatus(models.Model):

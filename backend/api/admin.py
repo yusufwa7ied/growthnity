@@ -9,9 +9,13 @@ from .models import (
     MediaBuyerDailySpend, DepartmentTarget,
     RawAdvertiserRecord,
     SpringRoseTransaction,
-    NoonNamshiTransaction,
+    NamshiTransaction,
     NoonGCCTransaction,
     NoonEgyptTransaction,
+    DahamTransaction,
+    ElEsaeiKidsTransaction,
+    ReefTransaction,
+    ElNahdiTransaction,
     PayoutRuleHistory,
     RevenueRuleHistory,
     AdvertiserCancellationRate,
@@ -428,8 +432,8 @@ class PerformanceRecordAdmin(ImportExportModelAdmin):
     date_hierarchy = "date"
     readonly_fields = ("date",)
 
-@admin.register(NoonNamshiTransaction)
-class NoonNamshiTransactionAdmin(ImportExportModelAdmin):
+@admin.register(NamshiTransaction)
+class NamshiTransactionAdmin(ImportExportModelAdmin):
     list_display = (
         "created_date",
         "advertiser_name",
@@ -499,4 +503,89 @@ class NoonEgyptTransactionAdmin(ImportExportModelAdmin):
     ordering = ("-order_date",)
     date_hierarchy = "order_date"
     readonly_fields = ("record_id", "order_hash", "created_at", "updated_at")
+
+
+@admin.register(DahamTransaction)
+class DahamTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "coupon_code",
+        "partner_name",
+        "country",
+        "orders",
+        "sales",
+        "revenue_usd",
+        "payout_usd",
+        "profit_usd",
+    )
+    search_fields = ("coupon_code", "partner_name")
+    list_filter = ("order_date", "country")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ElEsaeiKidsTransaction)
+class ElEsaeiKidsTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "coupon_code",
+        "partner_name",
+        "country",
+        "orders",
+        "sales",
+        "revenue_usd",
+        "payout_usd",
+        "profit_usd",
+    )
+    search_fields = ("coupon_code", "partner_name")
+    list_filter = ("order_date", "country")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ReefTransaction)
+class ReefTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "coupon_code",
+        "partner_name",
+        "country",
+        "orders",
+        "sales",
+        "revenue_usd",
+        "payout_usd",
+        "profit_usd",
+    )
+    search_fields = ("coupon_code", "partner_name")
+    list_filter = ("order_date", "country")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ElNahdiTransaction)
+class ElNahdiTransactionAdmin(ImportExportModelAdmin):
+    list_display = (
+        "order_date",
+        "coupon_code",
+        "partner_name",
+        "country",
+        "orders",
+        "sales",
+        "revenue_usd",
+        "payout_usd",
+        "profit_usd",
+    )
+    search_fields = ("coupon_code", "partner_name")
+    list_filter = ("order_date", "country")
+    list_per_page = 50
+    ordering = ("-order_date",)
+    date_hierarchy = "order_date"
+    readonly_fields = ("created_at", "updated_at")
+
 

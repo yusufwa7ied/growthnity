@@ -11,7 +11,7 @@ from django.conf import settings
 
 from api.models import (
     Advertiser,
-    NoonNamshiTransaction,
+    NamshiTransaction,
     CampaignPerformance,
     Partner,
     Coupon,
@@ -167,9 +167,9 @@ def clean_namshi(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
-    """Save processed rows to NoonNamshiTransaction table"""
+    """Save processed rows to NamshiTransaction table"""
     if df.empty:
-        NoonNamshiTransaction.objects.filter(
+        NamshiTransaction.objects.filter(
             advertiser_name=advertiser.name,
             created_date__gte=date_from,
             created_date__lte=date_to,
@@ -177,7 +177,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
         return 0
 
     with transaction.atomic():
-        NoonNamshiTransaction.objects.filter(
+        NamshiTransaction.objects.filter(
             advertiser_name=advertiser.name,
             created_date__gte=date_from,
             created_date__lte=date_to,
@@ -191,7 +191,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                 partner = Partner.objects.filter(id=int(partner_id)).first()
 
             objs.append(
-                NoonNamshiTransaction(
+                NamshiTransaction(
                     order_id=0,
                     created_date=r.get("created_at"),
                     delivery_status="delivered",
@@ -219,14 +219,14 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                 )
             )
 
-        NoonNamshiTransaction.objects.bulk_create(objs, batch_size=2000)
+        NamshiTransaction.objects.bulk_create(objs, batch_size=2000)
 
     return len(df)
 
 
 def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     """Aggregate to CampaignPerformance table"""
-    qs = NoonNamshiTransaction.objects.filter(
+    qs = NamshiTransaction.objects.filter(
         advertiser_name=advertiser.name,
         created_date__date__gte=date_from,
         created_date__date__lte=date_to
