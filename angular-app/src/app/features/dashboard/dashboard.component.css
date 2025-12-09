@@ -4340,6 +4340,13 @@
   color: #101010;
 }
 
+.kpi-grid .kpi-subvalue {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
 .section-title {
   display: flex;
   align-items: center;

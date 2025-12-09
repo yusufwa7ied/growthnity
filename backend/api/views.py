@@ -1365,6 +1365,39 @@ def advertiser_detail_summary_view(request):
             'revenues': [float(d['revenue'] or 0) for d in daily_data]
         }
 
+        # Calculate net payout by applying cancellation rates (same logic as kpis_view)
+        # Returns None if no cancellation rates exist
+        total_net_payout = Decimal('0')
+        has_any_cancellation_rate = False
+        
+        # Calculate net for MB spend
+        if has_mb and mb_spend_lookup:
+            for (date, adv_id, part_id), spend_amount in mb_spend_lookup.items():
+                cancellation_rate = get_cancellation_rate_for_date(adv_id, date)
+                if cancellation_rate > 0:
+                    has_any_cancellation_rate = True
+                spend_decimal = Decimal(str(spend_amount))
+                net_spend = spend_decimal * (Decimal('1') - (cancellation_rate / Decimal('100')))
+                total_net_payout += net_spend
+        
+        # Calculate net for AFF/INF payouts
+        aff_inf_qs = qs.exclude(partner__partner_type='MB')
+        for record in aff_inf_qs.values('date', 'advertiser_id', 'total_payout'):
+            cancellation_rate = get_cancellation_rate_for_date(record['advertiser_id'], record['date'])
+            if cancellation_rate > 0:
+                has_any_cancellation_rate = True
+            payout_amount = Decimal(str(record['total_payout'] or 0))
+            net_payout_calc = payout_amount * (Decimal('1') - (cancellation_rate / Decimal('100')))
+            total_net_payout += net_payout_calc
+        
+        # If no cancellation rates exist, set to None
+        if not has_any_cancellation_rate:
+            net_payout_value = None
+            net_profit_value = None
+        else:
+            net_payout_value = float(total_net_payout)
+            net_profit_value = total_revenue - float(total_net_payout)
+        
         # Build response
         response_data = {
             'advertiser_id': advertiser.id,
@@ -1374,6 +1407,7 @@ def advertiser_detail_summary_view(request):
                 'sales': float(kpis['total_sales'] or 0),
                 'revenue': float(kpis['total_revenue'] or 0),
                 'payout': float(kpis['total_payout'] or 0),
+                'net_payout': net_payout_value,
             },
             'partner_breakdown': partner_breakdown,
             'top_coupons': top_coupons,
@@ -1384,6 +1418,7 @@ def advertiser_detail_summary_view(request):
         # Only include profit if user can see it
         if can_see_profit:
             response_data['kpis']['profit'] = float(kpis['total_profit'] or 0)
+            response_data['kpis']['net_profit'] = net_profit_value
 
         return Response(response_data)
     
