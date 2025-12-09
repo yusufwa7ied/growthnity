@@ -547,11 +547,11 @@ def graph_data_view(request):
     user_is_admin = company_user and company_user.role and company_user.role.name in {"Admin", "OpsManager"}
 
     # Aggregate KPIs per day - ALL ROLES now get revenue
-    daily_data = qs.values("date").annotate(
+    daily_data = list(qs.values("date").annotate(
         total_sales=Sum("total_sales"),
         total_revenue=Sum("total_revenue"),
         total_payout=Sum("total_payout"),
-    ).order_by("date")
+    ).order_by("date"))
 
     # Get MB spend per day to calculate daily_cost (same as KPI logic)
     mb_qs = qs.filter(partner__partner_type="MB")
