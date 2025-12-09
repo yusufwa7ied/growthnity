@@ -23,7 +23,20 @@ from .models import (
 def format_advertiser_name(name, geo):
     """Format advertiser name with geo for Noon"""
     if name == "Noon" and geo:
-        return f"Noon {geo.upper()}" if geo.lower() == "gcc" else f"Noon {geo.title()}"
+        # Map country codes to display names
+        geo_upper = geo.upper()
+        
+        # GCC countries should display as "Noon GCC"
+        gcc_countries = ["SAU", "ARE", "QAT", "KWT", "OMN", "BHR", "SA", "AE"]
+        if geo_upper in gcc_countries or geo.lower() == "gcc":
+            return "Noon GCC"
+        
+        # Egypt should display as "Noon Egypt"
+        if geo_upper in ["EGY", "EGYPT", "EG"]:
+            return "Noon Egypt"
+        
+        # Fallback for any other geo
+        return f"Noon {geo.title()}"
     return name
 
 
