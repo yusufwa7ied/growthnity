@@ -45,6 +45,14 @@ COUNTRY_MAP = {
     "KW": "KWT",
     "OM": "OMN",
     "BH": "BHR",
+    # Lowercase variants (in case Excel has lowercase)
+    "sa": "SAU",
+    "ae": "ARE",
+    "uae": "ARE",
+    "qa": "QAT",
+    "kw": "KWT",
+    "om": "OMN",
+    "bh": "BHR",
 }
 
 # New bracket structure (from Nov 1, 2025)
@@ -310,7 +318,9 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce", format="mixed")
     df["advertiser_name"] = df["advertiser_name"].astype(str).str.strip()
     df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
-    df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
+    
+    # Normalize country: strip, convert to uppercase, then map 2-letter to 3-letter codes
+    df["country"] = df["country"].astype(str).str.strip().str.upper().replace(COUNTRY_MAP)
     
     # Filter: Keep only GCC countries, exclude Egypt
     df = df[df["country"].isin(GCC_COUNTRIES)]
