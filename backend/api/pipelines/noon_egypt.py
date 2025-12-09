@@ -323,8 +323,8 @@ def run(date_from: date, date_to: date):
         
         # Filter date range
         egypt_clean = egypt_clean[
-            (egypt_clean["order_date"] >= date_from) & 
-            (egypt_clean["order_date"] <= date_to)
+            (egypt_clean["order_date"] >= pd.Timestamp(date_from)) & 
+            (egypt_clean["order_date"] <= pd.Timestamp(date_to))
         ].copy()
         print(f"📊 Filtered to {len(egypt_clean)} Egypt rows in date range")
         

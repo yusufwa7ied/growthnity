@@ -40,7 +40,7 @@ COUNTRY_MAP = {
 # ---------------------------------------------------
 
 ADVERTISER_NAME = "El_Esaei_Kids"
-S3_CSV_KEY = "pipeline-data/el_esaei.csv"
+S3_CSV_KEY = "pipeline-data/el_esaei_kids.csv"
 
 
 # ---------------------------------------------------
