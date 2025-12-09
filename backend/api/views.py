@@ -1215,9 +1215,10 @@ def advertiser_detail_summary_view(request):
         # Base queryset filtered by advertiser
         qs = CampaignPerformance.objects.filter(advertiser_id=advertiser_id)
 
-        # Apply geo filter
+        # Apply geo filter with expansion for 'gcc' and 'egypt'
         if geo:
-            qs = qs.filter(geo=geo)
+            expanded_geos = expand_geo_filter([geo])
+            qs = qs.filter(geo__in=expanded_geos)
 
         # Apply date filters
         if date_from:
