@@ -195,8 +195,8 @@
             </div>
 
             <p-table *ngIf="!loading" [value]="spendRecords" [loading]="loading" [(selection)]="selectedRecords"
-                [paginator]="true" [rows]="25" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="true"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" styleClass="spend-table"
+                [paginator]="true" [rows]="25" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="false"
+                styleClass="spend-table"
                 dataKey="id" selectionMode="multiple">
 
                 <ng-template pTemplate="header">
