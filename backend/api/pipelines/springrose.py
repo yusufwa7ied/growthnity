@@ -238,11 +238,13 @@ def push_springrose_to_performance(date_from, date_to):
         g = groups[key]
         # Use advertiser's exchange rate for USD conversion
         exchange_rate = float(advertiser.exchange_rate or 1.0)
+        partner = Partner.objects.filter(name=r.partner_name).first() if r.partner_name else None
+        is_mb = partner and partner.partner_type == "MB"
         if r.user_type == "RTU":
             g["rtu_orders"] += 1
             g["rtu_sales"] += float(r.sales) * exchange_rate
             g["rtu_revenue"] += float(r.our_rev) * exchange_rate
-            g["rtu_payout"] += float(r.payout) * exchange_rate
+            g["rtu_payout"] += 0.0 if is_mb else float(r.payout) * exchange_rate
 
     with transaction.atomic():
         CampaignPerformance.objects.filter(
