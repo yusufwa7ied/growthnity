@@ -45,6 +45,26 @@ def get_cancellation_rate_for_date(advertiser_id, target_date):
 
 
 # Helper function to format advertiser name with geo for Noon
+def expand_geo_filter(geos):
+    """
+    Expand 'gcc' and 'egypt' to their constituent country codes.
+    This allows filtering by display name (Noon GCC) to work with actual country codes.
+    """
+    gcc_countries = ["SAU", "ARE", "QAT", "KWT", "OMN", "BHR"]
+    egypt_countries = ["EGY"]
+    
+    expanded = []
+    for geo in geos:
+        if geo.lower() == "gcc":
+            expanded.extend(gcc_countries)
+        elif geo.lower() == "egypt":
+            expanded.extend(egypt_countries)
+        else:
+            expanded.append(geo)
+    
+    return expanded
+
+
 def format_advertiser_name(advertiser_name, geo=None):
     """
     Format advertiser name to include geo for Noon.
@@ -256,7 +276,9 @@ def kpis_view(request):
         qs = qs.filter(advertiser_id__in=advertiser_ids)
 
     if geos:
-        qs = qs.filter(geo__in=geos)
+        # Expand 'gcc' and 'egypt' to actual country codes
+        expanded_geos = expand_geo_filter(geos)
+        qs = qs.filter(geo__in=expanded_geos)
 
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
@@ -472,7 +494,9 @@ def graph_data_view(request):
     if advertiser_ids:
         qs = qs.filter(advertiser_id__in=advertiser_ids)
     if geos:
-        qs = qs.filter(geo__in=geos)
+        # Expand 'gcc' and 'egypt' to actual country codes
+        expanded_geos = expand_geo_filter(geos)
+        qs = qs.filter(geo__in=expanded_geos)
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
     if coupon_codes:
@@ -596,7 +620,9 @@ def performance_table_view(request):
         qs = qs.filter(advertiser_id__in=advertiser_ids)
 
     if geos:
-        qs = qs.filter(geo__in=geos)
+        # Expand 'gcc' and 'egypt' to actual country codes
+        expanded_geos = expand_geo_filter(geos)
+        qs = qs.filter(geo__in=expanded_geos)
 
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
@@ -1112,7 +1138,9 @@ def dashboard_pie_chart_data_view(request):
         qs = qs.filter(advertiser_id__in=advertiser_ids)
 
     if geos:
-        qs = qs.filter(geo__in=geos)
+        # Expand 'gcc' and 'egypt' to actual country codes
+        expanded_geos = expand_geo_filter(geos)
+        qs = qs.filter(geo__in=expanded_geos)
 
     if partner_ids:
         qs = qs.filter(partner_id__in=partner_ids)
