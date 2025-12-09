@@ -605,6 +605,10 @@ def graph_data_view(request):
         if user_is_admin:
             rev = entry["total_revenue"] or 0
             entry["total_profit"] = rev - entry["total_cost"]
+        
+        # Convert date object to string for JSON serialization
+        if hasattr(entry["date"], "isoformat"):
+            entry["date"] = entry["date"].isoformat()
 
     # Build response
     if user_is_admin:
