@@ -39,18 +39,7 @@ BRACKET_START_DATE = datetime(2025, 11, 18).date()
 # Exchange rate for AED to USD
 AED_TO_USD = 0.27
 
-# Egypt Revenue (Our Rev) - Bracket-based
-EGYPT_REVENUE = {
-    "Bracket 1": 0.30,   # $4.75 - $14.25
-    "Bracket 2": 0.75,   # $14.26 - $23.85
-    "Bracket 3": 1.30,   # $23.86 - $37.24
-    "Bracket 4": 2.20,   # $37.25 - $59.40
-    "Bracket 5": 3.25,   # $59.41 - $72.00
-    "Bracket 6": 4.25,   # $72.01 - $110.00
-    "Bracket 7": 7.00,   # $110.01 & above
-}
-
-# Egypt Default Payouts (Bracket-based)
+# Egypt Default Payouts - What WE PAY to partners (Bracket-based)
 EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 1": 0.20,   # $4.75 - $14.25
     "Bracket 2": 0.55,   # $14.26 - $23.85
@@ -61,7 +50,7 @@ EGYPT_DEFAULT_PAYOUTS = {
     "Bracket 7": 5.50,   # $110.01 & above
 }
 
-# Egypt Special Payouts (for special partners)
+# Egypt Special Payouts - What WE PAY to special partners (Bracket-based)
 EGYPT_SPECIAL_PAYOUTS = {
     "Bracket 1": 0.25,   # $4.75 - $14.25
     "Bracket 2": 0.65,   # $14.26 - $23.85
@@ -147,12 +136,12 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
     # Extract bracket number (e.g., "Bracket 1_$0.27" → "Bracket 1")
     df["bracket_name"] = df["bracket"].apply(extract_bracket_number)
     
-    # Get revenue from bracket (our rev from Noon)
-    df["revenue_usd"] = df["bracket_name"].map(EGYPT_REVENUE).fillna(0.0)
+    # Extract revenue from bracket string (e.g., "Bracket 1_$0.27" → 0.27)
+    # This is OUR REVENUE from Noon (what's in the Excel)
+    df["revenue_usd"] = df["bracket"].apply(extract_bracket_revenue)
     
-    # Extract payout from bracket string (e.g., "Bracket 1_$0.27" → 0.27)
-    # This is what's IN the Excel - could be default or special payout
-    df["payout_usd"] = df["bracket"].apply(extract_bracket_revenue)
+    # Get payout from default payout table (what WE PAY to partners)
+    df["payout_usd"] = df["bracket_name"].map(EGYPT_DEFAULT_PAYOUTS).fillna(0.0)
     
     # Calculate profit
     df["profit_usd"] = df["revenue_usd"] - df["payout_usd"]
