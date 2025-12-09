@@ -603,7 +603,7 @@ def graph_data_view(request):
             entry["total_cost"] = mb_spend + non_mb_payout
             
             if user_is_admin:
-                rev = entry["total_revenue"] or 0
+                rev = float(entry["total_revenue"] or 0)
                 entry["total_profit"] = rev - entry["total_cost"]
             
             # Convert date object to string for JSON serialization
