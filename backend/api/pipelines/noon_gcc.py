@@ -138,9 +138,10 @@ def calculate_new_brackets(df, advertiser):
         # Calculate revenue per order
         revenue_per_order = get_bracket_amount(order_value_aed / orders if orders > 0 else 0, bracket_config["revenue"])
         
-        # Check for special payout (PartnerPayout exists = special)
+        # Check partner type and special payout
         partner_name = row.get("partner_name")
         partner = Partner.objects.filter(name=partner_name).first() if partner_name else None
+        partner_type = row.get("partner_type", "AFF")
         has_special = False
         
         if partner:
@@ -150,13 +151,17 @@ def calculate_new_brackets(df, advertiser):
             ).first()
             has_special = special_payout is not None
         
-        # Use special or default bracket
-        payout_brackets = bracket_config["special"] if has_special else bracket_config["default"]
-        payout_per_order = get_bracket_amount(order_value_aed / orders if orders > 0 else 0, payout_brackets)
-        
         # Calculate totals
         our_rev = revenue_per_order * orders
-        payout = payout_per_order * orders
+        
+        # Media Buyers (MB) get 100% of revenue as payout
+        if partner_type == "MB":
+            payout = our_rev
+        else:
+            # Use special or default bracket for AFF/INF
+            payout_brackets = bracket_config["special"] if has_special else bracket_config["default"]
+            payout_per_order = get_bracket_amount(order_value_aed / orders if orders > 0 else 0, payout_brackets)
+            payout = payout_per_order * orders
         
         # Update row
         row_dict = row.to_dict()
