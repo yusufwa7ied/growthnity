@@ -559,7 +559,7 @@ class NamshiTransaction(models.Model):
     profit_usd = models.DecimalField(max_digits=12, decimal_places=4, default=0)
 
     class Meta:
-        db_table = "api_noonnamshitransaction"
+        db_table = "api_namshitransaction"
         verbose_name = "Namshi Transaction"
         verbose_name_plural = "Namshi Transactions"
 

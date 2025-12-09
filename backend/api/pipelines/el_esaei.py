@@ -7,7 +7,7 @@ from django.conf import settings
 
 from api.models import (
     Advertiser,
-    RDELTransaction,
+    ElEsaeiKidsTransaction,
     CampaignPerformance,
     Partner,
     Coupon,
@@ -21,15 +21,26 @@ from api.pipelines.helpers import (
     nf,
     nz,
 )
-from api.pipelines.rdel_shared import clean_rdel_format
 from api.services.s3_service import s3_service
+
+# Country mapping - standardize to 3-letter ISO codes
+COUNTRY_MAP = {
+    "KSA": "SAU",
+    "UAE": "ARE",
+    "QA": "QAT",
+    "KW": "KWT",
+    "OM": "OMN",
+    "OMA": "OMN",
+    "BH": "BHR",
+    "BAH": "BHR",
+}
 
 # ---------------------------------------------------
 # CONFIG
 # ---------------------------------------------------
 
-ADVERTISER_NAME = "El_Esaei_Kids"
-S3_CSV_KEY = "pipeline-data/el_esaei_kids.csv"
+ADVERTISER_NAME = "ElEsaeiKids"
+S3_CSV_KEY = "pipeline-data/el_esaei.csv"
 
 
 # ---------------------------------------------------
@@ -39,7 +50,7 @@ S3_CSV_KEY = "pipeline-data/el_esaei_kids.csv"
 def run(date_from: date, date_to: date):
     advertiser = Advertiser.objects.get(name=ADVERTISER_NAME)
 
-    print(f"🚀 Running El_Esaei_Kids pipeline {date_from} → {date_to}")
+    print(f"🚀 Running ElEsaeiKids pipeline {date_from} → {date_to}")
 
     # 1. LOAD RAW CSV
     raw_df = fetch_raw_data()
@@ -49,8 +60,8 @@ def run(date_from: date, date_to: date):
     # 2. STORE RAW SNAPSHOT
     store_raw_snapshot(advertiser, raw_df, date_from, date_to, source="el_esaei_csv_sheet")
 
-    # 3. CLEAN (using shared RDEL format cleaner)
-    clean_df = clean_rdel_format(raw_df, advertiser)
+    # 3. CLEAN
+    clean_df = clean_el_esaei(raw_df, advertiser)
     print("🔍 CLEAN DF HEAD:")
     print(clean_df.head(10))
 
@@ -69,13 +80,13 @@ def run(date_from: date, date_to: date):
     print("🔍 FINAL DF HEAD:")
     print(final_df.head(10))
 
-    # 7. SAVE INTO RDELTransaction
+    # 7. SAVE INTO RDELTransaction (reusing same model for now)
     count = save_final_rows(advertiser, final_df, date_from, date_to)
 
     # 8. PUSH TO CAMPAIGN PERFORMANCE
     push_el_esaei_to_performance(date_from, date_to)
 
-    print(f"✅ El_Esaei_Kids pipeline inserted {count} rows.")
+    print(f"✅ ElEsaeiKids pipeline inserted {count} rows.")
     return count
 
 
@@ -84,9 +95,40 @@ def run(date_from: date, date_to: date):
 # ---------------------------------------------------
 
 def fetch_raw_data() -> pd.DataFrame:
-    print("📄 Loading El_Esaei_Kids CSV from S3...")
+    print("📄 Loading ElEsaeiKids CSV from S3...")
     df = s3_service.read_csv_to_df(S3_CSV_KEY)
     print(f"✅ Loaded {len(df)} rows from S3")
+    return df
+
+
+# ---------------------------------------------------
+# CLEAN El_Esaei_Kids FORMAT
+# ---------------------------------------------------
+
+def clean_el_esaei(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
+    """Clean CSV data for ElEsaeiKids."""
+    df = df.copy()
+    
+    df.rename(columns={"date": "created_at", "sales": "sales"}, inplace=True)
+    df["created_at"] = pd.to_datetime(df["created_at"], format="%m/%d/%Y", errors="coerce")
+    df["sales"] = df["sales"].astype(str).str.replace(",", "").str.replace("%", "").astype(float)
+    df["orders"] = df["orders"].astype(int)
+    df["coupon"] = df["coupon"].str.upper()
+    df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
+    
+    df["rate_type"] = advertiser.rev_rate_type
+    df["commission"] = 0.0
+    df["order_id"] = df.apply(lambda row: f"{"ELESAEIKIDS"}_{row['created_at'].strftime('%Y%m%d')}_{row['coupon']}_{row['country']}", axis=1)
+    df["user_type"] = "RTU"
+    df["order_count"] = df["orders"]
+    df["delivery_status"] = "delivered"
+    df["partner_id"] = pd.NA
+    df["partner_name"] = None
+    df["partner_type"] = None
+    df["advertiser_id"] = advertiser.id
+    df["advertiser_name"] = advertiser.name
+    df["currency"] = advertiser.currency
+    
     return df
 
 
@@ -96,59 +138,47 @@ def fetch_raw_data() -> pd.DataFrame:
 
 def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, date_to: date) -> int:
     if df.empty:
-        RDELTransaction.objects.filter(
-            advertiser_name=ADVERTISER_NAME,
-            created_date__date__gte=date_from,
-            created_date__date__lte=date_to
+        ElEsaeiKidsTransaction.objects.filter(
+            order_date__gte=date_from,
+            order_date__lte=date_to
         ).delete()
         return 0
 
     with transaction.atomic():
-        RDELTransaction.objects.filter(
-            advertiser_name=ADVERTISER_NAME,
-            created_date__date__gte=date_from,
-            created_date__date__lte=date_to
+        ElEsaeiKidsTransaction.objects.filter(
+            order_date__gte=date_from,
+            order_date__lte=date_to
         ).delete()
 
         objs = []
         for r in df.to_dict(orient="records"):
             partner_id = r.get("partner_id")
-            if pd.isna(partner_id):
-                partner_id = None
+            partner = None
+            if partner_id and not pd.isna(partner_id):
+                partner = Partner.objects.filter(id=int(partner_id)).first()
             
-            advertiser_id = r.get("advertiser_id")
-            if pd.isna(advertiser_id):
-                advertiser_id = None
+            coupon_code = r.get("coupon", "")
+            coupon_obj = None
+            if coupon_code:
+                coupon_obj = Coupon.objects.filter(code=coupon_code, advertiser=advertiser).first()
                 
             objs.append(
-                RDELTransaction(
-                    order_id=str(r["order_id"]),
-                    created_date=r.get("created_at"),
-                    user_type=r.get("user_type"),
-                    sales=nf(r.get("sales")),
-                    commission=nf(r.get("commission")),
+                ElEsaeiKidsTransaction(
+                    order_date=r.get("created_at").date() if pd.notna(r.get("created_at")) else date_from,
+                    coupon_code=coupon_code,
+                    coupon=coupon_obj,
                     country=r.get("country", ""),
-                    order_count=nz(r.get("order_count", 1)),
-                    coupon=r.get("coupon", ""),
-                    partner_id=partner_id,
+                    orders=nz(r.get("order_count", 1)),
+                    sales=nf(r.get("sales")),
+                    partner=partner,
                     partner_name=r.get("partner_name", "(No Partner)"),
-                    advertiser_id=advertiser_id,
-                    advertiser_name=ADVERTISER_NAME,
-                    ftu_rate=nf(r.get("ftu_rate")),
-                    rtu_rate=nf(r.get("rtu_rate")),
-                    rate_type=r.get("rate_type", "percent"),
-                    ftu_fixed_bonus=nf(r.get("ftu_fixed_bonus")),
-                    rtu_fixed_bonus=nf(r.get("rtu_fixed_bonus")),
-                    payout=nf(r.get("payout")),
-                    our_rev=nf(r.get("our_rev")),
-                    our_rev_usd=nf(r.get("our_rev_usd")),
+                    revenue_usd=nf(r.get("our_rev_usd")),
                     payout_usd=nf(r.get("payout_usd")),
                     profit_usd=nf(r.get("profit_usd")),
-                    currency=r.get("currency", advertiser.currency),
                 )
             )
 
-        RDELTransaction.objects.bulk_create(objs, batch_size=500)
+        ElEsaeiKidsTransaction.objects.bulk_create(objs, batch_size=500)
 
     return len(df)
 
@@ -159,33 +189,32 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
 
 def push_el_esaei_to_performance(date_from, date_to):
     advertiser = Advertiser.objects.filter(name=ADVERTISER_NAME).first()
-    qs = RDELTransaction.objects.filter(
-        advertiser_name=ADVERTISER_NAME,
-        created_date__date__gte=date_from,
-        created_date__date__lte=date_to
+    qs = ElEsaeiKidsTransaction.objects.filter(
+        order_date__gte=date_from,
+        order_date__lte=date_to
     )
 
     if not qs.exists():
-        print("⚠️ No El_Esaei_Kids transactions found")
+        print("⚠️ No ElEsaeiKids transactions found")
         return 0
 
     groups = {}
 
     for r in qs:
         key = (
-            r.created_date.date(),
-            r.advertiser_name,
+            r.order_date,
+            advertiser.name,
             r.partner_name,
-            r.coupon,
+            r.coupon_code,
             r.country
         )
 
         if key not in groups:
             groups[key] = {
-                "date": r.created_date.date(),
-                "advertiser_name": r.advertiser_name,
+                "date": r.order_date,
+                "advertiser_name": advertiser.name,
                 "partner_name": r.partner_name,
-                "coupon": r.coupon,
+                "coupon": r.coupon_code,
                 "geo": r.country,
                 "ftu_orders": 0,
                 "rtu_orders": 0,
@@ -200,16 +229,11 @@ def push_el_esaei_to_performance(date_from, date_to):
         g = groups[key]
         exchange_rate = float(advertiser.exchange_rate or 1.0) if advertiser else 1.0
 
-        if r.user_type == "FTU":
-            g["ftu_orders"] += r.order_count
-            g["ftu_sales"] += float(r.sales) * exchange_rate
-            g["ftu_revenue"] += float(r.our_rev_usd)
-            g["ftu_payout"] += float(r.payout_usd)
-        elif r.user_type == "RTU":
-            g["rtu_orders"] += r.order_count
-            g["rtu_sales"] += float(r.sales) * exchange_rate
-            g["rtu_revenue"] += float(r.our_rev_usd)
-            g["rtu_payout"] += float(r.payout_usd)
+        # All RDEL transactions are RTU by default
+        g["rtu_orders"] += r.orders
+        g["rtu_sales"] += float(r.sales) * exchange_rate
+        g["rtu_revenue"] += float(r.revenue_usd)
+        g["rtu_payout"] += float(r.payout_usd)
 
     # SAVE to CampaignPerformance
     with transaction.atomic():
@@ -248,5 +272,5 @@ def push_el_esaei_to_performance(date_from, date_to):
 
         CampaignPerformance.objects.bulk_create(objs, batch_size=2000)
 
-    print(f"✅ Aggregated {len(objs)} El_Esaei_Kids performance rows.")
+    print(f"✅ Aggregated {len(objs)} ElEsaeiKids performance rows.")
     return len(objs)
