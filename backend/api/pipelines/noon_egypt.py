@@ -427,17 +427,22 @@ def push_noon_to_performance(date_from: date, date_to: date):
         
         g = groups[key]
         
+        # Check if partner is Media Buyer (MB) - they should have zero payout in performance
+        is_mb = r.partner and r.partner.partner_type == "MB"
+        
         # Aggregate by user type
         if r.user_type == "ftu":
             g["ftu_orders"] += 1
             g["ftu_sales"] += float(r.order_value_usd)
             g["ftu_revenue"] += float(r.revenue_usd)
-            g["ftu_payout"] += float(r.payout_usd)
+            # MB partners: zero payout in performance (they add costs later)
+            g["ftu_payout"] += 0.0 if is_mb else float(r.payout_usd)
         elif r.user_type == "rtu":
             g["rtu_orders"] += 1
             g["rtu_sales"] += float(r.order_value_usd)
             g["rtu_revenue"] += float(r.revenue_usd)
-            g["rtu_payout"] += float(r.payout_usd)
+            # MB partners: zero payout in performance (they add costs later)
+            g["rtu_payout"] += 0.0 if is_mb else float(r.payout_usd)
     
     # Delete existing performance records for Egypt
     deleted = CampaignPerformance.objects.filter(

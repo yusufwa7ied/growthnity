@@ -228,12 +228,17 @@ def push_daham_to_performance(date_from, date_to):
 
         g = groups[key]
         exchange_rate = float(advertiser.exchange_rate or 1.0) if advertiser else 1.0
+        
+        # Check if partner is Media Buyer (MB) - they should have zero payout in performance
+        partner_obj = Partner.objects.filter(name=r.partner_name).first() if r.partner_name else None
+        is_mb = partner_obj and partner_obj.partner_type == "MB"
 
         # All RDEL transactions are RTU by default
         g["rtu_orders"] += r.orders
         g["rtu_sales"] += float(r.sales) * exchange_rate
         g["rtu_revenue"] += float(r.revenue_usd)
-        g["rtu_payout"] += float(r.payout_usd)
+        # MB partners: zero payout in performance (they add costs later)
+        g["rtu_payout"] += 0.0 if is_mb else float(r.payout_usd)
 
     # SAVE to CampaignPerformance
     with transaction.atomic():

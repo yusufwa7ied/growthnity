@@ -260,16 +260,22 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
 
         g = groups[key]
         
+        # Check if partner is Media Buyer (MB) - they should have zero payout in performance
+        partner_obj = Partner.objects.filter(name=r.partner_name).first() if r.partner_name else None
+        is_mb = partner_obj and partner_obj.partner_type == "MB"
+        
         if r.user_type == "FTU":
             g["ftu_orders"] += r.orders
             g["ftu_sales"] += float(r.sales) * exchange_rate
             g["ftu_revenue"] += float(r.our_rev) * exchange_rate
-            g["ftu_payout"] += float(r.payout) * exchange_rate
+            # MB partners: zero payout in performance (they add costs later)
+            g["ftu_payout"] += 0.0 if is_mb else (float(r.payout) * exchange_rate)
         elif r.user_type == "RTU":
             g["rtu_orders"] += r.orders
             g["rtu_sales"] += float(r.sales) * exchange_rate
             g["rtu_revenue"] += float(r.our_rev) * exchange_rate
-            g["rtu_payout"] += float(r.payout) * exchange_rate
+            # MB partners: zero payout in performance (they add costs later)
+            g["rtu_payout"] += 0.0 if is_mb else (float(r.payout) * exchange_rate)
 
     with transaction.atomic():
         CampaignPerformance.objects.filter(

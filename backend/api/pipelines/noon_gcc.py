@@ -493,16 +493,22 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
         # For old logic, need to convert from AED
         exchange_rate = 0.27 if not is_new_bracket else 1.0
         
+        # Check if partner is Media Buyer (MB) - they should have zero payout in performance
+        partner_obj = Partner.objects.filter(name=r.partner_name).first() if r.partner_name else None
+        is_mb = partner_obj and partner_obj.partner_type == "MB"
+        
         if r.user_type == "FTU":
             g["ftu_orders"] += r.ftu_orders
             g["ftu_sales"] += float(r.ftu_value) * 0.27  # Sales always in AED, convert to USD
             g["ftu_revenue"] += float(r.revenue_usd) * exchange_rate
-            g["ftu_payout"] += float(r.payout_usd) * exchange_rate
+            # MB partners: zero payout in performance (they add costs later)
+            g["ftu_payout"] += 0.0 if is_mb else (float(r.payout_usd) * exchange_rate)
         elif r.user_type == "RTU":
             g["rtu_orders"] += r.rtu_orders
             g["rtu_sales"] += float(r.rtu_value) * 0.27
             g["rtu_revenue"] += float(r.revenue_usd) * exchange_rate
-            g["rtu_payout"] += float(r.payout_usd) * exchange_rate
+            # MB partners: zero payout in performance (they add costs later)
+            g["rtu_payout"] += 0.0 if is_mb else (float(r.payout_usd) * exchange_rate)
 
     with transaction.atomic():
         # Delete ALL Noon_GCC performance records for the date range (including old Egypt data)
