@@ -54,8 +54,18 @@ def clean_rdel_format(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
     # Uppercase coupon codes for consistency
     df["coupon"] = df["coupon"].str.upper()
     
-    # Country uppercase
-    df["country"] = df["country"].astype(str).str.upper()
+    # Country mapping - standardize to 3-letter ISO codes
+    COUNTRY_MAP = {
+        "KSA": "SAU",
+        "UAE": "ARE",
+        "QA": "QAT",
+        "KW": "KWT",
+        "OM": "OMN",
+        "OMA": "OMN",
+        "BH": "BHR",
+        "BAH": "BHR",
+    }
+    df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
     
     # Add standard fields
     df["rate_type"] = advertiser.rev_rate_type

@@ -133,9 +133,9 @@ def clean_noon_egypt(df: pd.DataFrame) -> pd.DataFrame:
         df["platform"] = ""
         
     if "country" in df.columns:
-        df["country"] = df["country"].astype(str).str.strip()
+        df["country"] = df["country"].astype(str).str.strip().str.upper()
     else:
-        df["country"] = "eg"
+        df["country"] = "EGY"
     
     # Add region flags
     df["is_gcc"] = False
@@ -432,13 +432,16 @@ def push_noon_to_performance(date_from: date, date_to: date):
         )
         
         if key not in groups:
+            # Normalize region to proper country code (egypt → EGY)
+            geo_normalized = "EGY" if r.region.lower() == "egypt" else r.country
+            
             groups[key] = {
                 "date": r.order_date,
                 "partner": r.partner,
                 "partner_name": r.partner_name,
                 "coupon": coupon_obj,
                 "coupon_code": r.coupon_code,
-                "geo": r.region,
+                "geo": geo_normalized,
                 "ftu_orders": 0,
                 "rtu_orders": 0,
                 "ftu_sales": 0,

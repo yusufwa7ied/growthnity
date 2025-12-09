@@ -126,8 +126,16 @@ def clean_styli(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
     # Date
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
 
-    # Country uppercase
-    df["country"] = df["country"].astype(str).str.upper()
+    # Country mapping - standardize to 3-letter ISO codes
+    COUNTRY_MAP = {
+        "KSA": "SAU",
+        "UAE": "ARE",
+        "QA": "QAT",
+        "KW": "KWT",
+        "OM": "OMN",
+        "BH": "BHR",
+    }
+    df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
 
     # Delivery always delivered for Styli
     df["delivery_status"] = "delivered"

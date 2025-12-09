@@ -417,10 +417,13 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
 
 def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     """Aggregate to CampaignPerformance."""
+    # Include both uppercase and lowercase country codes for backwards compatibility
+    gcc_countries_all = GCC_COUNTRIES + [c.lower() for c in GCC_COUNTRIES] + ["sa", "ae"]
+    
     qs = NoonTransaction.objects.filter(
         order_date__gte=date_from,
         order_date__lte=date_to,
-        country__in=GCC_COUNTRIES
+        country__in=gcc_countries_all
     )
     
     if not qs.exists():
@@ -430,14 +433,22 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
     groups = {}
     
     for r in qs:
-        key = (r.order_date, r.partner_name, r.coupon_code, r.country)
+        # Normalize country code to uppercase 3-letter format
+        country_normalized = str(r.country).upper()
+        if country_normalized in COUNTRY_MAP:
+            country_normalized = COUNTRY_MAP[country_normalized]
+        elif country_normalized not in GCC_COUNTRIES:
+            # Skip if not a valid GCC country after normalization
+            continue
+            
+        key = (r.order_date, r.partner_name, r.coupon_code, country_normalized)
         
         if key not in groups:
             groups[key] = {
                 "date": r.order_date,
                 "partner_name": r.partner_name,
                 "coupon": r.coupon_code,
-                "geo": r.country,
+                "geo": country_normalized,
                 "ftu_orders": 0,
                 "rtu_orders": 0,
                 "ftu_sales": 0.0,
