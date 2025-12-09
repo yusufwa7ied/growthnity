@@ -966,14 +966,21 @@ def dashboard_filter_options_view(request):
             cp.advertiser.name if cp.advertiser else "Unknown",
             cp.geo
         )
-        # Use a composite key for Noon to separate GCC and Egypt in dropdown
-        advertiser_key = f"{cp.advertiser_id}_{cp.geo}" if cp.advertiser and cp.advertiser.name == "Noon" and cp.geo else str(cp.advertiser_id)
+        
+        # Use display name as key for Noon to group GCC countries together
+        # This ensures "Noon GCC" appears once, not per country (SAU, ARE, etc.)
+        if cp.advertiser and cp.advertiser.name == "Noon":
+            advertiser_key = f"{cp.advertiser_id}_{advertiser_display_name}"
+        else:
+            advertiser_key = str(cp.advertiser_id)
         
         if advertiser_key not in advertisers_map:
+            # Store the representative geo (will be "gcc" or "egypt" for filtering)
+            geo_value = "gcc" if "GCC" in advertiser_display_name else ("egypt" if "Egypt" in advertiser_display_name else cp.geo)
             advertisers_map[advertiser_key] = {
                 "advertiser_id": cp.advertiser_id,
                 "campaign": advertiser_display_name,
-                "geo": cp.geo if cp.advertiser and cp.advertiser.name == "Noon" else None
+                "geo": geo_value if cp.advertiser and cp.advertiser.name == "Noon" else None
             }
         
         # Partners
