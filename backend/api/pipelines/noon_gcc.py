@@ -311,6 +311,10 @@ def clean_noon_gcc(df: pd.DataFrame) -> pd.DataFrame:
     df["advertiser_name"] = df["advertiser_name"].astype(str).str.strip()
     df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
     df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
+    
+    # Filter: Keep only GCC countries, exclude Egypt
+    df = df[df["country"].isin(GCC_COUNTRIES)]
+    print(f"✅ Filtered to GCC countries only: {len(df)} rows remaining")
 
     for c in ["total_orders", "nonpayable_orders", "ftu_orders_src", "rtu_orders_src"]:
         df[c] = pd.to_numeric(df.get(c, 0), errors="coerce").fillna(0).astype(int)
