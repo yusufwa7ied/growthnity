@@ -328,6 +328,8 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
     
     # Build MB spend lookup for accurate cost calculation
     mb_spend_lookup = {}
+    mb_revenue_totals = {}
+    
     if has_full_access or can_see_profit:
         # Get all MB records from the data
         mb_records = [r for r in data if r.partner and r.partner.partner_type == "MB"]
@@ -342,6 +344,11 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
                 for s in mb_spends:
                     key = (s.date, s.advertiser_id, s.partner_id)
                     mb_spend_lookup[key] = mb_spend_lookup.get(key, 0) + float(s.amount_spent or 0)
+                
+                # Calculate total revenue per date/advertiser/partner for proportional allocation
+                for r in mb_records:
+                    key = (r.date, r.advertiser_id, r.partner_id)
+                    mb_revenue_totals[key] = mb_revenue_totals.get(key, 0) + float(r.total_revenue or 0)
     
     # Write header
     headers = [
@@ -391,7 +398,14 @@ def write_detailed_data(writer, data, has_full_access, can_see_profit):
             # Use actual MB spend for MB partners, stored payout for others
             if record.partner and record.partner.partner_type == "MB":
                 key = (record.date, record.advertiser_id, record.partner_id)
-                payout = mb_spend_lookup.get(key, 0)
+                total_spend = mb_spend_lookup.get(key, 0)
+                total_revenue_for_key = mb_revenue_totals.get(key, 1)
+                
+                # Allocate spend proportionally based on this record's revenue
+                if total_revenue_for_key > 0:
+                    payout = total_spend * (revenue / total_revenue_for_key)
+                else:
+                    payout = 0
             else:
                 payout = float(record.total_payout)
             
