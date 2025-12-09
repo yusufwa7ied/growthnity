@@ -505,13 +505,11 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
             g["rtu_payout"] += float(r.payout_usd) * exchange_rate
 
     with transaction.atomic():
-        # Include both uppercase and lowercase country codes to delete old data
-        gcc_countries_delete = GCC_COUNTRIES + [c.lower() for c in GCC_COUNTRIES] + ["sa", "ae"]
+        # Delete ALL Noon_GCC performance records for the date range (including old Egypt data)
         CampaignPerformance.objects.filter(
             advertiser=advertiser,
             date__gte=date_from,
-            date__lte=date_to,
-            geo__in=gcc_countries_delete
+            date__lte=date_to
         ).delete()
 
         objs = []
