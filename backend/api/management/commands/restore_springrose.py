@@ -167,7 +167,7 @@ class Command(BaseCommand):
                     rev_rate = advertiser.rev_rtu_rate if advertiser.rev_rate_type == 'percent' else Decimal('0')
                     our_rev = (sales * rev_rate / 100) if advertiser.rev_rate_type == 'percent' else Decimal('0')
 
-                    # Get payout rate
+                    # Get payout rate - check specific rule first, then advertiser default
                     payout_rate = Decimal('0')
                     if partner:
                         payout_rule = PartnerPayout.objects.filter(
@@ -176,6 +176,12 @@ class Command(BaseCommand):
                         ).first()
                         if payout_rule:
                             payout_rate = payout_rule.rtu_payout
+                        else:
+                            # Use advertiser's default payout rate if no specific rule
+                            payout_rate = advertiser.default_rtu_payout or Decimal('0')
+                    else:
+                        # Unknown partner - use advertiser default
+                        payout_rate = advertiser.default_rtu_payout or Decimal('0')
 
                     payout = (our_rev * payout_rate / 100) if payout_rate else Decimal('0')
                     profit = our_rev - payout
