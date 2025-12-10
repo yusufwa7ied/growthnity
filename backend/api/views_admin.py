@@ -572,9 +572,22 @@ def media_buyer_spend_view(request):
                 defaults={
                     'amount_spent': amount_spent,
                     'currency': currency,
-                    'coupon': None  # Coupon is now always NULL
+                    'coupon': None,  # Coupon is now always NULL
+                    'updated_by': user,
+                    'created_by': user if created else None  # Only set created_by if it's a new record
                 }
             )
+            
+            # If it's an update (not new), set created_by if it was null
+            if not created and spend.created_by is None:
+                spend.created_by = user
+                spend.save(update_fields=['created_by'])
+            
+            # Log the action
+            import logging
+            logger = logging.getLogger(__name__)
+            action = "CREATED" if created else "UPDATED"
+            logger.info(f"MediaBuyerDailySpend {action} by user '{user.username}' | Date: {date} | Partner: {spend.partner.name if spend.partner else 'N/A'} | Advertiser: {spend.advertiser.name} | Platform: {platform} | Amount: ${amount_spent}")
             
             return Response({
                 'id': spend.id,
@@ -588,7 +601,9 @@ def media_buyer_spend_view(request):
                 'platform': spend.platform,
                 'amount_spent': float(spend.amount_spent),
                 'currency': spend.currency or 'USD',
-                'created': created
+                'created': created,
+                'created_by': user.username,
+                'updated_by': user.username
             }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
         except Exception as e:
@@ -654,8 +669,15 @@ def update_media_buyer_spend_view(request, pk):
         spend.amount_spent = amount_spent
     if currency:
         spend.currency = currency
-
+    
+    # Track who updated
+    spend.updated_by = user
     spend.save()
+    
+    # Log the update
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"MediaBuyerDailySpend UPDATED by user '{user.username}' | ID: {spend.id} | Date: {spend.date} | Partner: {spend.partner.name if spend.partner else 'N/A'} | Amount: ${spend.amount_spent}")
 
     return Response({
         'id': spend.id,
@@ -666,7 +688,8 @@ def update_media_buyer_spend_view(request, pk):
         'partner_name': spend.partner.name if spend.partner else None,
         'platform': spend.platform,
         'amount_spent': float(spend.amount_spent),
-        'currency': spend.currency or 'USD'
+        'currency': spend.currency or 'USD',
+        'updated_by': user.username
     }, status=status.HTTP_200_OK)
 
 
