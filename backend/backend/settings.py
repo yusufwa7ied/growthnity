@@ -204,6 +204,17 @@ S3_PIPELINE_FILES = {
     "styli": "pipeline-data/styli.csv",
 }
 
+# Power BI Configuration for Reef
+# Set these in environment variables or .env file (never commit secrets!)
+POWERBI_TENANT_ID = config("POWERBI_TENANT_ID", default="")
+POWERBI_CLIENT_ID = config("POWERBI_CLIENT_ID", default="")
+POWERBI_CLIENT_SECRET = config("POWERBI_CLIENT_SECRET", default="")
+POWERBI_USERNAME = config("POWERBI_USERNAME", default="hello@growthnity.com")
+
+# Reef Power BI Report Configuration
+REEF_POWERBI_REPORT_ID = "4c156468-2cc8-4ff5-a83e-43efefe1c7f6"
+REEF_POWERBI_GROUP_ID = "me"  # Personal workspace
+
 # Django Jazzmin Admin Configuration
 JAZZMIN_SETTINGS = {
     "site_title": "Growthnity",
