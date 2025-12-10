@@ -975,6 +975,7 @@ class ReefTransaction(models.Model):
     coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True, related_name="reef_transactions")
     coupon_code = models.CharField(max_length=100, db_index=True)
     country = models.CharField(max_length=10)
+    user_type = models.CharField(max_length=10, default="RTU", help_text="FTU or RTU")  # NEW
     orders = models.IntegerField(default=0)
     sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     partner = models.ForeignKey("Partner", on_delete=models.SET_NULL, null=True, blank=True, related_name="reef_transactions")

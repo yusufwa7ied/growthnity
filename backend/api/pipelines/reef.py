@@ -23,8 +23,16 @@ from api.pipelines.helpers import (
 )
 from api.services.s3_service import s3_service
 
-# Country mapping - standardize to 3-letter ISO codes
+# Country mapping - Arabic to 3-letter ISO codes
 COUNTRY_MAP = {
+    # Arabic names
+    "الامارات": "ARE",
+    "قطر": "QAT",
+    "البحرين": "BHR",
+    "المملكة العربية السعودية": "SAU",
+    "الكويت": "KWT",
+    "عمان": "OMN",
+    # English names (fallback)
     "KSA": "SAU",
     "UAE": "ARE",
     "QA": "QAT",
@@ -33,6 +41,19 @@ COUNTRY_MAP = {
     "OMA": "OMN",
     "BH": "BHR",
     "BAH": "BHR",
+}
+
+# User type mapping - Arabic to English
+USER_TYPE_MAP = {
+    "جديد": "FTU",  # New customer
+    "مكرر": "RTU",  # Repeat customer
+}
+
+# Delivery status mapping - Arabic to English
+DELIVERY_STATUS_MAP = {
+    "تم التوصيل": "delivered",
+    "جاري التوصيل": "in_transit",
+    "تم التنفيذ": "fulfilled",
 }
 
 # ---------------------------------------------------
@@ -106,28 +127,68 @@ def fetch_raw_data() -> pd.DataFrame:
 # ---------------------------------------------------
 
 def clean_reef(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
-    """Clean CSV data for Reef."""
+    """
+    Clean Excel data for Reef (Arabic column names).
+    
+    Expected columns:
+    - Date - Year, Date - Quarter, Date - Month, Date - Day
+    - كود الكوبون (Coupon code)
+    - صافى المبيعات (Net sales)
+    - تصنيف العميل (Customer type: جديد=FTU, مكرر=RTU)
+    - الدول (Country)
+    - رقم الطلب (Order number)
+    - حالة الطلب (Order status)
+    """
     df = df.copy()
     
-    df.rename(columns={"date": "created_at", "sales": "sales"}, inplace=True)
-    df["created_at"] = pd.to_datetime(df["created_at"], format="%m/%d/%Y", errors="coerce")
-    df["sales"] = df["sales"].astype(str).str.replace(",", "").str.replace("%", "").astype(float)
-    df["orders"] = df["orders"].astype(int)
-    df["coupon"] = df["coupon"].str.upper()
-    df["country"] = df["country"].astype(str).str.upper().replace(COUNTRY_MAP)
+    # Remove summary/total rows (rows where Date - Year contains "Total" or filter text)
+    df = df[df["Date - Year"].astype(str).str.isdigit()].copy()
     
+    # Build date from components
+    df["year"] = df["Date - Year"].astype(int)
+    df["month"] = pd.to_datetime(df["Date - Month"], format="%B", errors="coerce").dt.month
+    df["day"] = df["Date - Day"].astype(int)
+    df["created_at"] = pd.to_datetime(df[["year", "month", "day"]], errors="coerce")
+    
+    # Map Arabic column names to English
+    df.rename(columns={
+        "كود الكوبون": "coupon",
+        "صافى المبيعات": "sales",
+        "تصنيف العميل": "user_type_arabic",
+        "الدول": "country_arabic",
+        "رقم الطلب": "order_number",
+        "حالة الطلب": "delivery_status_arabic",
+    }, inplace=True)
+    
+    # Clean and transform data
+    df["sales"] = df["sales"].astype(float)
+    df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
+    df["country"] = df["country_arabic"].astype(str).str.strip().replace(COUNTRY_MAP)
+    df["user_type"] = df["user_type_arabic"].astype(str).str.strip().replace(USER_TYPE_MAP)
+    df["delivery_status"] = df["delivery_status_arabic"].astype(str).str.strip().replace(DELIVERY_STATUS_MAP)
+    df["order_number"] = df["order_number"].astype(int)
+    
+    # Each row is 1 order
+    df["order_count"] = 1
+    df["orders"] = 1
+    
+    # Build order_id (unique identifier)
+    df["order_id"] = df["order_number"].astype(str)
+    
+    # Standard fields for pipeline
     df["rate_type"] = advertiser.rev_rate_type
     df["commission"] = 0.0
-    df["order_id"] = df.apply(lambda row: f"{advertiser.name.upper()}_{row['created_at'].strftime('%Y%m%d')}_{row['coupon']}_{row['country']}", axis=1)
-    df["user_type"] = "RTU"
-    df["order_count"] = df["orders"]
-    df["delivery_status"] = "delivered"
     df["partner_id"] = pd.NA
     df["partner_name"] = None
     df["partner_type"] = None
     df["advertiser_id"] = advertiser.id
     df["advertiser_name"] = advertiser.name
     df["currency"] = advertiser.currency
+    
+    # Drop temporary columns
+    df = df.drop(columns=["Date - Year", "Date - Quarter", "Date - Month", "Date - Day", 
+                          "year", "month", "day", "user_type_arabic", "country_arabic", 
+                          "delivery_status_arabic", "order_number"], errors="ignore")
     
     return df
 
@@ -168,6 +229,7 @@ def save_final_rows(advertiser: Advertiser, df: pd.DataFrame, date_from: date, d
                     coupon_code=coupon_code,
                     coupon=coupon_obj,
                     country=r.get("country", ""),
+                    user_type=r.get("user_type", "RTU"),  # NEW: FTU or RTU from cleaned data
                     orders=nz(r.get("order_count", 1)),
                     sales=nf(r.get("sales")),
                     partner=partner,
@@ -233,12 +295,17 @@ def push_reef_to_performance(date_from, date_to):
         partner_obj = Partner.objects.filter(name=r.partner_name).first() if r.partner_name else None
         is_mb = partner_obj and partner_obj.partner_type == "MB"
 
-        # All RDEL transactions are RTU by default
-        g["rtu_orders"] += r.orders
-        g["rtu_sales"] += float(r.sales) * exchange_rate
-        g["rtu_revenue"] += float(r.revenue_usd)
-        # MB partners: zero payout in performance (they add costs later)
-        g["rtu_payout"] += 0.0 if is_mb else float(r.payout_usd)
+        # Aggregate by user type (FTU or RTU)
+        if r.user_type == "FTU":
+            g["ftu_orders"] += r.orders
+            g["ftu_sales"] += float(r.sales) * exchange_rate
+            g["ftu_revenue"] += float(r.revenue_usd)
+            g["ftu_payout"] += 0.0 if is_mb else float(r.payout_usd)
+        else:  # RTU
+            g["rtu_orders"] += r.orders
+            g["rtu_sales"] += float(r.sales) * exchange_rate
+            g["rtu_revenue"] += float(r.revenue_usd)
+            g["rtu_payout"] += 0.0 if is_mb else float(r.payout_usd)
 
     # SAVE to CampaignPerformance
     with transaction.atomic():
