@@ -523,9 +523,9 @@ def push_to_performance(advertiser: Advertiser, date_from: date, date_to: date):
             partner = Partner.objects.filter(name=g["partner_name"]).first() if g["partner_name"] else None
             coupon_obj = Coupon.objects.filter(code=g["coupon"]).first() if g["coupon"] else None
             
-            # Skip records with blank coupon
-            if not coupon_obj:
-                continue
+            # Allow NULL coupons (consistent with other pipelines)
+            # if not coupon_obj:
+            #     continue
 
             objs.append(
                 CampaignPerformance(
