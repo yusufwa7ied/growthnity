@@ -456,9 +456,9 @@ def push_noon_to_performance(date_from: date, date_to: date):
     # Create new performance records
     records = []
     for key, g in groups.items():
-        # Skip records with blank coupon
-        if not g["coupon"]:
-            continue
+        # Allow NULL coupons (consistent with other pipelines)
+        # if not g["coupon"]:
+        #     continue
             
         total_orders = g["ftu_orders"] + g["rtu_orders"]
         total_sales = g["ftu_sales"] + g["rtu_sales"]
