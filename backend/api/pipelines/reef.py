@@ -161,7 +161,8 @@ def clean_reef(df: pd.DataFrame, advertiser: Advertiser) -> pd.DataFrame:
     }, inplace=True)
     
     # Clean and transform data
-    df["sales"] = df["sales"].astype(float)
+    # Remove commas from sales values before converting to float
+    df["sales"] = df["sales"].astype(str).str.replace(',', '', regex=False).astype(float)
     df["coupon"] = df["coupon"].astype(str).str.strip().str.upper()
     df["country"] = df["country_arabic"].astype(str).str.strip().replace(COUNTRY_MAP)
     df["user_type"] = df["user_type_arabic"].astype(str).str.strip().replace(USER_TYPE_MAP)
