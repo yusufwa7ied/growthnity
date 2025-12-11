@@ -574,12 +574,14 @@ def media_buyer_spend_view(request):
                     'currency': currency,
                     'coupon': None,  # Coupon is now always NULL
                     'updated_by': user,
-                    'created_by': user if created else None  # Only set created_by if it's a new record
                 }
             )
             
-            # If it's an update (not new), set created_by if it was null
-            if not created and spend.created_by is None:
+            # Set created_by appropriately
+            if created:
+                spend.created_by = user
+                spend.save(update_fields=['created_by'])
+            elif spend.created_by is None:
                 spend.created_by = user
                 spend.save(update_fields=['created_by'])
             
