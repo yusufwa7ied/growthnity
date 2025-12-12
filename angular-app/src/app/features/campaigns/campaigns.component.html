@@ -1,10 +1,11 @@
-<app-main-header></app-main-header>
+<div class="campaigns-page">
+  <app-main-header></app-main-header>
 
-<div class="container">
-  <div class="page-header">
-    <h1>Campaigns</h1>
-    <p>View all campaigns and track which ones you're actively working on</p>
-  </div>
+  <div class="container">
+    <div class="page-header">
+      <h1>Campaigns</h1>
+      <p>View all campaigns and track which ones you're actively working on</p>
+    </div>
 
   <!-- Working Campaigns Section -->
   <div class="section" *ngIf="workingCampaigns.length > 0">
@@ -74,6 +75,7 @@
     <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
     <p>Loading campaigns...</p>
   </div>
-</div>
+  </div>
 
-<app-footer></app-footer>
+  <app-footer></app-footer>
+</div>

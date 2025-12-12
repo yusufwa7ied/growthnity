@@ -1,6 +1,12 @@
-.container {
+.campaigns-page {
   min-height: 100vh;
   background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
   padding: 2rem;
 }
 
