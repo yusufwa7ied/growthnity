@@ -11,6 +11,7 @@ from .models import (
     CompanyUser, Partner, CampaignPerformance, 
     Coupon, Advertiser, AccountAssignment, AdvertiserCancellationRate
 )
+# Force rebuild
 
 
 def get_cancellation_rate_for_date(advertiser_id, target_date):
