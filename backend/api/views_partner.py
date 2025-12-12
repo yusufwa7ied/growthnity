@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from .models import (
     CompanyUser, Partner, CampaignPerformance, 
-    Coupon, Advertiser, AccountAssignment
+    Coupon, Advertiser, AccountAssignment, AdvertiserCancellationRate
 )
 
 
@@ -117,16 +117,22 @@ def partner_coupons_performance_view(request):
         
         # Calculate net payout (assuming cancellation rate is applied)
         # Net payout is the actual payout after cancellations
-        if record.advertiser and record.advertiser.cancellation_rates.exists():
-            latest_rate = record.advertiser.cancellation_rates.order_by('-effective_date').first()
-            if latest_rate:
-                cancellation_rate = float(latest_rate.rate)
-                net_payout = float(record.total_payout or 0) * (1 - cancellation_rate / 100)
-                grouped_data[key]['total_payout_net'] += net_payout
+        payout_amount = float(record.total_payout or 0)
+        try:
+            if record.advertiser:
+                latest_rate = AdvertiserCancellationRate.objects.filter(
+                    advertiser=record.advertiser
+                ).order_by('-start_date').first()
+                if latest_rate:
+                    cancellation_rate = float(latest_rate.cancellation_rate)
+                    net_payout = payout_amount * (1 - cancellation_rate / 100)
+                    grouped_data[key]['total_payout_net'] += net_payout
+                else:
+                    grouped_data[key]['total_payout_net'] += payout_amount
             else:
-                grouped_data[key]['total_payout_net'] += float(record.total_payout or 0)
-        else:
-            grouped_data[key]['total_payout_net'] += float(record.total_payout or 0)
+                grouped_data[key]['total_payout_net'] += payout_amount
+        except Exception:
+            grouped_data[key]['total_payout_net'] += payout_amount
     
     # Convert to list and apply search filter
     result = list(grouped_data.values())
@@ -239,11 +245,15 @@ def partner_campaigns_view(request):
         gross_payout = float(perf['total_payout'] or 0)
         net_payout = gross_payout
         
-        if advertiser.cancellation_rates.exists():
-            latest_rate = advertiser.cancellation_rates.order_by('-effective_date').first()
+        try:
+            latest_rate = AdvertiserCancellationRate.objects.filter(
+                advertiser=advertiser
+            ).order_by('-start_date').first()
             if latest_rate:
-                cancellation_rate = float(latest_rate.rate)
+                cancellation_rate = float(latest_rate.cancellation_rate)
                 net_payout = gross_payout * (1 - cancellation_rate / 100)
+        except Exception:
+            pass
         
         # Determine if partner is working on this campaign
         is_working = advertiser.id in working_advertiser_ids

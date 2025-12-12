@@ -1,39 +1,46 @@
 .container {
+  min-height: 100vh;
+  background: #f9fafb;
   padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .page-header {
   margin-bottom: 3rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
   margin-bottom: 0.5rem;
 }
 
 .page-header p {
-  color: #666;
-  font-size: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
 .section {
   margin-bottom: 3rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
   margin-bottom: 0.5rem;
 }
 
 .section-description {
-  color: #666;
+  color: #6b7280;
   margin-bottom: 1.5rem;
+  font-size: 0.875rem;
 }
 
 .campaigns-grid {
@@ -43,20 +50,21 @@
 }
 
 .campaign-card {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
 }
 
 .campaign-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .campaign-card.working {
-  border-left: 4px solid #22c55e;
+  border-left: 3px solid #009292;
 }
 
 .campaign-card.available {
-  border-left: 4px solid #94a3b8;
+  border-left: 3px solid #d1d5db;
 }
 
 .campaign-header {
@@ -69,9 +77,9 @@
 }
 
 .campaign-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
   margin: 0;
 }
 
@@ -89,23 +97,24 @@
 
 .metric-label {
   font-size: 0.75rem;
-  color: #666;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .metric-value {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #111827;
 }
 
 .metric-value.highlight {
-  color: #22c55e;
+  color: #009292;
 }
 
 .metric-value.negative {
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .campaign-info {
@@ -130,8 +139,10 @@
 }
 
 ::ng-deep .p-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   height: 100%;
 }
 

@@ -1,57 +1,67 @@
 .container {
+  min-height: 100vh;
+  background: #f9fafb;
   padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .page-header {
   margin-bottom: 2rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-header h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
   margin-bottom: 0.5rem;
 }
 
 .page-header p {
-  color: #666;
-  font-size: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 2rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .summary-card-content {
   text-align: center;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .summary-label {
-  font-size: 0.875rem;
-  color: #666;
-  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 .summary-value {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #333;
+  color: #111827;
 }
 
 .summary-value.success {
-  color: #22c55e;
+  color: #009292;
 }
 
 .filters-card {
   margin-bottom: 2rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .filters-grid {
@@ -68,19 +78,22 @@
 }
 
 .filter-item label {
-  font-weight: 500;
-  color: #555;
+  font-weight: 600;
+  color: #374151;
   font-size: 0.875rem;
 }
 
 .filter-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .table-card {
   margin-bottom: 2rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .text-right {
@@ -92,8 +105,10 @@
 }
 
 ::ng-deep .p-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 ::ng-deep .p-card-body {
@@ -113,28 +128,39 @@
 }
 
 ::ng-deep .p-button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+::ng-deep .p-button-label {
+  font-weight: 500;
 }
 
 ::ng-deep .p-table {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
 ::ng-deep .p-table .p-datatable-thead > tr > th {
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: #f9fafb;
+  color: #111827;
   font-weight: 600;
-  padding: 1rem;
-  border-bottom: 2px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 ::ng-deep .p-table .p-datatable-tbody > tr > td {
-  padding: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
 }
 
 ::ng-deep .p-table .p-datatable-tbody > tr:hover {
-  background-color: #f8f9fa;
+  background-color: #f9fafb;
 }
 
 ::ng-deep .p-paginator {
