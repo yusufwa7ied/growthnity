@@ -53,8 +53,10 @@ class Command(BaseCommand):
             # Username is the full email address
             username = partner.email.lower()
             
-            # Check if user already exists
+            # Check if user already exists (by username OR by email)
             existing_user = User.objects.filter(username=username).first()
+            if not existing_user:
+                existing_user = User.objects.filter(email=partner.email).first()
             
             if existing_user:
                 # User exists - check if linked to this partner
