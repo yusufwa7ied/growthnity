@@ -118,7 +118,11 @@
   gap: 1rem;
 }
 
-.table-header h3 {
+.table-icon {
+  margin-right: 0.25rem;
+}
+
+.table-title h3 {
   margin: 0;
   color: #1f2937;
   font-size: 1.25rem;
@@ -247,11 +251,17 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5) !important;
 }
 
+/* Centered content */
+.centered {
+  text-align: center !important;
+}
+
 /* Stacked Cell - Dashboard Style */
 .stacked-cell {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  align-items: center;
 }
 
 .main-value {

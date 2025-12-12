@@ -53,7 +53,7 @@
             <ng-template pTemplate="header">
                 <div class="table-header">
                     <div class="table-title">
-                        <h3><i class="pi pi-table"></i> Coupon Performance</h3>
+                        <h3><i class="pi pi-table table-icon"></i> Coupon Performance</h3>
                         <span class="record-count">{{ totalRecords }} records</span>
                     </div>
                     <div class="table-controls">
@@ -98,20 +98,20 @@
             <p-table [value]="coupons" [loading]="loading" [paginator]="false" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th class="col-campaign">Campaign</th>
-                        <th class="col-coupon">Coupon</th>
-                        <th class="col-orders">Orders</th>
-                        <th class="col-amount">Sales</th>
-                        <th class="col-amount">Payout</th>
+                        <th class="col-campaign centered">Campaign</th>
+                        <th class="col-coupon centered">Coupons</th>
+                        <th class="col-orders centered">Orders</th>
+                        <th class="col-amount centered">Sales</th>
+                        <th class="col-amount centered">Payout</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-coupon>
                     <tr>
-                        <td class="col-campaign">{{ coupon.advertiser_name }}</td>
-                        <td class="col-coupon">{{ coupon.coupon }}</td>
-                        <td class="col-orders">{{ coupon.orders }}</td>
-                        <td class="col-amount">${{ coupon.sales | trimDecimals }}</td>
-                        <td class="col-amount stacked-cell">
+                        <td class="col-campaign centered">{{ coupon.campaign_display }}</td>
+                        <td class="col-coupon centered">{{ coupon.coupons }}</td>
+                        <td class="col-orders centered">{{ coupon.orders }}</td>
+                        <td class="col-amount centered">${{ coupon.sales | trimDecimals }}</td>
+                        <td class="col-amount centered stacked-cell">
                             <div class="main-value">${{ coupon.gross_payout | trimDecimals }}</div>
                             <div class="sub-value">Net: {{ coupon.net_payout !== null && coupon.net_payout !== undefined ? ('$' + (coupon.net_payout | trimDecimals)) : '-' }}</div>
                         </td>
