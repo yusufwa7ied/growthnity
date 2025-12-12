@@ -3,14 +3,19 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export interface CouponPerformance {
-    advertiser_id: number;
-    advertiser_name: string;
+export interface CouponData {
     coupon: string;
     orders: number;
     sales: number;
     gross_payout: number;
-    net_payout: number;
+    net_payout: number | null;
+}
+
+export interface CouponPerformance {
+    advertiser_id: number;
+    advertiser_name: string;
+    coupon_count: number;
+    coupons: CouponData[];
 }
 
 export interface CouponPerformanceResponse {

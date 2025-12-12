@@ -103,11 +103,28 @@ export class MyCouponsComponent implements OnInit {
     }
 
     calculateSummary() {
-        this.totalCoupons = this.coupons.length;
-        this.totalOrders = this.coupons.reduce((sum, c) => sum + c.orders, 0);
-        this.totalSales = this.coupons.reduce((sum, c) => sum + c.sales, 0);
-        this.totalGrossPayout = this.coupons.reduce((sum, c) => sum + c.gross_payout, 0);
-        this.totalNetPayout = this.coupons.reduce((sum, c) => sum + c.net_payout, 0);
+        // Count total coupons across all campaigns
+        this.totalCoupons = this.coupons.reduce((sum, campaign) => sum + campaign.coupon_count, 0);
+        
+        // Sum up metrics from all coupons in all campaigns
+        let orders = 0;
+        let sales = 0;
+        let grossPayout = 0;
+        let netPayout = 0;
+
+        this.coupons.forEach(campaign => {
+            campaign.coupons.forEach(coupon => {
+                orders += coupon.orders;
+                sales += coupon.sales;
+                grossPayout += coupon.gross_payout;
+                netPayout += coupon.net_payout || 0;
+            });
+        });
+
+        this.totalOrders = orders;
+        this.totalSales = sales;
+        this.totalGrossPayout = grossPayout;
+        this.totalNetPayout = netPayout;
     }
 
     onPageChange(event: any) {

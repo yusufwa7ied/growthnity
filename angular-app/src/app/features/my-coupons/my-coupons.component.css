@@ -394,6 +394,92 @@
   text-align: center !important;
 }
 
+/* Campaign Grouping Styles */
+::ng-deep .campaign-row {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
+  border-bottom: none !important;
+}
+
+::ng-deep .campaign-header {
+  padding: 0.875rem 1.5rem !important;
+  border-bottom: 2px solid #009292 !important;
+}
+
+.campaign-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #009292;
+  letter-spacing: 0.3px;
+}
+
+.coupon-count {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-left: 0.5rem;
+}
+
+::ng-deep .coupon-row {
+  background: #ffffff !important;
+}
+
+::ng-deep .coupon-row:hover {
+  background: #f9fafb !important;
+}
+
+::ng-deep .coupon-row.last-in-group td {
+  border-bottom: 2px solid #e5e7eb !important;
+}
+
+.coupon-indent {
+  padding-left: 3rem !important;
+  text-align: left !important;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Filter Background Transparency Fix - Match Dashboard */
+::ng-deep .filter-group .p-datepicker,
+::ng-deep .filter-group .p-select {
+  background: transparent !important;
+}
+
+::ng-deep .filter-group .p-datepicker .p-datepicker-input,
+::ng-deep .filter-group .p-select-label {
+  background: transparent !important;
+}
+
+::ng-deep .filter-group .p-datepicker:hover,
+::ng-deep .filter-group .p-select:hover {
+  background: transparent !important;
+}
+
+/* Ensure dropdowns and date picker overlays have proper z-index - Match Dashboard */
+::ng-deep .p-select-overlay,
+::ng-deep .p-datepicker-overlay,
+::ng-deep .p-datepicker {
+  z-index: 10000 !important;
+}
+
+::ng-deep .p-select-overlay {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
+  padding: 0.5rem !important;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .container {

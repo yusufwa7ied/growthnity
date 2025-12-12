@@ -97,18 +97,25 @@ def partner_coupons_performance_view(request):
         'advertiser', 'partner', 'coupon'
     )
     
-    # Group by coupon (each coupon is a separate row)
-    grouped_data = {}
+    # Group by campaign (advertiser) and then by coupon
+    campaigns_data = {}
     
     for record in performance_qs:
-        advertiser_name = record.advertiser.name if record.advertiser else ''
+        advertiser_id = record.advertiser.id if record.advertiser else None
+        advertiser_name = record.advertiser.name if record.advertiser else 'Unknown Campaign'
         coupon_code = record.coupon.code if record.coupon else 'No Coupon'
         
-        # Use coupon as unique key
-        if coupon_code not in grouped_data:
-            grouped_data[coupon_code] = {
-                'advertiser': advertiser_name,
-                'advertiser_id': record.advertiser.id if record.advertiser else None,
+        # Create campaign entry if it doesn't exist
+        if advertiser_id not in campaigns_data:
+            campaigns_data[advertiser_id] = {
+                'advertiser_id': advertiser_id,
+                'advertiser_name': advertiser_name,
+                'coupons': {}
+            }
+        
+        # Create coupon entry under this campaign if it doesn't exist
+        if coupon_code not in campaigns_data[advertiser_id]['coupons']:
+            campaigns_data[advertiser_id]['coupons'][coupon_code] = {
                 'coupon': coupon_code,
                 'total_orders': 0,
                 'total_sales': 0,
@@ -118,9 +125,10 @@ def partner_coupons_performance_view(request):
             }
         
         # Aggregate metrics for this coupon
-        grouped_data[coupon_code]['total_orders'] += record.total_orders or 0
-        grouped_data[coupon_code]['total_sales'] += float(record.total_sales or 0)
-        grouped_data[coupon_code]['total_payout_gross'] += float(record.total_payout or 0)
+        coupon_data = campaigns_data[advertiser_id]['coupons'][coupon_code]
+        coupon_data['total_orders'] += record.total_orders or 0
+        coupon_data['total_sales'] += float(record.total_sales or 0)
+        coupon_data['total_payout_gross'] += float(record.total_payout or 0)
         
         # Calculate net payout using date-specific cancellation rate
         payout_amount = float(record.total_payout or 0)
@@ -128,41 +136,48 @@ def partner_coupons_performance_view(request):
             if record.advertiser:
                 cancellation_rate = get_cancellation_rate_for_date(record.advertiser.id, record.date)
                 if cancellation_rate > 0:
-                    grouped_data[coupon_code]['has_cancellation_rate'] = True
+                    coupon_data['has_cancellation_rate'] = True
                     net_payout = payout_amount * float(Decimal('1') - (cancellation_rate / Decimal('100')))
-                    grouped_data[coupon_code]['total_payout_net'] += net_payout
+                    coupon_data['total_payout_net'] += net_payout
         except Exception:
             pass
     
-    # Convert to list and apply search filter
-    result = []
-    for item in grouped_data.values():
+    # Convert to list format for frontend
+    formatted_results = []
+    for campaign in campaigns_data.values():
         # Apply search filter
         if search:
-            if (search in item['advertiser'].lower() or search in item['coupon'].lower()):
-                result.append(item)
-        else:
-            result.append(item)
-    
-    # Sort by total_sales descending
-    result.sort(key=lambda x: x['total_sales'], reverse=True)
-    
-    # Format results to match frontend expectations
-    formatted_results = []
-    for item in result:
-        # Set net_payout to None if no cancellation rate exists
-        net_payout_value = None
-        if item['has_cancellation_rate']:
-            net_payout_value = round(item['total_payout_net'], 2)
+            # Check if search matches campaign name or any coupon
+            matches = search in campaign['advertiser_name'].lower()
+            if not matches:
+                matches = any(search in coupon for coupon in campaign['coupons'].keys())
+            if not matches:
+                continue
+        
+        # Convert coupons dict to list
+        coupons_list = []
+        for coupon_data in campaign['coupons'].values():
+            # Set net_payout to None if no cancellation rate exists
+            net_payout_value = None
+            if coupon_data['has_cancellation_rate']:
+                net_payout_value = round(coupon_data['total_payout_net'], 2)
+            
+            coupons_list.append({
+                'coupon': coupon_data['coupon'],
+                'orders': coupon_data['total_orders'],
+                'sales': round(coupon_data['total_sales'], 2),
+                'gross_payout': round(coupon_data['total_payout_gross'], 2),
+                'net_payout': net_payout_value
+            })
+        
+        # Sort coupons by sales descending
+        coupons_list.sort(key=lambda x: x['sales'], reverse=True)
         
         formatted_results.append({
-            'advertiser_id': item['advertiser_id'],
-            'advertiser_name': item['advertiser'],
-            'coupon': item['coupon'],
-            'orders': item['total_orders'],
-            'sales': round(item['total_sales'], 2),
-            'gross_payout': round(item['total_payout_gross'], 2),
-            'net_payout': net_payout_value
+            'advertiser_id': campaign['advertiser_id'],
+            'advertiser_name': campaign['advertiser_name'],
+            'coupon_count': len(coupons_list),
+            'coupons': coupons_list
         })
     
     return Response({

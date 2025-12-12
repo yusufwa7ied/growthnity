@@ -98,17 +98,23 @@
             <p-table [value]="coupons" [loading]="loading" [paginator]="false" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th class="col-campaign centered">Campaign</th>
                         <th class="col-coupon centered">Coupon</th>
                         <th class="col-orders centered">Orders</th>
                         <th class="col-amount centered">Sales</th>
                         <th class="col-amount centered">Payout</th>
                     </tr>
                 </ng-template>
-                <ng-template pTemplate="body" let-coupon>
-                    <tr>
-                        <td class="col-campaign centered">{{ coupon.advertiser_name }}</td>
-                        <td class="col-coupon centered">{{ coupon.coupon }}</td>
+                <ng-template pTemplate="body" let-campaign let-rowIndex="rowIndex">
+                    <!-- Campaign Header Row -->
+                    <tr class="campaign-row">
+                        <td colspan="4" class="campaign-header">
+                            <span class="campaign-name">{{ campaign.advertiser_name }}</span>
+                            <span class="coupon-count">({{ campaign.coupon_count }})</span>
+                        </td>
+                    </tr>
+                    <!-- Coupon Rows -->
+                    <tr *ngFor="let coupon of campaign.coupons; let isLast = last" class="coupon-row" [class.last-in-group]="isLast">
+                        <td class="col-coupon coupon-indent">{{ coupon.coupon }}</td>
                         <td class="col-orders centered">{{ coupon.orders }}</td>
                         <td class="col-amount centered">${{ coupon.sales | trimDecimals }}</td>
                         <td class="col-amount centered stacked-cell">
@@ -119,7 +125,7 @@
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="5" class="text-center">
+                        <td colspan="4" class="text-center">
                             <div class="empty-message">
                                 <i class="pi pi-inbox"></i>
                                 <p>No coupons found</p>
