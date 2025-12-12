@@ -43,6 +43,10 @@ from .views_admin import (
     partners_view,
     partner_detail_view,
 )
+from .views_partner import (
+    partner_coupons_performance_view,
+    partner_campaigns_view,
+)
 
 urlpatterns = [
     path("click/", views_tracking.redirect_tracking_click, name="tracking-click"),
@@ -97,6 +101,10 @@ urlpatterns = [
     # Partner management endpoints
     path("admin/partners/", partners_view, name="admin-partners"),
     path("admin/partners/<int:pk>/", partner_detail_view, name="admin-partner-detail"),
+    
+    # Partner Portal endpoints
+    path("partner/my-coupons/", partner_coupons_performance_view, name="partner-my-coupons"),
+    path("partner/campaigns/", partner_campaigns_view, name="partner-campaigns"),
     
     # Pipeline management endpoints
     path("pipelines/trigger/", trigger_pipeline_upload, name="pipeline-trigger"),

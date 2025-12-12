@@ -7,6 +7,10 @@
             <img src="Brandmark.png" class="logo" (click)="refreshDashboard()">
             <nav class="nav-links">
                 <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="goToDashboard()">Dashboard</a>
+                <a class="nav-link" [class.active]="activeTab === 'my-coupons'" *ngIf="isPartner"
+                    (click)="goToMyCoupons()">My Coupons</a>
+                <a class="nav-link" [class.active]="activeTab === 'campaigns'" *ngIf="isPartner"
+                    (click)="goToCampaigns()">Campaigns</a>
                 <a class="nav-link" [class.active]="activeTab === 'coupons'" *ngIf="canAccessCoupons"
                     (click)="goToCoupons()">Coupons</a>
                 <a class="nav-link" [class.active]="activeTab === 'advertisers'" *ngIf="isAdmin"

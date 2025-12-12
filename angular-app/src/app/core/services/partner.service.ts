@@ -1,7 +1,39 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+
+export interface CouponPerformance {
+    advertiser_id: number;
+    advertiser_name: string;
+    coupon: string;
+    orders: number;
+    sales: number;
+    gross_payout: number;
+    net_payout: number;
+}
+
+export interface CouponPerformanceResponse {
+    results: CouponPerformance[];
+    count: number;
+    next: string | null;
+    previous: string | null;
+}
+
+export interface CampaignSummary {
+    advertiser_id: number;
+    advertiser_name: string;
+    orders: number;
+    sales: number;
+    revenue: number;
+    payout: number;
+    profit: number;
+    is_working: boolean;
+}
+
+export interface CampaignsResponse {
+    campaigns: CampaignSummary[];
+}
 
 export interface SpecialPayoutInfo {
     advertiser: string;
@@ -113,5 +145,30 @@ export class PartnerService {
 
     deletePartnerPayout(id: number): Observable<any> {
         return this.http.delete(`${this.payoutsUrl}${id}/`);
+    }
+
+    // Partner Portal Methods
+    getMyCoupons(
+        dateFrom?: string,
+        dateTo?: string,
+        advertiserId?: number,
+        search?: string,
+        page: number = 1
+    ): Observable<CouponPerformanceResponse> {
+        let params = new HttpParams().set('page', page.toString());
+        
+        if (dateFrom) params = params.set('date_from', dateFrom);
+        if (dateTo) params = params.set('date_to', dateTo);
+        if (advertiserId) params = params.set('advertiser_id', advertiserId.toString());
+        if (search) params = params.set('search', search);
+
+        return this.http.get<CouponPerformanceResponse>(
+            `${environment.apiUrl}/partner/my-coupons/`,
+            { params }
+        );
+    }
+
+    getCampaigns(): Observable<CampaignsResponse> {
+        return this.http.get<CampaignsResponse>(`${environment.apiUrl}/partner/campaigns/`);
     }
 }

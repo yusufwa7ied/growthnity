@@ -16,7 +16,7 @@ export class MainHeaderComponent implements OnInit {
     @Input() showSidebarButton: boolean = true;
     @Output() sidebarToggle = new EventEmitter<void>();
 
-    activeTab: 'dashboard' | 'daily-spend' | 'coupons' | 'advertisers' | 'partners' | 'targets' = 'dashboard';
+    activeTab: 'dashboard' | 'daily-spend' | 'coupons' | 'advertisers' | 'partners' | 'targets' | 'my-coupons' | 'campaigns' = 'dashboard';
     user: User | null = null;
     role: string = '';
     isAdmin: boolean = false;              // OpsManager or Admin (full access)
@@ -24,6 +24,7 @@ export class MainHeaderComponent implements OnInit {
     isDepartmentRestricted: boolean = false; // TeamMember with affiliate/influencer department
     canAccessCoupons: boolean = false;     // Only OpsManager/Admin
     isViewOnly: boolean = false;           // ViewOnly role - dashboard only, all data
+    isPartner: boolean = false;            // TeamMember with affiliate/influencer department
     displayRole: string = '';
 
     constructor(
@@ -73,11 +74,12 @@ export class MainHeaderComponent implements OnInit {
             this.isDepartmentRestricted = false;
             this.canAccessCoupons = false;  // NO coupons
         } else if (this.user?.department === 'affiliate' || this.user?.department === 'influencer') {
-            // TeamMember with affiliate/influencer: Filtered dashboard only
+            // TeamMember with affiliate/influencer: Partner portal access
             this.isAdmin = false;
             this.isMediaBuyer = false;
             this.isDepartmentRestricted = true;
             this.canAccessCoupons = false;
+            this.isPartner = true;
         } this.displayRole = this.getDisplayRole();
     }
 
@@ -97,6 +99,10 @@ export class MainHeaderComponent implements OnInit {
         // Use exact match to avoid conflicts (e.g., /dashboard matching /coupons)
         if (url === '/' || url.startsWith('/dashboard')) {
             this.activeTab = 'dashboard';
+        } else if (url.startsWith('/my-coupons')) {
+            this.activeTab = 'my-coupons';
+        } else if (url.startsWith('/campaigns')) {
+            this.activeTab = 'campaigns';
         } else if (url.startsWith('/coupons')) {
             this.activeTab = 'coupons';
         } else if (url.startsWith('/advertisers')) {
@@ -175,5 +181,15 @@ export class MainHeaderComponent implements OnInit {
     goToMediaBuyerSpend(): void {
         this.activeTab = 'daily-spend';
         this.router.navigate(['/media-buyer-spend'], { skipLocationChange: false });
+    }
+
+    goToMyCoupons(): void {
+        this.activeTab = 'my-coupons';
+        this.router.navigate(['/my-coupons'], { skipLocationChange: false });
+    }
+
+    goToCampaigns(): void {
+        this.activeTab = 'campaigns';
+        this.router.navigate(['/campaigns'], { skipLocationChange: false });
     }
 }

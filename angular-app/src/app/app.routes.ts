@@ -54,6 +54,16 @@ export const routes: Routes = [
     canActivate: [mediaBuyerGuard]
   },
   {
+    path: 'my-coupons',
+    loadComponent: () => import('./features/my-coupons/my-coupons.component').then(m => m.MyCouponsComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'campaigns',
+    loadComponent: () => import('./features/campaigns/campaigns.component').then(m => m.CampaignsComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: '/login'
   }
