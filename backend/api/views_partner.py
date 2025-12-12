@@ -140,21 +140,24 @@ def partner_coupons_performance_view(request):
     # Sort by total_sales descending
     result.sort(key=lambda x: x['total_sales'], reverse=True)
     
-    # Calculate summary stats
-    summary = {
-        'total_coupons': len(result),
-        'total_orders': sum(item['total_orders'] for item in result),
-        'total_sales': sum(item['total_sales'] for item in result),
-        'total_payout_gross': sum(item['total_payout_gross'] for item in result),
-        'total_payout_net': sum(item['total_payout_net'] for item in result),
-        'active_campaigns': len(set(item['advertiser'] for item in result))
-    }
+    # Format results to match frontend expectations
+    formatted_results = []
+    for item in result:
+        formatted_results.append({
+            'advertiser_id': item['advertiser_id'],
+            'advertiser_name': item['advertiser'],
+            'coupon': item['coupon'],
+            'orders': item['total_orders'],
+            'sales': round(item['total_sales'], 2),
+            'gross_payout': round(item['total_payout_gross'], 2),
+            'net_payout': round(item['total_payout_net'], 2)
+        })
     
     return Response({
-        'summary': summary,
-        'data': result,
-        'date_from': date_from.strftime('%Y-%m-%d'),
-        'date_to': date_to.strftime('%Y-%m-%d')
+        'results': formatted_results,
+        'count': len(formatted_results),
+        'next': None,
+        'previous': None
     }, status=status.HTTP_200_OK)
 
 
@@ -191,15 +194,18 @@ def partner_campaigns_view(request):
     date_to = datetime.now()
     date_from = date_to - timedelta(days=30)
     
-    # Get all advertisers the partner has worked with
-    advertiser_ids = CampaignPerformance.objects.filter(
-        partner__in=user_partners
-    ).values_list('advertiser_id', flat=True).distinct()
+    # Get all advertisers
+    all_advertisers = Advertiser.objects.all()
     
-    advertisers = Advertiser.objects.filter(id__in=advertiser_ids)
+    # Get advertiser IDs the partner has worked with
+    working_advertiser_ids = set(
+        CampaignPerformance.objects.filter(
+            partner__in=user_partners
+        ).values_list('advertiser_id', flat=True).distinct()
+    )
     
     campaigns = []
-    for advertiser in advertisers:
+    for advertiser in all_advertisers:
         # Get performance data for last 30 days
         perf = CampaignPerformance.objects.filter(
             advertiser=advertiser,
@@ -239,32 +245,23 @@ def partner_campaigns_view(request):
                 cancellation_rate = float(latest_rate.rate)
                 net_payout = gross_payout * (1 - cancellation_rate / 100)
         
+        # Determine if partner is working on this campaign
+        is_working = advertiser.id in working_advertiser_ids
+        
         campaigns.append({
-            'id': advertiser.id,
-            'name': advertiser.name,
-            'attribution': advertiser.attribution,
-            'currency': advertiser.currency,
-            'coupons_count': coupons_count,
-            'last_30_days': {
-                'orders': perf['total_orders'] or 0,
-                'sales': float(perf['total_sales'] or 0),
-                'revenue': float(perf['total_revenue'] or 0),
-                'payout_gross': gross_payout,
-                'payout_net': net_payout
-            },
-            'lifetime': {
-                'orders': lifetime_perf['lifetime_orders'] or 0,
-                'sales': float(lifetime_perf['lifetime_sales'] or 0),
-                'payout': float(lifetime_perf['lifetime_payout'] or 0)
-            },
-            'is_active': perf['total_orders'] and perf['total_orders'] > 0
+            'advertiser_id': advertiser.id,
+            'advertiser_name': advertiser.name,
+            'orders': perf['total_orders'] or 0,
+            'sales': round(float(perf['total_sales'] or 0), 2),
+            'revenue': round(float(perf['total_revenue'] or 0), 2),
+            'payout': round(net_payout, 2),
+            'profit': round(float(perf['total_revenue'] or 0) - net_payout, 2),
+            'is_working': is_working
         })
     
-    # Sort by last 30 days sales
-    campaigns.sort(key=lambda x: x['last_30_days']['sales'], reverse=True)
+    # Sort: working campaigns first, then by sales
+    campaigns.sort(key=lambda x: (not x['is_working'], -x['sales']))
     
     return Response({
-        'campaigns': campaigns,
-        'total_campaigns': len(campaigns),
-        'active_campaigns': sum(1 for c in campaigns if c['is_active'])
+        'campaigns': campaigns
     }, status=status.HTTP_200_OK)
