@@ -99,7 +99,7 @@
                 <ng-template pTemplate="header">
                     <tr>
                         <th class="col-campaign centered">Campaign</th>
-                        <th class="col-coupon centered">Coupons</th>
+                        <th class="col-coupon centered">Coupon</th>
                         <th class="col-orders centered">Orders</th>
                         <th class="col-amount centered">Sales</th>
                         <th class="col-amount centered">Payout</th>
@@ -107,8 +107,8 @@
                 </ng-template>
                 <ng-template pTemplate="body" let-coupon>
                     <tr>
-                        <td class="col-campaign centered">{{ coupon.campaign_display }}</td>
-                        <td class="col-coupon centered">{{ coupon.coupons }}</td>
+                        <td class="col-campaign centered">{{ coupon.advertiser_name }}</td>
+                        <td class="col-coupon centered">{{ coupon.coupon }}</td>
                         <td class="col-orders centered">{{ coupon.orders }}</td>
                         <td class="col-amount centered">${{ coupon.sales | trimDecimals }}</td>
                         <td class="col-amount centered stacked-cell">
