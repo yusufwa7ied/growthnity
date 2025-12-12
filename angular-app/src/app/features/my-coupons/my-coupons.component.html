@@ -8,108 +8,123 @@
         </div>
 
         <!-- Summary Cards -->
-        <div class="summary-cards">
-            <p-card>
-                <div class="summary-card-content">
-                    <div class="summary-label">Total Coupons</div>
-                    <div class="summary-value">{{ totalCoupons }}</div>
+        <div class="kpi-grid">
+            <p-card styleClass="kpi-card">
+                <div class="kpi-content">
+                    <i class="pi pi-tag kpi-icon"></i>
+                    <div>
+                        <h4>COUPONS</h4>
+                        <p class="kpi-value">{{ totalCoupons }}</p>
+                    </div>
                 </div>
             </p-card>
-            <p-card>
-                <div class="summary-card-content">
-                    <div class="summary-label">Total Orders</div>
-                    <div class="summary-value">{{ totalOrders }}</div>
+            <p-card styleClass="kpi-card">
+                <div class="kpi-content">
+                    <i class="pi pi-shopping-cart kpi-icon"></i>
+                    <div>
+                        <h4>ORDERS</h4>
+                        <p class="kpi-value">{{ totalOrders }}</p>
+                    </div>
                 </div>
             </p-card>
-            <p-card>
-                <div class="summary-card-content">
-                    <div class="summary-label">Total Sales</div>
-                    <div class="summary-value">{{ totalSales | trimDecimals }}</div>
+            <p-card styleClass="kpi-card">
+                <div class="kpi-content">
+                    <i class="pi pi-dollar kpi-icon"></i>
+                    <div>
+                        <h4>SALES</h4>
+                        <p class="kpi-value">${{ totalSales | trimDecimals }}</p>
+                    </div>
                 </div>
             </p-card>
-            <p-card>
-                <div class="summary-card-content">
-                    <div class="summary-label">Gross Payout</div>
-                    <div class="summary-value">{{ totalGrossPayout | trimDecimals }}</div>
-                </div>
-            </p-card>
-            <p-card>
-                <div class="summary-card-content">
-                    <div class="summary-label">Net Payout</div>
-                    <div class="summary-value success">{{ totalNetPayout | trimDecimals }}</div>
+            <p-card styleClass="kpi-card">
+                <div class="kpi-content">
+                    <i class="pi pi-wallet kpi-icon"></i>
+                    <div>
+                        <h4>PAYOUT</h4>
+                        <p class="kpi-value">${{ totalGrossPayout | trimDecimals }}</p>
+                        <p class="kpi-subvalue">Net: ${{ totalNetPayout | trimDecimals }}</p>
+                    </div>
                 </div>
             </p-card>
         </div>
 
-        <!-- Filters -->
-        <p-card class="filters-card">
-            <div class="filter-bar-content">
-                <div class="filter-controls">
-                    <div class="filter-group">
-                        <label class="filter-label">Date From</label>
-                        <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
-                            [showIcon]="true" (onSelect)="applyFilters()" (onClear)="applyFilters()">
-                        </p-datepicker>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">Date To</label>
-                        <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
-                            [showIcon]="true" (onSelect)="applyFilters()" (onClear)="applyFilters()">
-                        </p-datepicker>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">Campaign</label>
-                        <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
-                            placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()">
-                        </p-select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">Search Coupon</label>
-                        <input pInputText [(ngModel)]="searchTerm" placeholder="Search by coupon code"
-                            (input)="onSearchChange()" class="filter-input">
-                    </div>
-                </div>
-
-                <div class="filter-actions">
-                    <p-button label="Clear All" severity="secondary" icon="pi pi-times" (onClick)="clearFilters()"
-                        styleClass="clear-btn">
-                    </p-button>
-                    <p-button label="Export CSV" severity="success" icon="pi pi-download" (onClick)="exportData()"
-                        styleClass="export-btn">
-                    </p-button>
-                </div>
-            </div>
-        </p-card>
-
-        <!-- Data Table -->
+        <!-- Data Table with Filters -->
         <p-card class="table-card">
+            <ng-template pTemplate="header">
+                <div class="table-header">
+                    <div class="table-title">
+                        <h3><i class="pi pi-table"></i> Coupon Performance</h3>
+                        <span class="record-count">{{ totalRecords }} records</span>
+                    </div>
+                    <div class="table-controls">
+                        <div class="filter-controls">
+                            <div class="filter-group">
+                                <label class="filter-label">Date From</label>
+                                <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
+                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                                </p-datepicker>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">Date To</label>
+                                <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
+                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                                </p-datepicker>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">Campaign</label>
+                                <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
+                                    placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()">
+                                </p-select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">Search Coupon</label>
+                                <input pInputText [(ngModel)]="searchTerm" placeholder="Search by coupon code"
+                                    (input)="onSearchChange()" class="filter-input">
+                            </div>
+                        </div>
+
+                        <div class="export-buttons">
+                            <p-button label="Export CSV" icon="pi pi-download" (onClick)="exportData()"
+                                severity="primary" size="small" styleClass="export-btn">
+                            </p-button>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+
             <p-table [value]="coupons" [loading]="loading" [paginator]="false" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th>Campaign</th>
-                        <th>Coupon</th>
-                        <th class="text-right">Orders</th>
-                        <th class="text-right">Sales</th>
-                        <th class="text-right">Gross Payout</th>
-                        <th class="text-right">Net Payout</th>
+                        <th class="col-campaign">Campaign</th>
+                        <th class="col-coupon">Coupon</th>
+                        <th class="col-orders">Orders</th>
+                        <th class="col-amount">Sales</th>
+                        <th class="col-amount">Payout</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-coupon>
                     <tr>
-                        <td>{{ coupon.advertiser_name }}</td>
-                        <td><strong>{{ coupon.coupon }}</strong></td>
-                        <td class="text-right">{{ coupon.orders }}</td>
-                        <td class="text-right">{{ coupon.sales | trimDecimals }}</td>
-                        <td class="text-right">{{ coupon.gross_payout | trimDecimals }}</td>
-                        <td class="text-right success"><strong>{{ coupon.net_payout | trimDecimals }}</strong></td>
+                        <td class="col-campaign">{{ coupon.advertiser_name }}</td>
+                        <td class="col-coupon">{{ coupon.coupon }}</td>
+                        <td class="col-orders">{{ coupon.orders }}</td>
+                        <td class="col-amount">${{ coupon.sales | trimDecimals }}</td>
+                        <td class="col-amount stacked-cell">
+                            <div class="main-value">${{ coupon.gross_payout | trimDecimals }}</div>
+                            <div class="sub-value">Net: ${{ coupon.net_payout | trimDecimals }}</div>
+                        </td>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="6" class="text-center">No coupons found</td>
+                        <td colspan="5" class="text-center">
+                            <div class="empty-message">
+                                <i class="pi pi-inbox"></i>
+                                <p>No coupons found</p>
+                            </div>
+                        </td>
                     </tr>
                 </ng-template>
             </p-table>

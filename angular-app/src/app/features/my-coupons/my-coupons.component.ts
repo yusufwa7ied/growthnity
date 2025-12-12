@@ -145,13 +145,17 @@ export class MyCouponsComponent implements OnInit {
         const dateTo = this.dateTo ? this.formatDate(this.dateTo) : '';
         const advertiserId = this.selectedAdvertiser?.id;
 
-        let url = `${this.partnerService['apiUrl']}/partner/my-coupons/?export=csv`;
-        if (dateFrom) url += `&date_from=${dateFrom}`;
-        if (dateTo) url += `&date_to=${dateTo}`;
-        if (advertiserId) url += `&advertiser_id=${advertiserId}`;
-        if (this.searchTerm) url += `&search=${this.searchTerm}`;
+        let params: string[] = [];
+        if (dateFrom) params.push(`date_from=${dateFrom}`);
+        if (dateTo) params.push(`date_to=${dateTo}`);
+        if (advertiserId) params.push(`advertiser_id=${advertiserId}`);
+        if (this.searchTerm) params.push(`search=${this.searchTerm}`);
+        params.push('export=csv');
 
-        window.open(url, '_blank');
+        const queryString = params.join('&');
+        const url = `/api/partner/my-coupons/?${queryString}`;
+        
+        window.location.href = url;
     }
 
     private formatDate(date: Date): string {
