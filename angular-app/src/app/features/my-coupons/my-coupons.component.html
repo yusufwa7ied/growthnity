@@ -42,7 +42,7 @@
                     <div>
                         <h4>PAYOUT</h4>
                         <p class="kpi-value">${{ totalGrossPayout | trimDecimals }}</p>
-                        <p class="kpi-subvalue">Net: ${{ totalNetPayout | trimDecimals }}</p>
+                        <p class="kpi-subvalue">Net: {{ totalNetPayout !== null && totalNetPayout !== undefined ? ('$' + (totalNetPayout | trimDecimals)) : '-' }}</p>
                     </div>
                 </div>
             </p-card>
@@ -113,7 +113,7 @@
                         <td class="col-amount">${{ coupon.sales | trimDecimals }}</td>
                         <td class="col-amount stacked-cell">
                             <div class="main-value">${{ coupon.gross_payout | trimDecimals }}</div>
-                            <div class="sub-value">Net: ${{ coupon.net_payout | trimDecimals }}</div>
+                            <div class="sub-value">Net: {{ coupon.net_payout !== null && coupon.net_payout !== undefined ? ('$' + (coupon.net_payout | trimDecimals)) : '-' }}</div>
                         </td>
                     </tr>
                 </ng-template>

@@ -5,11 +5,29 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from .models import (
     CompanyUser, Partner, CampaignPerformance, 
     Coupon, Advertiser, AccountAssignment, AdvertiserCancellationRate
 )
+
+
+def get_cancellation_rate_for_date(advertiser_id, target_date):
+    """
+    Get the applicable cancellation rate for an advertiser on a specific date.
+    Returns the cancellation rate as a Decimal, or 0 if no rate is found.
+    """
+    rate = AdvertiserCancellationRate.objects.filter(
+        advertiser_id=advertiser_id,
+        start_date__lte=target_date
+    ).filter(
+        Q(end_date__gte=target_date) | Q(end_date__isnull=True)
+    ).order_by('-start_date').first()
+    
+    if rate:
+        return rate.cancellation_rate
+    return Decimal('0')
 
 
 @api_view(['GET'])
@@ -78,18 +96,18 @@ def partner_coupons_performance_view(request):
         'advertiser', 'partner', 'coupon'
     )
     
-    # Group by advertiser and coupon
+    # Group by coupon only
     grouped_data = {}
+    has_any_cancellation_rate = False
     
     for record in performance_qs:
-        advertiser_name = record.advertiser.name if record.advertiser else 'Unknown'
         coupon_code = record.coupon.code if record.coupon else 'No Coupon'
         
-        # Create unique key for grouping
-        key = f"{advertiser_name}|{coupon_code}"
+        # Get first advertiser name for display
+        advertiser_name = record.advertiser.name if record.advertiser else 'Unknown'
         
-        if key not in grouped_data:
-            grouped_data[key] = {
+        if coupon_code not in grouped_data:
+            grouped_data[coupon_code] = {
                 'advertiser': advertiser_name,
                 'advertiser_id': record.advertiser.id if record.advertiser else None,
                 'coupon': coupon_code,
@@ -102,37 +120,32 @@ def partner_coupons_performance_view(request):
                 'ftu_orders': 0,
                 'rtu_orders': 0,
                 'ftu_sales': 0,
-                'rtu_sales': 0
+                'rtu_sales': 0,
+                'has_cancellation_rate': False
             }
         
         # Aggregate metrics
-        grouped_data[key]['total_orders'] += record.total_orders or 0
-        grouped_data[key]['total_sales'] += float(record.total_sales or 0)
-        grouped_data[key]['total_revenue'] += float(record.total_revenue or 0)
-        grouped_data[key]['total_payout_gross'] += float(record.total_payout or 0)
-        grouped_data[key]['ftu_orders'] += record.ftu_orders or 0
-        grouped_data[key]['rtu_orders'] += record.rtu_orders or 0
-        grouped_data[key]['ftu_sales'] += float(record.ftu_sales or 0)
-        grouped_data[key]['rtu_sales'] += float(record.rtu_sales or 0)
+        grouped_data[coupon_code]['total_orders'] += record.total_orders or 0
+        grouped_data[coupon_code]['total_sales'] += float(record.total_sales or 0)
+        grouped_data[coupon_code]['total_revenue'] += float(record.total_revenue or 0)
+        grouped_data[coupon_code]['total_payout_gross'] += float(record.total_payout or 0)
+        grouped_data[coupon_code]['ftu_orders'] += record.ftu_orders or 0
+        grouped_data[coupon_code]['rtu_orders'] += record.rtu_orders or 0
+        grouped_data[coupon_code]['ftu_sales'] += float(record.ftu_sales or 0)
+        grouped_data[coupon_code]['rtu_sales'] += float(record.rtu_sales or 0)
         
-        # Calculate net payout (assuming cancellation rate is applied)
-        # Net payout is the actual payout after cancellations
+        # Calculate net payout using date-specific cancellation rate
         payout_amount = float(record.total_payout or 0)
         try:
             if record.advertiser:
-                latest_rate = AdvertiserCancellationRate.objects.filter(
-                    advertiser=record.advertiser
-                ).order_by('-start_date').first()
-                if latest_rate:
-                    cancellation_rate = float(latest_rate.cancellation_rate)
-                    net_payout = payout_amount * (1 - cancellation_rate / 100)
-                    grouped_data[key]['total_payout_net'] += net_payout
-                else:
-                    grouped_data[key]['total_payout_net'] += payout_amount
-            else:
-                grouped_data[key]['total_payout_net'] += payout_amount
+                cancellation_rate = get_cancellation_rate_for_date(record.advertiser.id, record.date)
+                if cancellation_rate > 0:
+                    has_any_cancellation_rate = True
+                    grouped_data[coupon_code]['has_cancellation_rate'] = True
+                    net_payout = payout_amount * float(Decimal('1') - (cancellation_rate / Decimal('100')))
+                    grouped_data[coupon_code]['total_payout_net'] += net_payout
         except Exception:
-            grouped_data[key]['total_payout_net'] += payout_amount
+            pass
     
     # Convert to list and apply search filter
     result = list(grouped_data.values())
@@ -149,6 +162,11 @@ def partner_coupons_performance_view(request):
     # Format results to match frontend expectations
     formatted_results = []
     for item in result:
+        # Set net_payout to None if no cancellation rate exists
+        net_payout_value = None
+        if item['has_cancellation_rate']:
+            net_payout_value = round(item['total_payout_net'], 2)
+        
         formatted_results.append({
             'advertiser_id': item['advertiser_id'],
             'advertiser_name': item['advertiser'],
@@ -156,7 +174,7 @@ def partner_coupons_performance_view(request):
             'orders': item['total_orders'],
             'sales': round(item['total_sales'], 2),
             'gross_payout': round(item['total_payout_gross'], 2),
-            'net_payout': round(item['total_payout_net'], 2)
+            'net_payout': net_payout_value
         })
     
     return Response({
