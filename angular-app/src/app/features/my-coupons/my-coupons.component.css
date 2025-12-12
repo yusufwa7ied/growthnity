@@ -4,10 +4,238 @@
   display: contents;
 }
 
+.my-coupons-page {
+  min-height: 100vh;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Summary Cards - Copied from dashboard KPI grid */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+::ng-deep .summary-cards .p-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+::ng-deep .summary-cards .p-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.1);
+  transform: translateY(-2px);
+}
+
+::ng-deep .summary-cards .p-card-body {
+  padding: 1.25rem;
+  width: 100%;
+}
+
+.summary-card-content {
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #101010;
+}
+
+.summary-value.success {
+  color: #009292;
+}
+
+/* Filters Card */
+::ng-deep .filters-card.p-card {
+  margin-bottom: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+::ng-deep .filters-card .p-card-body {
+  padding: 1.5rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  align-items: end;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-item label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+::ng-deep .filter-item .p-datepicker,
+::ng-deep .filter-item .p-select,
+::ng-deep .filter-item .p-inputtext {
+  width: 100%;
+}
+
+/* Table Card - Copied from dashboard */
+::ng-deep .table-card.p-card {
+  border-radius: 16px !important;
+  overflow: hidden;
+  border-left: 4px solid #009292 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+::ng-deep .table-card.p-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 146, 146, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+::ng-deep .table-card .p-card-body {
+  padding: 0;
+}
+
+/* Table styling - Copied from dashboard */
+::ng-deep .p-datatable {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+::ng-deep .p-datatable .p-datatable-wrapper {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+::ng-deep .p-datatable .p-datatable-thead>tr>th {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
+  color: #1f2937 !important;
+  font-weight: 700 !important;
+  padding: 1rem 0.75rem !important;
+  text-align: center !important;
+  letter-spacing: 0.8px !important;
+  border-bottom: 2px solid #009292 !important;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody>tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody>tr>td {
+  padding: 1rem 0.75rem !important;
+  font-size: 0.9rem !important;
+  color: #4b5563 !important;
+  font-weight: 500 !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
+  line-height: 1.6 !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody>tr:hover {
+  background: linear-gradient(90deg, rgba(0, 146, 146, 0.03) 0%, rgba(0, 146, 146, 0.01) 100%) !important;
+}
+
+/* Button styling */
+::ng-deep .p-button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+::ng-deep .p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Paginator */
+::ng-deep .p-paginator {
+  margin-top: 1rem;
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+/* Text alignment utilities */
 .text-right {
   text-align: right !important;
 }
 
 .text-center {
   text-align: center !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
 }
