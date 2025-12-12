@@ -156,7 +156,7 @@ export class PartnerService {
         page: number = 1
     ): Observable<CouponPerformanceResponse> {
         let params = new HttpParams().set('page', page.toString());
-        
+
         if (dateFrom) params = params.set('date_from', dateFrom);
         if (dateTo) params = params.set('date_to', dateTo);
         if (advertiserId) params = params.set('advertiser_id', advertiserId.toString());

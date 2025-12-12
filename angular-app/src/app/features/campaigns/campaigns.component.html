@@ -1,81 +1,81 @@
 <div class="campaigns-page">
-  <app-main-header></app-main-header>
+    <app-main-header></app-main-header>
 
-  <div class="container">
-    <div class="page-header">
-      <h1>Campaigns</h1>
-      <p>View all campaigns and track which ones you're actively working on</p>
+    <div class="container">
+        <div class="page-header">
+            <h1>Campaigns</h1>
+            <p>View all campaigns and track which ones you're actively working on</p>
+        </div>
+
+        <!-- Working Campaigns Section -->
+        <div class="section" *ngIf="workingCampaigns.length > 0">
+            <h2 class="section-title">Working Campaigns ({{ workingCampaigns.length }})</h2>
+            <div class="campaigns-grid">
+                <p-card *ngFor="let campaign of workingCampaigns" class="campaign-card working">
+                    <div class="campaign-header">
+                        <h3>{{ campaign.advertiser_name }}</h3>
+                        <p-tag [value]="'Working'" [severity]="'success'"></p-tag>
+                    </div>
+
+                    <div class="campaign-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Orders</span>
+                            <span class="metric-value">{{ campaign.orders }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Sales</span>
+                            <span class="metric-value">{{ campaign.sales | trimDecimals }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Revenue</span>
+                            <span class="metric-value">{{ campaign.revenue | trimDecimals }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Payout</span>
+                            <span class="metric-value highlight">{{ campaign.payout | trimDecimals }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Profit</span>
+                            <span class="metric-value" [class.negative]="campaign.profit < 0">
+                                {{ campaign.profit | trimDecimals }}
+                            </span>
+                        </div>
+                    </div>
+                </p-card>
+            </div>
+        </div>
+
+        <!-- Not Working Campaigns Section -->
+        <div class="section">
+            <h2 class="section-title">Available Campaigns ({{ notWorkingCampaigns.length }})</h2>
+            <p class="section-description">These campaigns are available for you to work on</p>
+            <div class="campaigns-grid">
+                <p-card *ngFor="let campaign of notWorkingCampaigns" class="campaign-card available">
+                    <div class="campaign-header">
+                        <h3>{{ campaign.advertiser_name }}</h3>
+                        <p-tag [value]="'Available'" [severity]="'secondary'"></p-tag>
+                    </div>
+
+                    <div class="campaign-info">
+                        <p>This campaign is available for promotion. Contact your manager to start working on it.</p>
+                    </div>
+                </p-card>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && campaigns.length === 0" class="empty-state">
+            <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <h3>No Campaigns Available</h3>
+            <p>There are no campaigns available at the moment.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-state">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+            <p>Loading campaigns...</p>
+        </div>
     </div>
 
-  <!-- Working Campaigns Section -->
-  <div class="section" *ngIf="workingCampaigns.length > 0">
-    <h2 class="section-title">Working Campaigns ({{ workingCampaigns.length }})</h2>
-    <div class="campaigns-grid">
-      <p-card *ngFor="let campaign of workingCampaigns" class="campaign-card working">
-        <div class="campaign-header">
-          <h3>{{ campaign.advertiser_name }}</h3>
-          <p-tag [value]="'Working'" [severity]="'success'"></p-tag>
-        </div>
-        
-        <div class="campaign-metrics">
-          <div class="metric">
-            <span class="metric-label">Orders</span>
-            <span class="metric-value">{{ campaign.orders }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Sales</span>
-            <span class="metric-value">{{ campaign.sales | trimDecimals }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Revenue</span>
-            <span class="metric-value">{{ campaign.revenue | trimDecimals }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Payout</span>
-            <span class="metric-value highlight">{{ campaign.payout | trimDecimals }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Profit</span>
-            <span class="metric-value" [class.negative]="campaign.profit < 0">
-              {{ campaign.profit | trimDecimals }}
-            </span>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <!-- Not Working Campaigns Section -->
-  <div class="section">
-    <h2 class="section-title">Available Campaigns ({{ notWorkingCampaigns.length }})</h2>
-    <p class="section-description">These campaigns are available for you to work on</p>
-    <div class="campaigns-grid">
-      <p-card *ngFor="let campaign of notWorkingCampaigns" class="campaign-card available">
-        <div class="campaign-header">
-          <h3>{{ campaign.advertiser_name }}</h3>
-          <p-tag [value]="'Available'" [severity]="'secondary'"></p-tag>
-        </div>
-        
-        <div class="campaign-info">
-          <p>This campaign is available for promotion. Contact your manager to start working on it.</p>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <!-- Empty State -->
-  <div *ngIf="!loading && campaigns.length === 0" class="empty-state">
-    <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-    <h3>No Campaigns Available</h3>
-    <p>There are no campaigns available at the moment.</p>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
-    <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
-    <p>Loading campaigns...</p>
-  </div>
-  </div>
-
-  <app-footer></app-footer>
+    <app-footer></app-footer>
 </div>

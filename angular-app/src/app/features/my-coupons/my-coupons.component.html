@@ -1,155 +1,123 @@
 <div class="my-coupons-page">
-  <app-main-header></app-main-header>
+    <app-main-header></app-main-header>
 
-  <div class="container">
-    <div class="page-header">
-      <h1>My Coupons</h1>
-      <p>Track performance of your coupons across all campaigns</p>
+    <div class="container">
+        <div class="page-header">
+            <h1>My Coupons</h1>
+            <p>Track performance of your coupons across all campaigns</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <p-card>
+                <div class="summary-card-content">
+                    <div class="summary-label">Total Coupons</div>
+                    <div class="summary-value">{{ totalCoupons }}</div>
+                </div>
+            </p-card>
+            <p-card>
+                <div class="summary-card-content">
+                    <div class="summary-label">Total Orders</div>
+                    <div class="summary-value">{{ totalOrders }}</div>
+                </div>
+            </p-card>
+            <p-card>
+                <div class="summary-card-content">
+                    <div class="summary-label">Total Sales</div>
+                    <div class="summary-value">{{ totalSales | trimDecimals }}</div>
+                </div>
+            </p-card>
+            <p-card>
+                <div class="summary-card-content">
+                    <div class="summary-label">Gross Payout</div>
+                    <div class="summary-value">{{ totalGrossPayout | trimDecimals }}</div>
+                </div>
+            </p-card>
+            <p-card>
+                <div class="summary-card-content">
+                    <div class="summary-label">Net Payout</div>
+                    <div class="summary-value success">{{ totalNetPayout | trimDecimals }}</div>
+                </div>
+            </p-card>
+        </div>
+
+        <!-- Filters -->
+        <p-card class="filters-card">
+            <div class="filters-grid">
+                <div class="filter-item">
+                    <label>Date From</label>
+                    <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
+                        [showIcon]="true">
+                    </p-datepicker>
+                </div>
+
+                <div class="filter-item">
+                    <label>Date To</label>
+                    <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
+                        [showIcon]="true">
+                    </p-datepicker>
+                </div>
+
+                <div class="filter-item">
+                    <label>Campaign</label>
+                    <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
+                        placeholder="All Campaigns" [showClear]="true">
+                    </p-select>
+                </div>
+
+                <div class="filter-item">
+                    <label>Search Coupon</label>
+                    <input pInputText [(ngModel)]="searchTerm" placeholder="Search by coupon code"
+                        (keyup.enter)="applyFilters()">
+                </div>
+
+                <div class="filter-actions">
+                    <p-button label="Apply Filters" icon="pi pi-filter" (onClick)="applyFilters()">
+                    </p-button>
+                    <p-button label="Clear" severity="secondary" icon="pi pi-times" (onClick)="clearFilters()">
+                    </p-button>
+                    <p-button label="Export" severity="success" icon="pi pi-download" (onClick)="exportData()">
+                    </p-button>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Data Table -->
+        <p-card class="table-card">
+            <p-table [value]="coupons" [loading]="loading" [paginator]="false" responsiveLayout="scroll">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Coupon</th>
+                        <th class="text-right">Orders</th>
+                        <th class="text-right">Sales</th>
+                        <th class="text-right">Gross Payout</th>
+                        <th class="text-right">Net Payout</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-coupon>
+                    <tr>
+                        <td>{{ coupon.advertiser_name }}</td>
+                        <td><strong>{{ coupon.coupon }}</strong></td>
+                        <td class="text-right">{{ coupon.orders }}</td>
+                        <td class="text-right">{{ coupon.sales | trimDecimals }}</td>
+                        <td class="text-right">{{ coupon.gross_payout | trimDecimals }}</td>
+                        <td class="text-right success"><strong>{{ coupon.net_payout | trimDecimals }}</strong></td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="6" class="text-center">No coupons found</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+            <!-- Pagination -->
+            <p-paginator *ngIf="totalRecords > rowsPerPage" [rows]="rowsPerPage" [totalRecords]="totalRecords"
+                [first]="(currentPage - 1) * rowsPerPage" (onPageChange)="onPageChange($event)">
+            </p-paginator>
+        </p-card>
     </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    <p-card>
-      <div class="summary-card-content">
-        <div class="summary-label">Total Coupons</div>
-        <div class="summary-value">{{ totalCoupons }}</div>
-      </div>
-    </p-card>
-    <p-card>
-      <div class="summary-card-content">
-        <div class="summary-label">Total Orders</div>
-        <div class="summary-value">{{ totalOrders }}</div>
-      </div>
-    </p-card>
-    <p-card>
-      <div class="summary-card-content">
-        <div class="summary-label">Total Sales</div>
-        <div class="summary-value">{{ totalSales | trimDecimals }}</div>
-      </div>
-    </p-card>
-    <p-card>
-      <div class="summary-card-content">
-        <div class="summary-label">Gross Payout</div>
-        <div class="summary-value">{{ totalGrossPayout | trimDecimals }}</div>
-      </div>
-    </p-card>
-    <p-card>
-      <div class="summary-card-content">
-        <div class="summary-label">Net Payout</div>
-        <div class="summary-value success">{{ totalNetPayout | trimDecimals }}</div>
-      </div>
-    </p-card>
-  </div>
-
-  <!-- Filters -->
-  <p-card class="filters-card">
-    <div class="filters-grid">
-      <div class="filter-item">
-        <label>Date From</label>
-        <p-datepicker 
-          [(ngModel)]="dateFrom" 
-          dateFormat="yy-mm-dd"
-          placeholder="Select start date"
-          [showIcon]="true">
-        </p-datepicker>
-      </div>
-      
-      <div class="filter-item">
-        <label>Date To</label>
-        <p-datepicker 
-          [(ngModel)]="dateTo" 
-          dateFormat="yy-mm-dd"
-          placeholder="Select end date"
-          [showIcon]="true">
-        </p-datepicker>
-      </div>
-      
-      <div class="filter-item">
-        <label>Campaign</label>
-        <p-select 
-          [(ngModel)]="selectedAdvertiser" 
-          [options]="advertisers" 
-          optionLabel="name"
-          placeholder="All Campaigns"
-          [showClear]="true">
-        </p-select>
-      </div>
-      
-      <div class="filter-item">
-        <label>Search Coupon</label>
-        <input 
-          pInputText 
-          [(ngModel)]="searchTerm" 
-          placeholder="Search by coupon code"
-          (keyup.enter)="applyFilters()">
-      </div>
-      
-      <div class="filter-actions">
-        <p-button 
-          label="Apply Filters" 
-          icon="pi pi-filter" 
-          (onClick)="applyFilters()">
-        </p-button>
-        <p-button 
-          label="Clear" 
-          severity="secondary"
-          icon="pi pi-times" 
-          (onClick)="clearFilters()">
-        </p-button>
-        <p-button 
-          label="Export" 
-          severity="success"
-          icon="pi pi-download" 
-          (onClick)="exportData()">
-        </p-button>
-      </div>
-    </div>
-  </p-card>
-
-  <!-- Data Table -->
-  <p-card class="table-card">
-    <p-table 
-      [value]="coupons" 
-      [loading]="loading"
-      [paginator]="false"
-      responsiveLayout="scroll">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Campaign</th>
-          <th>Coupon</th>
-          <th class="text-right">Orders</th>
-          <th class="text-right">Sales</th>
-          <th class="text-right">Gross Payout</th>
-          <th class="text-right">Net Payout</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-coupon>
-        <tr>
-          <td>{{ coupon.advertiser_name }}</td>
-          <td><strong>{{ coupon.coupon }}</strong></td>
-          <td class="text-right">{{ coupon.orders }}</td>
-          <td class="text-right">{{ coupon.sales | trimDecimals }}</td>
-          <td class="text-right">{{ coupon.gross_payout | trimDecimals }}</td>
-          <td class="text-right success"><strong>{{ coupon.net_payout | trimDecimals }}</strong></td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center">No coupons found</td>
-        </tr>
-      </ng-template>
-    </p-table>
-
-    <!-- Pagination -->
-    <p-paginator 
-      *ngIf="totalRecords > rowsPerPage"
-      [rows]="rowsPerPage" 
-      [totalRecords]="totalRecords"
-      [first]="(currentPage - 1) * rowsPerPage"
-      (onPageChange)="onPageChange($event)">
-    </p-paginator>
-  </p-card>
-  </div>
-
-  <app-footer></app-footer>
+    <app-footer></app-footer>
 </div>

@@ -9,49 +9,49 @@ import { MainHeaderComponent } from '../../shared/components/main-header/main-he
 import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
 
 @Component({
-  selector: 'app-campaigns',
-  standalone: true,
-  imports: [
-    CommonModule,
-    Card,
-    Button,
-    Tag,
-    MainHeaderComponent,
-    FooterComponent,
-    TrimDecimalsPipe
-  ],
-  templateUrl: './campaigns.component.html',
-  styleUrl: './campaigns.component.css'
+    selector: 'app-campaigns',
+    standalone: true,
+    imports: [
+        CommonModule,
+        Card,
+        Button,
+        Tag,
+        MainHeaderComponent,
+        FooterComponent,
+        TrimDecimalsPipe
+    ],
+    templateUrl: './campaigns.component.html',
+    styleUrls: ['./campaigns.component.css']
 })
 export class CampaignsComponent implements OnInit {
-  campaigns: CampaignSummary[] = [];
-  workingCampaigns: CampaignSummary[] = [];
-  notWorkingCampaigns: CampaignSummary[] = [];
-  loading = false;
+    campaigns: CampaignSummary[] = [];
+    workingCampaigns: CampaignSummary[] = [];
+    notWorkingCampaigns: CampaignSummary[] = [];
+    loading = false;
 
-  constructor(private partnerService: PartnerService) {}
+    constructor(private partnerService: PartnerService) { }
 
-  ngOnInit() {
-    this.loadCampaigns();
-  }
+    ngOnInit() {
+        this.loadCampaigns();
+    }
 
-  loadCampaigns() {
-    this.loading = true;
-    this.partnerService.getCampaigns().subscribe({
-      next: (response) => {
-        this.campaigns = response.campaigns;
-        this.workingCampaigns = this.campaigns.filter(c => c.is_working);
-        this.notWorkingCampaigns = this.campaigns.filter(c => !c.is_working);
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading campaigns:', error);
-        this.loading = false;
-      }
-    });
-  }
+    loadCampaigns() {
+        this.loading = true;
+        this.partnerService.getCampaigns().subscribe({
+            next: (response) => {
+                this.campaigns = response.campaigns;
+                this.workingCampaigns = this.campaigns.filter(c => c.is_working);
+                this.notWorkingCampaigns = this.campaigns.filter(c => !c.is_working);
+                this.loading = false;
+            },
+            error: (error) => {
+                console.error('Error loading campaigns:', error);
+                this.loading = false;
+            }
+        });
+    }
 
-  getStatusSeverity(isWorking: boolean): 'success' | 'secondary' {
-    return isWorking ? 'success' : 'secondary';
-  }
+    getStatusSeverity(isWorking: boolean): 'success' | 'secondary' {
+        return isWorking ? 'success' : 'secondary';
+    }
 }
