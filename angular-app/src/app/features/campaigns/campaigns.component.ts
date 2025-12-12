@@ -21,7 +21,7 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         TrimDecimalsPipe
     ],
     templateUrl: './campaigns.component.html',
-    styleUrls: ['./campaigns.component.css']
+    styleUrl: './campaigns.component.css'
 })
 export class CampaignsComponent implements OnInit {
     campaigns: CampaignSummary[] = [];

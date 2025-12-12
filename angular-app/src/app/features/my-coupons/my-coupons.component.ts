@@ -33,7 +33,7 @@ import { TrimDecimalsPipe } from '../../shared/pipes/trim-decimals.pipe';
         TrimDecimalsPipe
     ],
     templateUrl: './my-coupons.component.html',
-    styleUrls: ['./my-coupons.component.css']
+    styleUrl: './my-coupons.component.css'
 })
 export class MyCouponsComponent implements OnInit {
     coupons: CouponPerformance[] = [];
