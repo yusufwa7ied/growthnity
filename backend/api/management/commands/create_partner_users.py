@@ -37,13 +37,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'❌ TeamMember role not found! Please create it first.'))
             return
 
-        # Get partners with emails
-        partners = Partner.objects.filter(email__isnull=False).exclude(email='')
+        # Get partners with emails (exclude MB - media buyers already have accounts)
+        partners = Partner.objects.filter(email__isnull=False).exclude(email='').exclude(partner_type='MB')
         
         if partner_type_filter:
             partners = partners.filter(partner_type=partner_type_filter)
 
-        self.stdout.write(f"\n📊 Found {partners.count()} partners with email addresses\n")
+        self.stdout.write(f"\n📊 Found {partners.count()} partners with email addresses (excluding MB)\n")
 
         created_count = 0
         updated_count = 0
