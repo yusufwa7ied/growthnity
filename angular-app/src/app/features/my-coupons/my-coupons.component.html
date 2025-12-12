@@ -43,40 +43,42 @@
 
         <!-- Filters -->
         <p-card class="filters-card">
-            <div class="filters-grid">
-                <div class="filter-item">
-                    <label>Date From</label>
-                    <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
-                        [showIcon]="true">
-                    </p-datepicker>
-                </div>
+            <div class="filter-bar-content">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label class="filter-label">Date From</label>
+                        <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
+                            [showIcon]="true" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                        </p-datepicker>
+                    </div>
 
-                <div class="filter-item">
-                    <label>Date To</label>
-                    <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
-                        [showIcon]="true">
-                    </p-datepicker>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Date To</label>
+                        <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
+                            [showIcon]="true" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                        </p-datepicker>
+                    </div>
 
-                <div class="filter-item">
-                    <label>Campaign</label>
-                    <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
-                        placeholder="All Campaigns" [showClear]="true">
-                    </p-select>
-                </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Campaign</label>
+                        <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
+                            placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()">
+                        </p-select>
+                    </div>
 
-                <div class="filter-item">
-                    <label>Search Coupon</label>
-                    <input pInputText [(ngModel)]="searchTerm" placeholder="Search by coupon code"
-                        (keyup.enter)="applyFilters()">
+                    <div class="filter-group">
+                        <label class="filter-label">Search Coupon</label>
+                        <input pInputText [(ngModel)]="searchTerm" placeholder="Search by coupon code"
+                            (input)="onSearchChange()" class="filter-input">
+                    </div>
                 </div>
 
                 <div class="filter-actions">
-                    <p-button label="Apply Filters" icon="pi pi-filter" (onClick)="applyFilters()">
+                    <p-button label="Clear All" severity="secondary" icon="pi pi-times" (onClick)="clearFilters()"
+                        styleClass="clear-btn">
                     </p-button>
-                    <p-button label="Clear" severity="secondary" icon="pi pi-times" (onClick)="clearFilters()">
-                    </p-button>
-                    <p-button label="Export" severity="success" icon="pi pi-download" (onClick)="exportData()">
+                    <p-button label="Export CSV" severity="success" icon="pi pi-download" (onClick)="exportData()"
+                        styleClass="export-btn">
                     </p-button>
                 </div>
             </div>

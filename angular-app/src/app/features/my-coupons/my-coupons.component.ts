@@ -45,6 +45,7 @@ export class MyCouponsComponent implements OnInit {
     dateTo: Date | null = null;
     selectedAdvertiser: Advertiser | null = null;
     searchTerm = '';
+    searchTimeout: any;
 
     // Pagination
     currentPage = 1;
@@ -113,6 +114,16 @@ export class MyCouponsComponent implements OnInit {
         this.currentPage = event.page + 1;
         this.rowsPerPage = event.rows;
         this.loadCoupons();
+    }
+
+    onSearchChange() {
+        // Debounce search to avoid too many API calls
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+        this.searchTimeout = setTimeout(() => {
+            this.applyFilters();
+        }, 500);
     }
 
     applyFilters() {

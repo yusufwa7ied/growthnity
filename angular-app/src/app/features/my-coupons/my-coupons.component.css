@@ -84,46 +84,115 @@
   color: #009292;
 }
 
-/* Filters Card */
+/* Filters Card - Dashboard Style */
 ::ng-deep .filters-card.p-card {
   margin-bottom: 2rem;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 ::ng-deep .filters-card .p-card-body {
-  padding: 1.5rem;
+  padding: 1.5rem 2rem;
 }
 
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.filter-bar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.filter-controls {
+  display: flex;
   gap: 1.5rem;
-  align-items: end;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
-.filter-item {
+.filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 180px;
+  flex: 1;
+  max-width: 240px;
 }
 
-.filter-item label {
+.filter-label {
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
+  color: #57606a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .filter-actions {
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
-::ng-deep .filter-item .p-datepicker,
-::ng-deep .filter-item .p-select,
-::ng-deep .filter-item .p-inputtext {
+::ng-deep .filter-group .p-datepicker,
+::ng-deep .filter-group .p-select,
+::ng-deep .filter-group .p-inputtext {
   width: 100%;
+}
+
+::ng-deep .filter-group .p-inputtext {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+::ng-deep .filter-group .p-inputtext:focus {
+  border-color: #009292;
+  box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
+::ng-deep .filter-group .p-datepicker .p-datepicker-input {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+::ng-deep .filter-group .p-select {
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+
+::ng-deep .filter-group .p-select:not(.p-disabled):hover {
+  border-color: #009292;
+}
+
+::ng-deep .filter-group .p-select-label {
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+}
+
+::ng-deep .clear-btn,
+::ng-deep .export-btn {
+  padding: 0.625rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+::ng-deep .export-btn {
+  background: #009292 !important;
+  border-color: #009292 !important;
+}
+
+::ng-deep .export-btn:hover {
+  background: #007b7b !important;
+  border-color: #007b7b !important;
 }
 
 /* Table Card - Copied from dashboard */
@@ -235,7 +304,24 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .filters-grid {
-    grid-template-columns: 1fr;
+  .filter-bar-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+  }
+
+  .filter-group {
+    max-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  ::ng-deep .filter-actions .p-button {
+    flex: 1;
   }
 }
