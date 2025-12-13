@@ -211,32 +211,41 @@
     max-width: 300px;
 }
 
+::ng-deep .filter-datepicker.p-datepicker,
+::ng-deep .filter-datepicker .p-datepicker,
+::ng-deep .filter-datepicker .p-component {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
 ::ng-deep .filter-datepicker .p-datepicker-input {
     width: 100%;
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 0.625rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #1f2937;
-    transition: all 0.3s ease;
+    background: #f9fafb !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    padding: 0.625rem 1rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    color: #1f2937 !important;
+    transition: all 0.3s ease !important;
 }
 
 ::ng-deep .filter-datepicker .p-datepicker-input:hover {
-    border-color: #009292;
-    background: white;
+    border-color: #009292 !important;
+    background: white !important;
 }
 
 ::ng-deep .filter-datepicker .p-datepicker-input:focus {
-    border-color: #009292;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
-    outline: none;
+    border-color: #009292 !important;
+    background: white !important;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1) !important;
+    outline: none !important;
 }
 
 ::ng-deep .filter-datepicker .p-datepicker-input::placeholder {
-    color: #9ca3af;
+    color: #9ca3af !important;
 }
 
 ::ng-deep .filter-select {
