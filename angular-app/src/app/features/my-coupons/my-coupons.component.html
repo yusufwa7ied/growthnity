@@ -63,14 +63,15 @@
                                 <label class="filter-label">Date From</label>
                                 <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd"
                                     placeholder="Select start date" [showIcon]="false" (onSelect)="applyFilters()"
-                                    (onClear)="applyFilters()">
+                                    (onClear)="applyFilters()" [style]="{'width':'100%', 'background':'white'}" appendTo="body">
                                 </p-datepicker>
                             </div>
 
                             <div class="filter-group">
                                 <label class="filter-label">Date To</label>
                                 <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
-                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()"
+                                    [style]="{'width':'100%', 'background':'white'}" appendTo="body">
                                 </p-datepicker>
                             </div>
 
