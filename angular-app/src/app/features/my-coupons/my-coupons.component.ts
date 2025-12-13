@@ -167,6 +167,11 @@ export class MyCouponsComponent implements OnInit {
         this.loadCoupons();
     }
 
+    clearSearch() {
+        this.searchTerm = '';
+        this.applyFilters();
+    }
+
     exportData() {
         const dateFrom = (this.dateRange && this.dateRange[0]) ? this.formatDate(this.dateRange[0]) : '';
         const dateTo = (this.dateRange && this.dateRange[1]) ? this.formatDate(this.dateRange[1]) : '';

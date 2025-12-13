@@ -35,6 +35,52 @@
     font-size: 0.875rem;
 }
 
+/* Filters Bar */
+.filters-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filters-bar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 200px;
+    flex: 1;
+    max-width: 280px;
+}
+
+.filters-bar .filter-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+::ng-deep .filters-bar .p-datepicker .p-datepicker-input,
+::ng-deep .filters-bar .p-select {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: white !important;
+    transition: all 0.15s ease;
+}
+
+::ng-deep .filters-bar .p-datepicker .p-datepicker-input:focus,
+::ng-deep .filters-bar .p-select:focus {
+    border-color: #009292;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
 /* KPI Grid - Dashboard Style */
 .kpi-grid {
     display: grid;
@@ -155,9 +201,74 @@
 .table-controls {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    gap: 2rem;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    flex: 1;
+    max-width: 400px;
+    transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+    border-color: #009292;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
+.search-box i.pi-search {
+    color: #9ca3af;
+    font-size: 1rem;
+}
+
+.table-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: 0.95rem;
+    color: #1f2937;
+    padding: 0.25rem;
+}
+
+.table-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.clear-search-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.clear-search-btn i {
+    font-size: 0.9rem;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
 }
 
 .filter-controls {
