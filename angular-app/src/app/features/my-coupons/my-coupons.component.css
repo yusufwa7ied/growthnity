@@ -287,7 +287,7 @@
 }
 
 /* Force white background on the container wrapper inside select */
-::ng-deep .filter-group .p-select > .p-component {
+::ng-deep .filter-group .p-select>.p-component {
     background: white !important;
 }
 
@@ -510,11 +510,20 @@
 }
 
 ::ng-deep .p-select-overlay {
+    background: white !important;
+    background-color: white !important;
     border-radius: 12px !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
     border: none !important;
     padding: 0.5rem !important;
     animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+::ng-deep .p-select-overlay .p-select-list-container,
+::ng-deep .p-select-overlay .p-select-list,
+::ng-deep .p-select-overlay .p-select-option {
+    background: white !important;
+    background-color: white !important;
 }
 
 @keyframes dropdownFadeIn {
