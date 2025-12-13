@@ -510,7 +510,6 @@
   padding: 1rem !important;
   animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   z-index: 100000 !important;
-  position: fixed !important;
   background: white !important;
 }
 

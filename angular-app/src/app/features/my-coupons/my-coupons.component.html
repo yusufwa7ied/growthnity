@@ -60,18 +60,11 @@
                     <div class="table-controls">
                         <div class="filter-controls">
                             <div class="filter-group">
-                                <label class="filter-label">Date From</label>
-                                <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd"
-                                    placeholder="Select start date" [showIcon]="false" (onSelect)="applyFilters()"
-                                    (onClear)="applyFilters()" styleClass="white-bg-input" appendTo="body">
-                                </p-datepicker>
-                            </div>
-
-                            <div class="filter-group">
-                                <label class="filter-label">Date To</label>
-                                <p-datepicker [(ngModel)]="dateTo" dateFormat="yy-mm-dd" placeholder="Select end date"
-                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()"
-                                    styleClass="white-bg-input" appendTo="body">
+                                <label class="filter-label">Date Range</label>
+                                <p-datepicker [(ngModel)]="dateRange" selectionMode="range" dateFormat="yy-mm-dd"
+                                    placeholder="Select date range" [showIcon]="false" [showButtonBar]="true" 
+                                    [readonlyInput]="true" (ngModelChange)="onDateRangeChange()" 
+                                    styleClass="white-bg-input">
                                 </p-datepicker>
                             </div>
 

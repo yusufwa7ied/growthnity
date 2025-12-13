@@ -41,8 +41,7 @@ export class MyCouponsComponent implements OnInit {
     loading = false;
 
     // Filters
-    dateFrom: Date | null = null;
-    dateTo: Date | null = null;
+    dateRange: Date[] | null = null;
     selectedAdvertiser: Advertiser | null = null;
     searchTerm = '';
     searchTimeout: any;
@@ -83,8 +82,8 @@ export class MyCouponsComponent implements OnInit {
     loadCoupons() {
         this.loading = true;
 
-        const dateFrom = this.dateFrom ? this.formatDate(this.dateFrom) : undefined;
-        const dateTo = this.dateTo ? this.formatDate(this.dateTo) : undefined;
+        const dateFrom = (this.dateRange && this.dateRange[0]) ? this.formatDate(this.dateRange[0]) : undefined;
+        const dateTo = (this.dateRange && this.dateRange[1]) ? this.formatDate(this.dateRange[1]) : undefined;
         const advertiserId = this.selectedAdvertiser?.id;
         const search = this.searchTerm || undefined;
 
@@ -152,9 +151,16 @@ export class MyCouponsComponent implements OnInit {
         this.loadCoupons();
     }
 
+    onDateRangeChange() {
+        if (this.dateRange && this.dateRange[0] && this.dateRange[1]) {
+            this.applyFilters();
+        } else if (!this.dateRange || (this.dateRange.length === 0)) {
+            this.applyFilters();
+        }
+    }
+
     clearFilters() {
-        this.dateFrom = null;
-        this.dateTo = null;
+        this.dateRange = null;
         this.selectedAdvertiser = null;
         this.searchTerm = '';
         this.currentPage = 1;
@@ -162,8 +168,8 @@ export class MyCouponsComponent implements OnInit {
     }
 
     exportData() {
-        const dateFrom = this.dateFrom ? this.formatDate(this.dateFrom) : '';
-        const dateTo = this.dateTo ? this.formatDate(this.dateTo) : '';
+        const dateFrom = (this.dateRange && this.dateRange[0]) ? this.formatDate(this.dateRange[0]) : '';
+        const dateTo = (this.dateRange && this.dateRange[1]) ? this.formatDate(this.dateRange[1]) : '';
         const advertiserId = this.selectedAdvertiser?.id;
 
         let params: string[] = [];
