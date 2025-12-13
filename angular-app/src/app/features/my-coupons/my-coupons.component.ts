@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'; // Force rebuild
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';

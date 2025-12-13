@@ -212,33 +212,33 @@
 }
 
 ::ng-deep .filter-group .p-datepicker .p-datepicker-input {
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: white !important;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select {
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  background: white !important;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select:not(.p-disabled):hover {
-  border-color: #009292;
-  background: white !important;
+    border-color: #009292;
+    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select:focus {
-  border-color: #009292;
-  background: white !important;
+    border-color: #009292;
+    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select-label {
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  background: transparent !important;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    background: transparent !important;
 }
 
 .export-buttons {
@@ -410,16 +410,16 @@
 }
 
 ::ng-deep .campaign-header {
-  padding: 0.875rem 1.5rem !important;
-  border-bottom: 2px solid #009292 !important;
-  text-align: left !important;
+    padding: 0.875rem 1.5rem !important;
+    border-bottom: 2px solid #009292 !important;
+    text-align: left !important;
 }
 
 .campaign-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #009292;
-  letter-spacing: 0.3px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #009292;
+    letter-spacing: 0.3px;
 }
 
 .coupon-count {

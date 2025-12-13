@@ -97,7 +97,7 @@ def partner_coupons_performance_view(request):
         'advertiser', 'partner', 'coupon'
     )
     
-    # Group by campaign (advertiser) and then by coupon
+    # Group by campaign (advertiser) and then by coupon - force rebuild
     campaigns_data = {}
     
     for record in performance_qs:
