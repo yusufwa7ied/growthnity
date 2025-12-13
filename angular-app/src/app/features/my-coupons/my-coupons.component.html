@@ -68,15 +68,13 @@
                             </button>
                         </div>
 
-                        <div class="filter-group">
-                            <label class="filter-label">Date Range</label>
-                            <p-datepicker [(ngModel)]="dateRange" selectionMode="range" dateFormat="yy-mm-dd"
-                                placeholder="Select date range" [showIcon]="false" [showButtonBar]="true" 
-                                [readonlyInput]="true" (ngModelChange)="onDateRangeChange()">
-                            </p-datepicker>
-                        </div>
-
-                        <div class="filter-group">
+    <div class="filter-group">
+      <label class="filter-label">Date Range</label>
+      <p-datepicker [(ngModel)]="dateRange" selectionMode="range" [showIcon]="false"
+        placeholder="Select date range" dateFormat="yy-mm-dd" [showButtonBar]="true" [readonlyInput]="true"
+        [appendTo]="'body'" (ngModelChange)="onDateRangeChange()" styleClass="modal-datepicker">
+      </p-datepicker>
+    </div>                        <div class="filter-group">
                             <label class="filter-label">Campaign</label>
                             <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
                                 placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
