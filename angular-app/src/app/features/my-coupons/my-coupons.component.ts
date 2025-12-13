@@ -90,6 +90,10 @@ export class MyCouponsComponent implements OnInit {
 
         this.partnerService.getMyCoupons(dateFrom, dateTo, advertiserId, search, this.currentPage).subscribe({
             next: (response) => {
+                console.log('=== API RESPONSE ===');
+                console.log('Count:', response.count);
+                console.log('First item:', response.results[0]);
+                console.log('First item structure:', JSON.stringify(response.results[0], null, 2));
                 this.coupons = response.results;
                 this.totalRecords = response.count;
                 this.calculateSummary();
