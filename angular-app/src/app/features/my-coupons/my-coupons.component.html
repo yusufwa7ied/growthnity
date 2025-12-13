@@ -49,26 +49,6 @@
             </p-card>
         </div>
 
-        <!-- Filters Bar -->
-        <div class="filters-bar">
-            <div class="filter-group">
-                <label class="filter-label">Date Range</label>
-                <p-datepicker [(ngModel)]="dateRange" selectionMode="range" dateFormat="yy-mm-dd"
-                    placeholder="Select date range" [showIcon]="false" [showButtonBar]="true" 
-                    [readonlyInput]="true" (ngModelChange)="onDateRangeChange()" 
-                    styleClass="white-bg-input">
-                </p-datepicker>
-            </div>
-
-            <div class="filter-group">
-                <label class="filter-label">Campaign</label>
-                <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
-                    placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
-                    styleClass="white-bg-input" appendTo="body">
-                </p-select>
-            </div>
-        </div>
-
         <!-- Data Table -->
         <p-card class="table-card">
             <ng-template pTemplate="header">
@@ -78,6 +58,23 @@
                         <span class="record-count">{{ totalRecords }} records</span>
                     </div>
                     <div class="table-controls">
+                        <div class="filter-group">
+                            <label class="filter-label">Date Range</label>
+                            <p-datepicker [(ngModel)]="dateRange" selectionMode="range" dateFormat="yy-mm-dd"
+                                placeholder="Select date range" [showIcon]="false" [showButtonBar]="true" 
+                                [readonlyInput]="true" (ngModelChange)="onDateRangeChange()" 
+                                styleClass="white-bg-input">
+                            </p-datepicker>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Campaign</label>
+                            <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
+                                placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
+                                styleClass="white-bg-input" appendTo="body">
+                            </p-select>
+                        </div>
+
                         <div class="search-box">
                             <i class="pi pi-search"></i>
                             <input type="text" pInputText [(ngModel)]="searchTerm" (input)="onSearchChange()"
@@ -87,6 +84,7 @@
                                 <i class="pi pi-times"></i>
                             </button>
                         </div>
+                        
                         <div class="export-buttons">
                             <p-button label="Export CSV" icon="pi pi-download" (onClick)="exportData()"
                                 severity="primary" size="small" styleClass="export-btn">

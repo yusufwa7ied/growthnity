@@ -201,9 +201,42 @@
 .table-controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     gap: 1rem;
     width: 100%;
+    flex-wrap: wrap;
+}
+
+.table-controls .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+}
+
+.table-controls .filter-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+::ng-deep .table-controls .p-datepicker .p-datepicker-input,
+::ng-deep .table-controls .p-select {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: white !important;
+    transition: all 0.15s ease;
+}
+
+::ng-deep .table-controls .p-datepicker .p-datepicker-input:focus,
+::ng-deep .table-controls .p-select:focus {
+    border-color: #009292;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
 }
 
 .search-box {
@@ -615,163 +648,163 @@
 
 /* Date Picker Panel - Match Dashboard */
 ::ng-deep .p-datepicker {
-  border-radius: 16px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
-  border: none !important;
-  padding: 1rem !important;
-  animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  z-index: 100000 !important;
-  background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    border: none !important;
+    padding: 1rem !important;
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 100000 !important;
+    background: white !important;
 }
 
 ::ng-deep .p-datepicker-header {
-  background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
-  border-radius: 12px !important;
-  padding: 1rem !important;
-  margin-bottom: 0.75rem !important;
-  border: none !important;
+    background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
+    border: none !important;
 }
 
 ::ng-deep .p-datepicker-title {
-  color: white !important;
-  font-weight: 600 !important;
-  font-size: 1rem !important;
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
 }
 
 ::ng-deep .p-datepicker-prev,
 ::ng-deep .p-datepicker-next {
-  color: white !important;
-  width: 2rem !important;
-  height: 2rem !important;
-  border-radius: 8px !important;
-  transition: all 0.2s ease !important;
+    color: white !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
 
 ::ng-deep .p-datepicker-prev:hover,
 ::ng-deep .p-datepicker-next:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: white !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
 }
 
 ::ng-deep .p-datepicker-calendar-container {
-  padding: 0.5rem !important;
-  background: white !important;
+    padding: 0.5rem !important;
+    background: white !important;
 }
 
 ::ng-deep .p-datepicker-weekday {
-  color: #6b7280 !important;
-  font-weight: 600 !important;
-  font-size: 0.8125rem !important;
-  padding: 0.5rem !important;
+    color: #6b7280 !important;
+    font-weight: 600 !important;
+    font-size: 0.8125rem !important;
+    padding: 0.5rem !important;
 }
 
 ::ng-deep .p-datepicker-day {
-  border-radius: 10px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  padding: 0.5rem !important;
-  margin: 0.125rem !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    padding: 0.5rem !important;
+    margin: 0.125rem !important;
 }
 
 ::ng-deep .p-datepicker-day:hover {
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
-  transform: scale(1.05) !important;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
+    transform: scale(1.05) !important;
 }
 
 ::ng-deep .p-datepicker-day.p-selected {
-  background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
-  color: white !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.3) !important;
+    background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0, 146, 146, 0.3) !important;
 }
 
 ::ng-deep .p-datepicker-day.p-selected:hover {
-  background: linear-gradient(135deg, #007b7b 0%, #006666 100%) !important;
-  transform: scale(1.05) !important;
+    background: linear-gradient(135deg, #007b7b 0%, #006666 100%) !important;
+    transform: scale(1.05) !important;
 }
 
 ::ng-deep .p-datepicker-today .p-datepicker-day {
-  border: 2px solid #009292 !important;
-  font-weight: 600 !important;
+    border: 2px solid #009292 !important;
+    font-weight: 600 !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar {
-  border-top: 1px solid #f3f4f6 !important;
-  padding: 0.75rem 0.5rem 0.5rem 0.5rem !important;
-  margin-top: 0.75rem !important;
-  background: white !important;
+    border-top: 1px solid #f3f4f6 !important;
+    padding: 0.75rem 0.5rem 0.5rem 0.5rem !important;
+    margin-top: 0.75rem !important;
+    background: white !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar button {
-  border-radius: 10px !important;
-  padding: 0.625rem 1.25rem !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 10px !important;
+    padding: 0.625rem 1.25rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar .p-button-text {
-  background: white !important;
-  border: 1.5px solid #e5e7eb !important;
-  color: #374151 !important;
+    background: white !important;
+    border: 1.5px solid #e5e7eb !important;
+    color: #374151 !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar .p-button-text:hover {
-  background: #f9fafb !important;
-  border-color: #d1d5db !important;
-  transform: translateY(-1px) !important;
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    transform: translateY(-1px) !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar .p-button:not(.p-button-text) {
-  background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
-  border: none !important;
-  color: white !important;
-  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.25) !important;
+    background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 146, 146, 0.25) !important;
 }
 
 ::ng-deep .p-datepicker-buttonbar .p-button:not(.p-button-text):hover {
-  background: linear-gradient(135deg, #007b7b 0%, #006666 100%) !important;
-  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3) !important;
-  transform: translateY(-1px) !important;
+    background: linear-gradient(135deg, #007b7b 0%, #006666 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3) !important;
+    transform: translateY(-1px) !important;
 }
 
 /* Dropdown Panel Styling - Match Dashboard */
 ::ng-deep .p-select-overlay {
-  border-radius: 16px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
-  border: none !important;
-  margin-top: 0.5rem !important;
-  animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  z-index: 100000 !important;
-  background: #ffffff !important;
-  padding: 0.625rem !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    border: none !important;
+    margin-top: 0.5rem !important;
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 100000 !important;
+    background: #ffffff !important;
+    padding: 0.625rem !important;
 }
 
 ::ng-deep .p-select-list {
-  background: #ffffff !important;
-  max-height: 320px !important;
+    background: #ffffff !important;
+    max-height: 320px !important;
 }
 
 ::ng-deep .p-select-option {
-  border-radius: 10px !important;
-  margin: 0.125rem 0 !important;
-  padding: 0.75rem 1rem !important;
-  font-weight: 500 !important;
-  font-size: 0.9375rem !important;
-  transition: none !important;
-  background: transparent !important;
+    border-radius: 10px !important;
+    margin: 0.125rem 0 !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 500 !important;
+    font-size: 0.9375rem !important;
+    transition: none !important;
+    background: transparent !important;
 }
 
 ::ng-deep .p-select-option:hover {
-  background: linear-gradient(135deg, #e6f7f7 0%, #f0fafa 100%) !important;
-  color: #009292 !important;
+    background: linear-gradient(135deg, #e6f7f7 0%, #f0fafa 100%) !important;
+    color: #009292 !important;
 }
 
 ::ng-deep .p-select-option.p-select-option-selected {
-  background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
-  color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.25) !important;
+    background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0, 146, 146, 0.25) !important;
 }
 
 @keyframes dropdownFadeIn {
