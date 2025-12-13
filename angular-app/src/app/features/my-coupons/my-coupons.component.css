@@ -200,97 +200,83 @@
 
 .table-controls {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
     width: 100%;
-    flex-wrap: wrap;
 }
 
-.table-controls .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 180px;
+::ng-deep .filter-datepicker {
+    min-width: 200px;
+    flex: 1;
+    max-width: 300px;
 }
 
-.table-controls .filter-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #57606a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-}
-
-::ng-deep .modal-datepicker {
-    position: relative;
-    z-index: 1;
-}
-
-::ng-deep .modal-datepicker .p-datepicker-input-wrapper {
-    position: relative;
-}
-
-::ng-deep .modal-datepicker .p-datepicker-panel {
-    margin-top: 0.5rem !important;
-}
-
-::ng-deep .modal-datepicker .p-datepicker-input {
+::ng-deep .filter-datepicker .p-datepicker-input {
     width: 100%;
-    border-radius: 10px;
+    background: #f9fafb;
     border: 2px solid #e5e7eb;
-    padding: 0.875rem 1rem;
-    font-size: 0.9375rem;
+    border-radius: 10px;
+    padding: 0.625rem 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: #1f2937;
-    background: transparent;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-::ng-deep .modal-datepicker .p-datepicker-input:hover {
+::ng-deep .filter-datepicker .p-datepicker-input:hover {
     border-color: #009292;
-    box-shadow: 0 2px 6px rgba(0, 146, 146, 0.1);
-}
-
-::ng-deep .modal-datepicker .p-datepicker-input:focus {
-    border-color: #009292;
-    box-shadow: 0 0 0 4px rgba(0, 146, 146, 0.15);
-    outline: none;
     background: white;
 }
 
-/* Campaign dropdown - match coupons page style */
-::ng-deep .table-controls .p-select {
+::ng-deep .filter-datepicker .p-datepicker-input:focus {
+    border-color: #009292;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+    outline: none;
+}
+
+::ng-deep .filter-datepicker .p-datepicker-input::placeholder {
+    color: #9ca3af;
+}
+
+::ng-deep .filter-select {
+    min-width: 200px;
+    flex: 1;
+    max-width: 300px;
+}
+
+::ng-deep .filter-select .p-select {
     width: 100%;
-    background: white !important;
-    border: 2px solid #e5e7eb !important;
-    border-radius: 12px !important;
-    min-height: 48px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+::ng-deep .filter-select .p-select:not(.p-disabled):hover {
+    border-color: #009292;
+    background: white;
+}
+
+::ng-deep .filter-select .p-select:not(.p-disabled).p-focus {
+    border-color: #009292;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
+::ng-deep .filter-select .p-select-label {
+    padding: 0.625rem 1rem;
     font-size: 0.95rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
+    color: #1f2937;
 }
 
-::ng-deep .table-controls .p-select:not(.p-disabled):hover {
-    border-color: #009292 !important;
-    box-shadow: 0 3px 8px rgba(0, 146, 146, 0.15) !important;
+::ng-deep .filter-select .p-select-label.p-placeholder {
+    color: #9ca3af;
 }
 
-::ng-deep .table-controls .p-select:not(.p-disabled).p-focus {
-    border-color: #009292 !important;
-    box-shadow: 0 0 0 4px rgba(0, 146, 146, 0.2) !important;
-}
-
-::ng-deep .table-controls .p-select-label {
-    background: white !important;
-    color: #101010 !important;
-    padding: 0.65rem 1rem !important;
-}
-
-::ng-deep .table-controls .p-select-dropdown {
-    color: #009292 !important;
-    padding-right: 0.75rem !important;
+::ng-deep .filter-select .p-select-dropdown {
+    color: #009292;
 }
 
 .search-box {

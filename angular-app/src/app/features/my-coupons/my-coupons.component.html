@@ -68,19 +68,16 @@
                             </button>
                         </div>
 
-    <div class="filter-group">
-      <label class="filter-label">Date Range</label>
-      <p-datepicker [(ngModel)]="dateRange" selectionMode="range" [showIcon]="false"
-        placeholder="Select date range" dateFormat="yy-mm-dd" [showButtonBar]="true" [readonlyInput]="true"
-        (ngModelChange)="onDateRangeChange()" styleClass="modal-datepicker">
-      </p-datepicker>
-    </div>                        <div class="filter-group">
-                            <label class="filter-label">Campaign</label>
-                            <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
-                                placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
-                                appendTo="body">
-                            </p-select>
-                        </div>
+                        <p-datepicker [(ngModel)]="dateRange" selectionMode="range" [showIcon]="false"
+                            placeholder="Select date range" dateFormat="yy-mm-dd" [showButtonBar]="true" 
+                            [readonlyInput]="true" (ngModelChange)="onDateRangeChange()" 
+                            styleClass="filter-datepicker">
+                        </p-datepicker>
+
+                        <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
+                            placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
+                            styleClass="filter-select" appendTo="body">
+                        </p-select>
                         
                         <div class="export-buttons">
                             <p-button label="Export CSV" icon="pi pi-download" (onClick)="exportData()"
