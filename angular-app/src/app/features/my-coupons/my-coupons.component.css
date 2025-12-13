@@ -219,42 +219,71 @@
     background: white !important;
 }
 
-/* PrimeNG Select - Force white background on ALL parts */
+/* PrimeNG Select - Force white background on ALL parts with maximum specificity */
+::ng-deep .filter-group p-select,
+::ng-deep .filter-group p-select .p-select,
 ::ng-deep .filter-group .p-select {
     width: 100% !important;
     border: 1px solid #d0d7de !important;
     border-radius: 6px !important;
     background: white !important;
+    background-color: white !important;
     transition: all 0.2s ease !important;
 }
 
+::ng-deep .filter-group p-select:not(.p-disabled):hover,
 ::ng-deep .filter-group .p-select:not(.p-disabled):hover {
     border-color: #009292 !important;
+    background: white !important;
+    background-color: white !important;
 }
 
+::ng-deep .filter-group p-select:not(.p-disabled).p-focus,
+::ng-deep .filter-group p-select:focus,
 ::ng-deep .filter-group .p-select:not(.p-disabled).p-focus,
 ::ng-deep .filter-group .p-select:focus {
     border-color: #009292 !important;
     box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1) !important;
     outline: none !important;
+    background: white !important;
+    background-color: white !important;
 }
 
+::ng-deep .filter-group p-select .p-select-label,
+::ng-deep .filter-group .p-select .p-select-label,
 ::ng-deep .filter-group .p-select-label {
     padding: 0.625rem 0.875rem !important;
     font-size: 0.875rem !important;
     font-weight: 500 !important;
     color: #1f2937 !important;
     background: white !important;
+    background-color: white !important;
 }
 
+::ng-deep .filter-group p-select .p-select-label.p-placeholder,
+::ng-deep .filter-group .p-select .p-select-label.p-placeholder,
 ::ng-deep .filter-group .p-select-label.p-placeholder {
     color: #9ca3af !important;
     font-weight: 400 !important;
+    background: white !important;
+    background-color: white !important;
 }
 
+::ng-deep .filter-group p-select .p-select-dropdown,
+::ng-deep .filter-group .p-select .p-select-dropdown,
 ::ng-deep .filter-group .p-select-dropdown {
     color: #6b7280 !important;
     background: white !important;
+    background-color: white !important;
+}
+
+/* Target the date picker input specifically */
+::ng-deep .filter-group p-datepicker,
+::ng-deep .filter-group p-datepicker .p-datepicker,
+::ng-deep .filter-group p-datepicker input,
+::ng-deep .filter-group .p-datepicker input {
+    background: white !important;
+    background-color: white !important;
 }
 
 /* Force white background on the container wrapper inside select */
