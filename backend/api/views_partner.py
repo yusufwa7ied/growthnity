@@ -150,7 +150,7 @@ def partner_coupons_performance_view(request):
             # Check if search matches campaign name or any coupon
             matches = search in campaign['advertiser_name'].lower()
             if not matches:
-                matches = any(search in coupon for coupon in campaign['coupons'].keys())
+                matches = any(search in coupon.lower() for coupon in campaign['coupons'].keys())
             if not matches:
                 continue
         
