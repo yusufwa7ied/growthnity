@@ -223,6 +223,10 @@
     margin: 0;
 }
 
+::ng-deep .table-controls .p-datepicker {
+    background: transparent !important;
+}
+
 ::ng-deep .table-controls .p-datepicker .p-datepicker-input {
     padding: 0.625rem 0.875rem;
     border: 1px solid #d0d7de;
