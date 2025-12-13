@@ -133,6 +133,13 @@ class Advertiser(models.Model):
         help_text="Default fixed bonus per RTU order for all partners"
     )
 
+    # Campaign description for partners
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Campaign description visible to partners/affiliates"
+    )
+
     def __str__(self):
         return self.name
 
@@ -198,6 +205,55 @@ class AdvertiserRate(models.Model):
 
     def __str__(self):
         return f"{self.advertiser.name} | {self.geo} | {self.user_type} | {self.rate_type}"
+
+
+class CouponRequest(models.Model):
+    """
+    Tracks coupon requests from partners/affiliates for campaigns they want to work on
+    """
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    advertiser = models.ForeignKey(
+        Advertiser,
+        on_delete=models.CASCADE,
+        related_name="coupon_requests"
+    )
+    company_user = models.ForeignKey(
+        "CompanyUser",
+        on_delete=models.CASCADE,
+        related_name="coupon_requests"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+    message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Optional message from the partner"
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Admin notes or rejection reason"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Coupon Request"
+        verbose_name_plural = "Coupon Requests"
+        ordering = ["-created_at"]
+        unique_together = [["advertiser", "company_user", "status"]]
+
+    def __str__(self):
+        return f"{self.company_user.user.username} - {self.advertiser.name} ({self.status})"
+
 
 class Partner(models.Model):
     PARTNER_TYPES = [

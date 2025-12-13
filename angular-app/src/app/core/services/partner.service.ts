@@ -28,12 +28,17 @@ export interface CouponPerformanceResponse {
 export interface CampaignSummary {
     advertiser_id: number;
     advertiser_name: string;
+    description: string;
     orders: number;
     sales: number;
-    revenue: number;
     payout: number;
-    profit: number;
+    net_payout: number | null;
     is_working: boolean;
+    // For available campaigns only
+    payout_rate_type?: string | null;
+    ftu_payout?: number | null;
+    rtu_payout?: number | null;
+    currency?: string | null;
 }
 
 export interface CampaignsResponse {
@@ -194,5 +199,12 @@ export class PartnerService {
             `${environment.apiUrl}/partner/my-coupons/`,
             { params, responseType: 'blob' }
         );
+    }
+
+    requestCoupon(advertiserId: number, message?: string): Observable<any> {
+        return this.http.post(`${environment.apiUrl}/partner/request-coupon/`, {
+            advertiser_id: advertiserId,
+            message: message || ''
+        });
     }
 }

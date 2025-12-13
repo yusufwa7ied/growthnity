@@ -10,7 +10,8 @@ import csv
 
 from .models import (
     CompanyUser, Partner, CampaignPerformance, 
-    Coupon, Advertiser, AccountAssignment, AdvertiserCancellationRate
+    Coupon, Advertiser, AccountAssignment, AdvertiserCancellationRate,
+    CouponRequest
 )
 # Force rebuild
 
@@ -310,12 +311,17 @@ def partner_campaigns_view(request):
         campaigns.append({
             'advertiser_id': advertiser.id,
             'advertiser_name': advertiser.name,
+            'description': advertiser.description or '',
             'orders': perf['total_orders'] or 0,
             'sales': round(float(perf['total_sales'] or 0), 2),
-            'revenue': round(float(perf['total_revenue'] or 0), 2),
-            'payout': round(net_payout, 2),
-            'profit': round(float(perf['total_revenue'] or 0) - net_payout, 2),
-            'is_working': is_working
+            'payout': round(gross_payout, 2),
+            'net_payout': round(net_payout, 2) if is_working else None,
+            'is_working': is_working,
+            # Payout rates for available campaigns
+            'payout_rate_type': advertiser.default_payout_rate_type if not is_working else None,
+            'ftu_payout': float(advertiser.default_ftu_payout) if advertiser.default_ftu_payout and not is_working else None,
+            'rtu_payout': float(advertiser.default_rtu_payout) if advertiser.default_rtu_payout and not is_working else None,
+            'currency': advertiser.currency if not is_working else None,
         })
     
     # Sort: working campaigns first, then by sales
@@ -324,3 +330,62 @@ def partner_campaigns_view(request):
     return Response({
         'campaigns': campaigns
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_coupon_view(request):
+    """
+    Partner/Affiliate requests a coupon for a campaign they want to work on
+    """
+    user = request.user
+    
+    try:
+        company_user = CompanyUser.objects.get(user=user)
+    except CompanyUser.DoesNotExist:
+        return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if user is a partner
+    if company_user.role.name != 'TeamMember' or company_user.department not in ['affiliate', 'influencer']:
+        return Response(
+            {"detail": "Access denied. This feature is only for partners."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    advertiser_id = request.data.get('advertiser_id')
+    message = request.data.get('message', '')
+    
+    if not advertiser_id:
+        return Response({"detail": "advertiser_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        advertiser = Advertiser.objects.get(id=advertiser_id)
+    except Advertiser.DoesNotExist:
+        return Response({"detail": "Advertiser not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if there's already a pending request
+    existing_request = CouponRequest.objects.filter(
+        company_user=company_user,
+        advertiser=advertiser,
+        status='pending'
+    ).first()
+    
+    if existing_request:
+        return Response(
+            {"detail": "You already have a pending request for this campaign"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Create the request
+    coupon_request = CouponRequest.objects.create(
+        company_user=company_user,
+        advertiser=advertiser,
+        message=message,
+        status='pending'
+    )
+    
+    return Response({
+        "detail": "Coupon request submitted successfully",
+        "request_id": coupon_request.id,
+        "status": coupon_request.status
+    }, status=status.HTTP_201_CREATED)

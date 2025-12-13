@@ -42,7 +42,13 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.section-subtitle {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
 }
 
 .section-description {
@@ -135,6 +141,63 @@
 
 .metric-value.negative {
     color: #dc2626;
+}
+
+/* Available Campaign Styling */
+.campaign-description {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 3px solid #009292;
+}
+
+.campaign-description p {
+    color: #4b5563;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.campaign-rates {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border-radius: 8px;
+    border: 1px solid #86efac;
+}
+
+.rates-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #16a34a;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.rates-header i {
+    font-size: 1rem;
+}
+
+.rates-text {
+    color: #166534;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.campaign-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .campaign-actions .p-button {
+    font-weight: 600;
 }
 
 /* Empty and loading states */

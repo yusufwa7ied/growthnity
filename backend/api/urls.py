@@ -46,6 +46,7 @@ from .views_admin import (
 from .views_partner import (
     partner_coupons_performance_view,
     partner_campaigns_view,
+    request_coupon_view,
 )
 
 urlpatterns = [
@@ -105,6 +106,7 @@ urlpatterns = [
     # Partner Portal endpoints
     path("partner/my-coupons/", partner_coupons_performance_view, name="partner-my-coupons"),
     path("partner/campaigns/", partner_campaigns_view, name="partner-campaigns"),
+    path("partner/request-coupon/", request_coupon_view, name="partner-request-coupon"),
     
     # Pipeline management endpoints
     path("pipelines/trigger/", trigger_pipeline_upload, name="pipeline-trigger"),

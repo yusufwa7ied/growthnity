@@ -19,6 +19,7 @@ from .models import (
     PayoutRuleHistory,
     RevenueRuleHistory,
     AdvertiserCancellationRate,
+    CouponRequest,
 )
 from .models import StyliTransaction
 from django.utils import timezone
@@ -54,6 +55,9 @@ class AdvertiserAdmin(ImportExportModelAdmin):
                 "default_payout_rate_type", "default_ftu_payout", "default_rtu_payout",
                 "default_ftu_fixed_bonus", "default_rtu_fixed_bonus"
             )
+        }),
+        ("Campaign Description", {
+            "fields": ("description",)
         }),
     )
     
@@ -130,6 +134,33 @@ class PartnerAdmin(ImportExportModelAdmin):
     search_fields = ("name", "partner_type")
     list_per_page = 50
     ordering = ("name",)
+
+
+@admin.register(CouponRequest)
+class CouponRequestAdmin(admin.ModelAdmin):
+    list_display = ("id", "company_user", "advertiser", "status", "created_at", "updated_at")
+    list_filter = ("status", "advertiser", "created_at")
+    search_fields = ("company_user__user__username", "company_user__user__email", "advertiser__name", "message")
+    list_per_page = 50
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at", "updated_at")
+    
+    fieldsets = (
+        ("Request Information", {
+            "fields": ("company_user", "advertiser", "status")
+        }),
+        ("Messages", {
+            "fields": ("message", "admin_notes")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at")
+        }),
+    )
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("company_user__user", "advertiser")
+
 
 @admin.register(MediaBuyerDailySpend)
 class MediaBuyerDailySpendAdmin(ImportExportModelAdmin):

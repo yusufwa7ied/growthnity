@@ -28,6 +28,7 @@ export class CampaignsComponent implements OnInit {
     workingCampaigns: CampaignSummary[] = [];
     notWorkingCampaigns: CampaignSummary[] = [];
     loading = false;
+    requestingCoupon: { [key: number]: boolean } = {};
 
     constructor(private partnerService: PartnerService) { }
 
@@ -51,7 +52,34 @@ export class CampaignsComponent implements OnInit {
         });
     }
 
+    requestCoupon(advertiserId: number) {
+        if (this.requestingCoupon[advertiserId]) return;
+
+        this.requestingCoupon[advertiserId] = true;
+        this.partnerService.requestCoupon(advertiserId).subscribe({
+            next: (response) => {
+                alert('Coupon request submitted successfully! Our team will review it shortly.');
+                this.requestingCoupon[advertiserId] = false;
+            },
+            error: (error) => {
+                console.error('Error requesting coupon:', error);
+                const message = error.error?.detail || 'Failed to submit request. Please try again.';
+                alert(message);
+                this.requestingCoupon[advertiserId] = false;
+            }
+        });
+    }
+
     getStatusSeverity(isWorking: boolean): 'success' | 'secondary' {
         return isWorking ? 'success' : 'secondary';
+    }
+
+    formatRate(campaign: CampaignSummary): string {
+        if (!campaign.payout_rate_type) return '';
+        
+        const ftu = campaign.ftu_payout ? `FTU: ${campaign.ftu_payout}${campaign.payout_rate_type === 'percent' ? '%' : ' ' + campaign.currency}` : '';
+        const rtu = campaign.rtu_payout ? `RTU: ${campaign.rtu_payout}${campaign.payout_rate_type === 'percent' ? '%' : ' ' + campaign.currency}` : '';
+        
+        return [ftu, rtu].filter(Boolean).join(' | ');
     }
 }
