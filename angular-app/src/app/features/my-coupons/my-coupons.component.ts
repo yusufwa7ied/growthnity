@@ -176,18 +176,25 @@ export class MyCouponsComponent implements OnInit {
         const dateFrom = (this.dateRange && this.dateRange[0]) ? this.formatDate(this.dateRange[0]) : '';
         const dateTo = (this.dateRange && this.dateRange[1]) ? this.formatDate(this.dateRange[1]) : '';
         const advertiserId = this.selectedAdvertiser?.id;
+        const search = this.searchTerm ? this.searchTerm.toLowerCase() : undefined;
 
-        let params: string[] = [];
-        if (dateFrom) params.push(`date_from=${dateFrom}`);
-        if (dateTo) params.push(`date_to=${dateTo}`);
-        if (advertiserId) params.push(`advertiser_id=${advertiserId}`);
-        if (this.searchTerm) params.push(`search=${this.searchTerm}`);
-        params.push('export=csv');
-
-        const queryString = params.join('&');
-        const url = `/api/partner/my-coupons/?${queryString}`;
-
-        window.location.href = url;
+        this.partnerService.exportMyCoupons(dateFrom, dateTo, advertiserId, search).subscribe({
+            next: (blob) => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `my_coupons_${new Date().getTime()}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            },
+            error: (error) => {
+                console.error('Error exporting data:', error);
+                alert('Failed to export data. Please try again.');
+            }
+        });
     }
 
     private formatDate(date: Date): string {

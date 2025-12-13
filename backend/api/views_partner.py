@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -6,6 +6,7 @@ from rest_framework import status
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta
 from decimal import Decimal
+import csv
 
 from .models import (
     CompanyUser, Partner, CampaignPerformance, 
@@ -179,6 +180,33 @@ def partner_coupons_performance_view(request):
             'coupon_count': len(coupons_list),
             'coupons': coupons_list
         })
+    
+    # Check if export is requested
+    export_format = request.GET.get('export')
+    if export_format == 'csv':
+        # Create CSV response
+        response = HttpResponse(content_type='text/csv')
+        filename = f"my_coupons_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        writer = csv.writer(response)
+        
+        # Write header
+        writer.writerow(['Campaign', 'Coupon', 'Orders', 'Sales', 'Gross Payout', 'Net Payout'])
+        
+        # Write data
+        for campaign in formatted_results:
+            for coupon in campaign['coupons']:
+                writer.writerow([
+                    campaign['advertiser_name'],
+                    coupon['coupon'],
+                    coupon['orders'],
+                    f"{coupon['sales']:.2f}",
+                    f"{coupon['gross_payout']:.2f}",
+                    f"{coupon['net_payout']:.2f}" if coupon['net_payout'] is not None else 'N/A'
+                ])
+        
+        return response
     
     return Response({
         'results': formatted_results,

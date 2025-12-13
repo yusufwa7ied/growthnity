@@ -176,4 +176,23 @@ export class PartnerService {
     getCampaigns(): Observable<CampaignsResponse> {
         return this.http.get<CampaignsResponse>(`${environment.apiUrl}/partner/campaigns/`);
     }
+
+    exportMyCoupons(
+        dateFrom?: string,
+        dateTo?: string,
+        advertiserId?: number,
+        search?: string
+    ): Observable<Blob> {
+        let params = new HttpParams().set('export', 'csv');
+
+        if (dateFrom) params = params.set('date_from', dateFrom);
+        if (dateTo) params = params.set('date_to', dateTo);
+        if (advertiserId) params = params.set('advertiser_id', advertiserId.toString());
+        if (search) params = params.set('search', search);
+
+        return this.http.get(
+            `${environment.apiUrl}/partner/my-coupons/`,
+            { params, responseType: 'blob' }
+        );
+    }
 }
