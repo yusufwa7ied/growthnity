@@ -77,7 +77,8 @@
                             <div class="filter-group">
                                 <label class="filter-label">Campaign</label>
                                 <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
-                                    placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()">
+                                    placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
+                                    [style]="{'width':'100%', 'background':'white'}" appendTo="body">
                                 </p-select>
                             </div>
 
