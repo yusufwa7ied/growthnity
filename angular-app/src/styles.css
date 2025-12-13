@@ -118,6 +118,16 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(0, 146, 146, 0.25);
 }
 
+/* White background utility class for inputs */
+::ng-deep .white-bg-input,
+::ng-deep .white-bg-input .p-select,
+::ng-deep .white-bg-input .p-datepicker,
+::ng-deep .white-bg-input .p-datepicker-input,
+::ng-deep .white-bg-input input {
+  background-color: white !important;
+  background: white !important;
+}
+
 /* Global Dropdown Styling - Custom Arrow */
 select,
 select.p-dropdown,
