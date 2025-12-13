@@ -528,11 +528,21 @@
 
 ::ng-deep .p-datepicker,
 ::ng-deep .p-datepicker-overlay,
+::ng-deep .p-datepicker .p-datepicker-panel,
 ::ng-deep .p-datepicker .p-datepicker-calendar-container,
 ::ng-deep .p-datepicker table,
 ::ng-deep .p-datepicker .p-datepicker-header,
-::ng-deep .p-datepicker .p-datepicker-calendar {
+::ng-deep .p-datepicker .p-datepicker-calendar,
+::ng-deep .p-datepicker tbody,
+::ng-deep .p-datepicker-group-container,
+::ng-deep .p-datepicker-group {
     background: white !important;
+    background-color: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+::ng-deep .p-datepicker * {
     background-color: white !important;
 }
 
