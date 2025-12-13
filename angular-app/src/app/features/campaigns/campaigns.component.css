@@ -331,13 +331,4 @@
     .section {
         margin-bottom: 3rem;
     }
-}   }
-
-    .campaigns-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .campaign-metrics {
-        grid-template-columns: 1fr;
-    }
 }
