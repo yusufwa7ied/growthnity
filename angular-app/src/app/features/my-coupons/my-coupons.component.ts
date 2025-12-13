@@ -105,7 +105,7 @@ export class MyCouponsComponent implements OnInit {
     calculateSummary() {
         // Count total coupons across all campaigns
         this.totalCoupons = this.coupons.reduce((sum, campaign) => sum + campaign.coupon_count, 0);
-        
+
         // Sum up metrics from all coupons in all campaigns
         let orders = 0;
         let sales = 0;
@@ -171,7 +171,7 @@ export class MyCouponsComponent implements OnInit {
 
         const queryString = params.join('&');
         const url = `/api/partner/my-coupons/?${queryString}`;
-        
+
         window.location.href = url;
     }
 

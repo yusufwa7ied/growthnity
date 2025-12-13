@@ -1,183 +1,183 @@
 :host {
-  display: contents;
+    display: contents;
 }
 
 .campaigns-page {
-  min-height: 100vh;
-  background: #f9fafb;
-  display: flex;
-  flex-direction: column;
+    min-height: 100vh;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+    flex: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+    margin-bottom: 2rem;
 }
 
 .page-header h2 {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.5rem;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
 }
 
 .page-header p {
-  color: #6b7280;
-  font-size: 0.875rem;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
 /* Sections */
 .section {
-  margin-bottom: 3rem;
+    margin-bottom: 3rem;
 }
 
 .section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
 }
 
 .section-description {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
 }
 
 /* Campaigns Grid */
 .campaigns-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
 }
 
 ::ng-deep .campaign-card.p-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
 }
 
 ::ng-deep .campaign-card.p-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 ::ng-deep .campaign-card.working {
-  border-left: 3px solid #009292;
+    border-left: 3px solid #009292;
 }
 
 ::ng-deep .campaign-card.available {
-  border-left: 3px solid #d1d5db;
+    border-left: 3px solid #d1d5db;
 }
 
 ::ng-deep .campaign-card .p-card-body {
-  padding: 1.5rem;
+    padding: 1.5rem;
 }
 
 .campaign-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .campaign-header h3 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
 }
 
 ::ng-deep .campaign-header .p-tag {
-  font-weight: 600;
-  border-radius: 6px;
+    font-weight: 600;
+    border-radius: 6px;
 }
 
 .campaign-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }
 
 .metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .metric-label {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .metric-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
 }
 
 .metric-value.highlight {
-  color: #009292;
+    color: #009292;
 }
 
 .metric-value.negative {
-  color: #dc2626;
+    color: #dc2626;
 }
 
 /* Empty and loading states */
 .empty-state,
 .loading-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #6b7280;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6b7280;
 }
 
 .empty-state i,
 .loading-state i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.3;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
 }
 
 .empty-state p,
 .loading-state p {
-  font-size: 1rem;
-  margin: 0;
+    font-size: 1rem;
+    margin: 0;
 }
 
 /* Text alignment utilities */
 .text-right {
-  text-align: right !important;
+    text-align: right !important;
 }
 
 .text-center {
-  text-align: center !important;
+    text-align: center !important;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
+    .container {
+        padding: 1rem;
+    }
 
-  .campaigns-grid {
-    grid-template-columns: 1fr;
-  }
+    .campaigns-grid {
+        grid-template-columns: 1fr;
+    }
 
-  .campaign-metrics {
-    grid-template-columns: 1fr;
-  }
+    .campaign-metrics {
+        grid-template-columns: 1fr;
+    }
 }

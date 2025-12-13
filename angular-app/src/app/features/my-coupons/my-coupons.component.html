@@ -42,7 +42,8 @@
                     <div>
                         <h4>PAYOUT</h4>
                         <p class="kpi-value">${{ totalGrossPayout | trimDecimals }}</p>
-                        <p class="kpi-subvalue">Net: {{ totalNetPayout !== null && totalNetPayout !== undefined ? ('$' + (totalNetPayout | trimDecimals)) : '-' }}</p>
+                        <p class="kpi-subvalue">Net: {{ totalNetPayout !== null && totalNetPayout !== undefined ? ('$' +
+                            (totalNetPayout | trimDecimals)) : '-' }}</p>
                     </div>
                 </div>
             </p-card>
@@ -60,8 +61,9 @@
                         <div class="filter-controls">
                             <div class="filter-group">
                                 <label class="filter-label">Date From</label>
-                                <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" placeholder="Select start date"
-                                    [showIcon]="false" (onSelect)="applyFilters()" (onClear)="applyFilters()">
+                                <p-datepicker [(ngModel)]="dateFrom" dateFormat="yy-mm-dd"
+                                    placeholder="Select start date" [showIcon]="false" (onSelect)="applyFilters()"
+                                    (onClear)="applyFilters()">
                                 </p-datepicker>
                             </div>
 
@@ -113,13 +115,15 @@
                         </td>
                     </tr>
                     <!-- Coupon Rows -->
-                    <tr *ngFor="let coupon of campaign.coupons; let isLast = last" class="coupon-row" [class.last-in-group]="isLast">
+                    <tr *ngFor="let coupon of campaign.coupons; let isLast = last" class="coupon-row"
+                        [class.last-in-group]="isLast">
                         <td class="col-coupon coupon-indent">{{ coupon.coupon }}</td>
                         <td class="col-orders centered">{{ coupon.orders }}</td>
                         <td class="col-amount centered">${{ coupon.sales | trimDecimals }}</td>
                         <td class="col-amount centered stacked-cell">
                             <div class="main-value">${{ coupon.gross_payout | trimDecimals }}</div>
-                            <div class="sub-value">Net: {{ coupon.net_payout !== null && coupon.net_payout !== undefined ? ('$' + (coupon.net_payout | trimDecimals)) : '-' }}</div>
+                            <div class="sub-value">Net: {{ coupon.net_payout !== null && coupon.net_payout !== undefined
+                                ? ('$' + (coupon.net_payout | trimDecimals)) : '-' }}</div>
                         </td>
                     </tr>
                 </ng-template>

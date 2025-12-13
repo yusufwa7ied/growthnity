@@ -1,214 +1,214 @@
 /* Component-specific styles - Most styles are in global styles.css */
 
 :host {
-  display: contents;
+    display: contents;
 }
 
 .my-coupons-page {
-  min-height: 100vh;
-  background: #f9fafb;
-  display: flex;
-  flex-direction: column;
+    min-height: 100vh;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+    flex: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+    margin-bottom: 2rem;
 }
 
 .page-header h2 {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.5rem;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
 }
 
 .page-header p {
-  color: #6b7280;
-  font-size: 0.875rem;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
 /* KPI Grid - Dashboard Style */
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 ::ng-deep .kpi-card.p-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 ::ng-deep .kpi-card.p-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 146, 146, 0.15);
-  transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 146, 146, 0.15);
+    transform: translateY(-2px);
 }
 
 ::ng-deep .kpi-card .p-card-body {
-  padding: 1.5rem;
+    padding: 1.5rem;
 }
 
 .kpi-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .kpi-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: white;
-  background: linear-gradient(135deg, #009292 0%, #00b0b0 100%);
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    background: linear-gradient(135deg, #009292 0%, #00b0b0 100%);
 }
 
-.kpi-content > div {
-  flex: 1;
+.kpi-content>div {
+    flex: 1;
 }
 
 .kpi-content h4 {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 0.5rem 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.5rem 0;
 }
 
 .kpi-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #101010;
-  margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #101010;
+    margin: 0;
 }
 
 .kpi-subvalue {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-  margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0.25rem 0 0 0;
 }
 
 /* Table Card Header - Dashboard Style */
 ::ng-deep .table-card .p-card-header {
-  background: linear-gradient(135deg, #f8fafa 0%, #eef7f7 100%);
-  border-bottom: 2px solid rgba(0, 146, 146, 0.2);
-  padding: 1.75rem 2.5rem;
+    background: linear-gradient(135deg, #f8fafa 0%, #eef7f7 100%);
+    border-bottom: 2px solid rgba(0, 146, 146, 0.2);
+    padding: 1.75rem 2.5rem;
 }
 
 .table-header {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .table-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .table-title h3 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 1.25rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  letter-spacing: 0.3px;
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.25rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    letter-spacing: 0.3px;
 }
 
 .table-title h3 i {
-  color: #009292;
-  font-size: 1.4rem;
-  padding: 0.5rem;
-  background: rgba(0, 146, 146, 0.1);
-  border-radius: 10px;
+    color: #009292;
+    font-size: 1.4rem;
+    padding: 0.5rem;
+    background: rgba(0, 146, 146, 0.1);
+    border-radius: 10px;
 }
 
 .record-count {
-  color: #6b7280;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  background: rgba(0, 146, 146, 0.08);
-  border-radius: 10px;
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 146, 146, 0.08);
+    border-radius: 10px;
 }
 
 .table-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 2rem;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
 .filter-controls {
-  display: flex;
-  gap: 1.5rem;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: flex-end;
+    display: flex;
+    gap: 1.5rem;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: flex-end;
 }
 
 .filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: 180px;
-  flex: 1;
-  max-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+    flex: 1;
+    max-width: 240px;
 }
 
 .filter-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #57606a;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
 }
 
 .filter-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
 }
 
 ::ng-deep .filter-group .p-datepicker,
 ::ng-deep .filter-group .p-select,
 ::ng-deep .filter-group .p-inputtext {
-  width: 100%;
+    width: 100%;
 }
 
 ::ng-deep .filter-group .p-inputtext {
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  transition: all 0.15s ease;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
 }
 
 ::ng-deep .filter-group .p-inputtext:focus {
-  border-color: #009292;
-  box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+    border-color: #009292;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
 }
 
 ::ng-deep .filter-group .p-datepicker .p-datepicker-input {
@@ -216,193 +216,203 @@
   border: 1px solid #d0d7de;
   border-radius: 6px;
   font-size: 0.875rem;
+  background: white !important;
 }
 
 ::ng-deep .filter-group .p-select {
   border: 1px solid #d0d7de;
   border-radius: 6px;
+  background: white !important;
 }
 
 ::ng-deep .filter-group .p-select:not(.p-disabled):hover {
   border-color: #009292;
+  background: white !important;
+}
+
+::ng-deep .filter-group .p-select:focus {
+  border-color: #009292;
+  background: white !important;
 }
 
 ::ng-deep .filter-group .p-select-label {
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
+  background: transparent !important;
 }
 
 .export-buttons {
-  display: flex;
-  gap: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
 }
 
 ::ng-deep .export-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border: none !important;
-  color: white !important;
-  font-weight: 600 !important;
-  padding: 0.5rem 1.25rem !important;
-  border-radius: 8px !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1.25rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
 }
 
 ::ng-deep .export-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5) !important;
 }
 
 /* Centered content */
 .centered {
-  text-align: center !important;
+    text-align: center !important;
 }
 
 /* Stacked Cell - Dashboard Style */
 .stacked-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
 }
 
 .main-value {
-  font-weight: 600;
-  color: #1f2937;
+    font-weight: 600;
+    color: #1f2937;
 }
 
 .sub-value {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
 }
 
 .empty-message {
-  text-align: center;
-  padding: 3rem 1rem !important;
-  color: #9ca3af;
+    text-align: center;
+    padding: 3rem 1rem !important;
+    color: #9ca3af;
 }
 
 .empty-message i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.3;
-  display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+    display: block;
 }
 
 .empty-message p {
-  margin: 0;
-  font-size: 1rem;
+    margin: 0;
+    font-size: 1rem;
 }
 
 /* Table Card - Copied from dashboard */
 ::ng-deep .table-card.p-card {
-  border-radius: 16px !important;
-  overflow: hidden;
-  border-left: 4px solid #009292 !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 146, 146, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+    border-left: 4px solid #009292 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 146, 146, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
 ::ng-deep .table-card.p-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 146, 146, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 12px 40px rgba(0, 146, 146, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 ::ng-deep .table-card .p-card-body {
-  padding: 0;
+    padding: 0;
 }
 
 /* Table styling - Copied from dashboard */
 ::ng-deep .p-datatable {
-  border-radius: 10px;
-  overflow: hidden;
-  background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
 }
 
 ::ng-deep .p-datatable .p-datatable-wrapper {
-  overflow-x: auto;
-  max-height: 600px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 ::ng-deep .p-datatable .p-datatable-thead>tr>th {
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
-  color: #1f2937 !important;
-  font-weight: 700 !important;
-  padding: 1rem !important;
-  text-align: center !important;
-  letter-spacing: 0.8px !important;
-  border-bottom: 2px solid #009292 !important;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  white-space: nowrap;
-  line-height: 1.4;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%) !important;
+    color: #1f2937 !important;
+    font-weight: 700 !important;
+    padding: 1rem !important;
+    text-align: center !important;
+    letter-spacing: 0.8px !important;
+    border-bottom: 2px solid #009292 !important;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+    line-height: 1.4;
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody>tr {
-  transition: all 0.2s ease;
-  border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody>tr>td {
-  padding: 0.875rem 1rem !important;
-  font-size: 0.9rem !important;
-  color: #4b5563 !important;
-  font-weight: 500 !important;
-  vertical-align: middle !important;
-  white-space: nowrap;
-  line-height: 1.6 !important;
-  text-transform: none !important;
-  letter-spacing: 0.3px;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.9rem !important;
+    color: #4b5563 !important;
+    font-weight: 500 !important;
+    vertical-align: middle !important;
+    white-space: nowrap;
+    line-height: 1.6 !important;
+    text-transform: none !important;
+    letter-spacing: 0.3px;
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody>tr:hover {
-  background: linear-gradient(90deg, rgba(0, 146, 146, 0.03) 0%, rgba(0, 146, 146, 0.01) 100%) !important;
+    background: linear-gradient(90deg, rgba(0, 146, 146, 0.03) 0%, rgba(0, 146, 146, 0.01) 100%) !important;
 }
 
 /* Button styling */
 ::ng-deep .p-button {
-  padding: 0.625rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
 }
 
 ::ng-deep .p-button:hover {
-  transform: translateY(-1px);
+    transform: translateY(-1px);
 }
 
 /* Paginator */
 ::ng-deep .p-paginator {
-  margin-top: 1rem;
-  border-top: 1px solid #dee2e6;
-  padding: 1rem;
-  background: #f9fafb;
+    margin-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    background: #f9fafb;
 }
 
 /* Text alignment utilities */
 .text-right {
-  text-align: right !important;
+    text-align: right !important;
 }
 
 .text-center {
-  text-align: center !important;
+    text-align: center !important;
 }
 
 /* Campaign Grouping Styles */
 ::ng-deep .campaign-row {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-  border-bottom: none !important;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
+    border-bottom: none !important;
 }
 
 ::ng-deep .campaign-header {
   padding: 0.875rem 1.5rem !important;
   border-bottom: 2px solid #009292 !important;
+  text-align: left !important;
 }
 
 .campaign-name {
@@ -413,101 +423,86 @@
 }
 
 .coupon-count {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-left: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-left: 0.5rem;
 }
 
 ::ng-deep .coupon-row {
-  background: #ffffff !important;
+    background: #ffffff !important;
 }
 
 ::ng-deep .coupon-row:hover {
-  background: #f9fafb !important;
+    background: #f9fafb !important;
 }
 
 ::ng-deep .coupon-row.last-in-group td {
-  border-bottom: 2px solid #e5e7eb !important;
+    border-bottom: 2px solid #e5e7eb !important;
 }
 
 .coupon-indent {
-  padding-left: 3rem !important;
-  text-align: left !important;
-  font-weight: 500;
-  color: #374151;
-}
-
-/* Filter Background Transparency Fix - Match Dashboard */
-::ng-deep .filter-group .p-datepicker,
-::ng-deep .filter-group .p-select {
-  background: transparent !important;
-}
-
-::ng-deep .filter-group .p-datepicker .p-datepicker-input,
-::ng-deep .filter-group .p-select-label {
-  background: transparent !important;
-}
-
-::ng-deep .filter-group .p-datepicker:hover,
-::ng-deep .filter-group .p-select:hover {
-  background: transparent !important;
+    padding-left: 3rem !important;
+    text-align: left !important;
+    font-weight: 500;
+    color: #374151;
 }
 
 /* Ensure dropdowns and date picker overlays have proper z-index - Match Dashboard */
 ::ng-deep .p-select-overlay,
 ::ng-deep .p-datepicker-overlay,
 ::ng-deep .p-datepicker {
-  z-index: 10000 !important;
+    z-index: 10000 !important;
 }
 
 ::ng-deep .p-select-overlay {
-  border-radius: 12px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
-  border: none !important;
-  padding: 0.5rem !important;
-  animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    border: none !important;
+    padding: 0.5rem !important;
+    animation: dropdownFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 @keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
+    .container {
+        padding: 1rem;
+    }
 
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-  .table-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
+    .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-  .filter-controls {
-    flex-direction: column;
-  }
+    .filter-controls {
+        flex-direction: column;
+    }
 
-  .filter-group {
-    max-width: 100%;
-  }
+    .filter-group {
+        max-width: 100%;
+    }
 
-  .export-buttons {
-    width: 100%;
-  }
+    .export-buttons {
+        width: 100%;
+    }
 
-  ::ng-deep .export-buttons .p-button {
-    width: 100%;
-  }
+    ::ng-deep .export-buttons .p-button {
+        width: 100%;
+    }
 }
