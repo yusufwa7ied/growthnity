@@ -236,7 +236,7 @@
     font-size: 0.9375rem;
     font-weight: 500;
     color: #1f2937;
-    background: white;
+    background: transparent;
     transition: all 0.2s ease;
 }
 
@@ -249,6 +249,7 @@
     border-color: #009292;
     box-shadow: 0 0 0 4px rgba(0, 146, 146, 0.15);
     outline: none;
+    background: white;
 }
 
 /* Campaign dropdown - match coupons page style */

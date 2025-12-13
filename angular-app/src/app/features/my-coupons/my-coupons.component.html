@@ -72,7 +72,7 @@
       <label class="filter-label">Date Range</label>
       <p-datepicker [(ngModel)]="dateRange" selectionMode="range" [showIcon]="false"
         placeholder="Select date range" dateFormat="yy-mm-dd" [showButtonBar]="true" [readonlyInput]="true"
-        [appendTo]="'body'" (ngModelChange)="onDateRangeChange()" styleClass="modal-datepicker">
+        (ngModelChange)="onDateRangeChange()" styleClass="modal-datepicker">
       </p-datepicker>
     </div>                        <div class="filter-group">
                             <label class="filter-label">Campaign</label>
