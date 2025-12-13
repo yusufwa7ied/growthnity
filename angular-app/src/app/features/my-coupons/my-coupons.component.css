@@ -228,6 +228,14 @@
     z-index: 1;
 }
 
+::ng-deep .modal-datepicker .p-datepicker-input-wrapper {
+    position: relative;
+}
+
+::ng-deep .modal-datepicker .p-datepicker-panel {
+    margin-top: 0.5rem !important;
+}
+
 ::ng-deep .modal-datepicker .p-datepicker-input {
     width: 100%;
     border-radius: 10px;
