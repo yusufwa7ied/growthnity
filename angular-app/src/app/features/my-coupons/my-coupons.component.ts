@@ -114,20 +114,24 @@ export class MyCouponsComponent implements OnInit {
         let sales = 0;
         let grossPayout = 0;
         let netPayout = 0;
+        let hasNetPayout = false;
 
         this.coupons.forEach(campaign => {
             campaign.coupons.forEach(coupon => {
                 orders += coupon.orders;
                 sales += coupon.sales;
                 grossPayout += coupon.gross_payout;
-                netPayout += coupon.net_payout || 0;
+                if (coupon.net_payout !== null && coupon.net_payout !== undefined) {
+                    netPayout += coupon.net_payout;
+                    hasNetPayout = true;
+                }
             });
         });
 
         this.totalOrders = orders;
         this.totalSales = sales;
         this.totalGrossPayout = grossPayout;
-        this.totalNetPayout = netPayout;
+        this.totalNetPayout = hasNetPayout ? netPayout : null;
     }
 
     onPageChange(event: any) {
