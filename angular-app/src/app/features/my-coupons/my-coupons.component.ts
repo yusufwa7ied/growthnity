@@ -56,7 +56,7 @@ export class MyCouponsComponent implements OnInit {
     totalOrders = 0;
     totalSales = 0;
     totalGrossPayout = 0;
-    totalNetPayout = 0;
+    totalNetPayout: number | null = 0;
 
     constructor(
         private partnerService: PartnerService,
