@@ -223,8 +223,7 @@
     margin: 0;
 }
 
-::ng-deep .table-controls .p-datepicker .p-datepicker-input,
-::ng-deep .table-controls .p-select {
+::ng-deep .table-controls .p-datepicker .p-datepicker-input {
     padding: 0.625rem 0.875rem;
     border: 1px solid #d0d7de;
     border-radius: 6px;
@@ -233,10 +232,42 @@
     transition: all 0.15s ease;
 }
 
-::ng-deep .table-controls .p-datepicker .p-datepicker-input:focus,
-::ng-deep .table-controls .p-select:focus {
+::ng-deep .table-controls .p-datepicker .p-datepicker-input:focus {
     border-color: #009292;
     box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
+}
+
+/* Campaign dropdown - match coupons page style */
+::ng-deep .table-controls .p-select {
+    width: 100%;
+    background: white !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    min-height: 48px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+::ng-deep .table-controls .p-select:not(.p-disabled):hover {
+    border-color: #009292 !important;
+    box-shadow: 0 3px 8px rgba(0, 146, 146, 0.15) !important;
+}
+
+::ng-deep .table-controls .p-select:not(.p-disabled).p-focus {
+    border-color: #009292 !important;
+    box-shadow: 0 0 0 4px rgba(0, 146, 146, 0.2) !important;
+}
+
+::ng-deep .table-controls .p-select-label {
+    background: white !important;
+    color: #101010 !important;
+    padding: 0.65rem 1rem !important;
+}
+
+::ng-deep .table-controls .p-select-dropdown {
+    color: #009292 !important;
+    padding-right: 0.75rem !important;
 }
 
 .search-box {

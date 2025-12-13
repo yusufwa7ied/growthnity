@@ -58,6 +58,16 @@
                         <span class="record-count">{{ totalRecords }} records</span>
                     </div>
                     <div class="table-controls">
+                        <div class="search-box">
+                            <i class="pi pi-search"></i>
+                            <input type="text" pInputText [(ngModel)]="searchTerm" (input)="onSearchChange()"
+                                placeholder="Search table..." class="table-search-input" />
+                            <button *ngIf="searchTerm" class="clear-search-btn" (click)="clearSearch()"
+                                title="Clear search">
+                                <i class="pi pi-times"></i>
+                            </button>
+                        </div>
+
                         <div class="filter-group">
                             <label class="filter-label">Date Range</label>
                             <p-datepicker [(ngModel)]="dateRange" selectionMode="range" dateFormat="yy-mm-dd"
@@ -71,18 +81,8 @@
                             <label class="filter-label">Campaign</label>
                             <p-select [(ngModel)]="selectedAdvertiser" [options]="advertisers" optionLabel="name"
                                 placeholder="All Campaigns" [showClear]="true" (onChange)="applyFilters()"
-                                styleClass="white-bg-input" appendTo="body">
+                                appendTo="body">
                             </p-select>
-                        </div>
-
-                        <div class="search-box">
-                            <i class="pi pi-search"></i>
-                            <input type="text" pInputText [(ngModel)]="searchTerm" (input)="onSearchChange()"
-                                placeholder="Search table..." class="table-search-input" />
-                            <button *ngIf="searchTerm" class="clear-search-btn" (click)="clearSearch()"
-                                title="Clear search">
-                                <i class="pi pi-times"></i>
-                            </button>
                         </div>
                         
                         <div class="export-buttons">
