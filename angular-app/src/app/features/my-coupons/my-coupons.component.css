@@ -219,31 +219,34 @@
     background: white !important;
 }
 
+::ng-deep .filter-group .p-select,
+::ng-deep .filter-group .p-select .p-select-label,
+::ng-deep .filter-group .p-select .p-select-dropdown {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+}
+
 ::ng-deep .filter-group .p-select {
     border: 1px solid #d0d7de;
     border-radius: 6px;
-    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select:not(.p-disabled):hover {
     border-color: #009292;
-    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select:not(.p-disabled).p-focus {
     border-color: #009292;
-    background: white !important;
     box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
 }
 
 ::ng-deep .filter-group .p-select-label {
     padding: 0.625rem 0.875rem;
     font-size: 0.875rem;
-    background: white !important;
 }
 
 ::ng-deep .filter-group .p-select-dropdown {
-    background: white !important;
+    color: #6b7280;
 }
 
 .export-buttons {
@@ -353,10 +356,6 @@
     z-index: 1;
     text-transform: uppercase !important;
     font-size: 0.75rem !important;
-
-::ng-deep .p-datatable .p-datatable-thead>tr>th.col-coupon {
-    text-align: left !important;
-}
     white-space: nowrap;
     line-height: 1.4;
 }
@@ -482,6 +481,12 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Coupon column header alignment - must come after general table styles */
+::ng-deep .my-coupons-page .p-datatable .p-datatable-thead > tr > th.col-coupon {
+    text-align: left !important;
+    padding-left: 1.5rem !important;
 }
 
 /* Responsive design */
