@@ -85,7 +85,7 @@ export class MyCouponsComponent implements OnInit {
         const dateFrom = (this.dateRange && this.dateRange[0]) ? this.formatDate(this.dateRange[0]) : undefined;
         const dateTo = (this.dateRange && this.dateRange[1]) ? this.formatDate(this.dateRange[1]) : undefined;
         const advertiserId = this.selectedAdvertiser?.id;
-        const search = this.searchTerm || undefined;
+        const search = this.searchTerm ? this.searchTerm.toLowerCase() : undefined;
 
         this.partnerService.getMyCoupons(dateFrom, dateTo, advertiserId, search, this.currentPage).subscribe({
             next: (response) => {

@@ -293,8 +293,56 @@
     color: #9ca3af;
 }
 
-::ng-deep .filter-select .p-select-dropdown {
-    color: #009292;
+::ng-deep .filter-select .p-select-dropdown,
+::ng-deep .filter-select.p-select .p-select-dropdown,
+::ng-deep p-select.filter-select .p-select-dropdown {
+    display: none !important;
+}
+
+/* Calendar button bar (footer) styling */
+::ng-deep .p-datepicker-buttonbar {
+    border-top: 1px solid #f3f4f6 !important;
+    padding: 0.75rem 0.5rem 0.5rem 0.5rem !important;
+    margin-top: 0.75rem !important;
+}
+
+::ng-deep .p-datepicker-buttonbar button {
+    border-radius: 10px !important;
+    padding: 0.625rem 1.25rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+::ng-deep .p-datepicker-buttonbar .p-button-text {
+    background: white !important;
+    border: 1.5px solid #e5e7eb !important;
+    color: #374151 !important;
+}
+
+::ng-deep .p-datepicker-buttonbar .p-button-text:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    transform: translateY(-1px) !important;
+}
+
+::ng-deep .p-datepicker-buttonbar .p-button:not(.p-button-text) {
+    background: linear-gradient(135deg, #009292 0%, #007b7b 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 146, 146, 0.25) !important;
+}
+
+::ng-deep .p-datepicker-buttonbar .p-button:not(.p-button-text):hover {
+    background: linear-gradient(135deg, #007b7b 0%, #006666 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 146, 146, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+::ng-deep .filter-select .p-select-dropdown,
+::ng-deep .filter-select.p-select .p-select-dropdown,
+::ng-deep p-select.filter-select .p-select-dropdown {
+    display: none !important;
 }
 
 .search-box {
