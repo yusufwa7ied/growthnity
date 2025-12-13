@@ -230,15 +230,20 @@
     background: white !important;
 }
 
-::ng-deep .filter-group .p-select:focus {
+::ng-deep .filter-group .p-select:not(.p-disabled).p-focus {
     border-color: #009292;
     background: white !important;
+    box-shadow: 0 0 0 3px rgba(0, 146, 146, 0.1);
 }
 
 ::ng-deep .filter-group .p-select-label {
     padding: 0.625rem 0.875rem;
     font-size: 0.875rem;
-    background: transparent !important;
+    background: white !important;
+}
+
+::ng-deep .filter-group .p-select-dropdown {
+    background: white !important;
 }
 
 .export-buttons {
@@ -348,6 +353,10 @@
     z-index: 1;
     text-transform: uppercase !important;
     font-size: 0.75rem !important;
+
+::ng-deep .p-datatable .p-datatable-thead>tr>th.col-coupon {
+    text-align: left !important;
+}
     white-space: nowrap;
     line-height: 1.4;
 }
